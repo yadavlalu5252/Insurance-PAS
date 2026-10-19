@@ -1,0 +1,92 @@
+<Solution>
+  <Folder Name="/ClaimManagement/">
+    <Project Path="ClaimManagement/ClaimManagement.Api/ClaimManagement.Api.csproj" />
+    <Project Path="ClaimManagement/ClaimManagement.Application/ClaimManagement.Application.csproj" />
+    <Project Path="ClaimManagement/ClaimManagement.Domain/ClaimManagement.Domain.csproj" />
+    <Project Path="ClaimManagement/ClaimManagement.Infrastructure/ClaimManagement.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/ClaimSettlement/">
+    <Project Path="ClaimSettlement/ClaimSettlement.Api/ClaimSettlement.Api.csproj" />
+    <Project Path="ClaimSettlement/ClaimSettlement.Application/ClaimSettlement.Application.csproj" />
+    <Project Path="ClaimSettlement/ClaimSettlement.Domain/ClaimSettlement.Domain.csproj" />
+    <Project Path="ClaimSettlement/ClaimSettlement.Infrastructure/ClaimSettlement.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/CustomerRegistration/">
+    <Project Path="CustomerRegistration/CustomerRegistration.Api/CustomerRegistration.Api.csproj" />
+    <Project Path="CustomerRegistration/CustomerRegistration.Application/CustomerRegistration.Application.csproj" />
+    <Project Path="CustomerRegistration/CustomerRegistration.Domain/CustomerRegistration.Domain.csproj" />
+    <Project Path="CustomerRegistration/CustomerRegistration.Infrastructure/CustomerRegistration.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/InsuranceProductManagement/">
+    <Project Path="InsuranceProductManagement/InsuranceProductManagement.Api/InsuranceProductManagement.Api.csproj" />
+    <Project Path="InsuranceProductManagement/InsuranceProductManagement.Application/InsuranceProductManagement.Application.csproj" />
+    <Project Path="InsuranceProductManagement/InsuranceProductManagement.Domain/InsuranceProductManagement.Domain.csproj" />
+    <Project Path="InsuranceProductManagement/InsuranceProductManagement.Infrastructure/InsuranceProductManagement.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Investigation/">
+    <Project Path="Investigation/Investigation.Api/Investigation.Api.csproj" />
+    <Project Path="Investigation/Investigation.Application/Investigation.Application.csproj" />
+    <Project Path="Investigation/Investigation.Domain/Investigation.Domain.csproj" />
+    <Project Path="Investigation/Investigation.Infrastructure/Investigation.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/KycVerification/">
+    <Project Path="KycVerification/KycVerification.Api/KycVerification.Api.csproj" />
+    <Project Path="KycVerification/KycVerification.Application/KycVerification.Application.csproj" />
+    <Project Path="KycVerification/KycVerification.Domain/KycVerification.Domain.csproj" />
+    <Project Path="KycVerification/KycVerification.Infrastructure/KycVerification.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/PolicyClosure/">
+    <Project Path="PolicyClosure/PolicyClosure.Api/PolicyClosure.Api.csproj" />
+    <Project Path="PolicyClosure/PolicyClosure.Application/PolicyClosure.Application.csproj" />
+    <Project Path="PolicyClosure/PolicyClosure.Domain/PolicyClosure.Domain.csproj" />
+    <Project Path="PolicyClosure/PolicyClosure.Infrastructure/PolicyClosure.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/PolicyIssuance/">
+    <Project Path="PolicyIssuance/PolicyIssuance.Api/PolicyIssuance.Api.csproj" />
+    <Project Path="PolicyIssuance/PolicyIssuance.Application/PolicyIssuance.Application.csproj" />
+    <Project Path="PolicyIssuance/PolicyIssuance.Domain/PolicyIssuance.Domain.csproj" />
+    <Project Path="PolicyIssuance/PolicyIssuance.Infrastructure/PolicyIssuance.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/PolicyRenewal/">
+    <Project Path="PolicyRenewal/PolicyRenewal.Api/PolicyRenewal.Api.csproj" />
+    <Project Path="PolicyRenewal/PolicyRenewal.Application/PolicyRenewal.Application.csproj" />
+    <Project Path="PolicyRenewal/PolicyRenewal.Domain/PolicyRenewal.Domain.csproj" />
+    <Project Path="PolicyRenewal/PolicyRenewal.Infrastructure/PolicyRenewal.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/PolicyServicing/">
+    <Project Path="PolicyServicing/PolicyServicing.Api/PolicyServicing.Api.csproj" />
+    <Project Path="PolicyServicing/PolicyServicing.Application/PolicyServicing.Application.csproj" />
+    <Project Path="PolicyServicing/PolicyServicing.Domain/PolicyServicing.Domain.csproj" />
+    <Project Path="PolicyServicing/PolicyServicing.Infrastructure/PolicyServicing.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/PremiumPayment/">
+    <Project Path="PremiumPayment/PremiumPayment.Api/PremiumPayment.Api.csproj" />
+    <Project Path="PremiumPayment/PremiumPayment.Application/PremiumPayment.Application.csproj" />
+    <Project Path="PremiumPayment/PremiumPayment.Domain/PremiumPayment.Domain.csproj" />
+    <Project Path="PremiumPayment/PremiumPayment.Infrastructure/PremiumPayment.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/PremiumSchedule/">
+    <Project Path="PremiumSchedule/PremiumSchedule.Api/PremiumSchedule.Api.csproj" />
+    <Project Path="PremiumSchedule/PremiumSchedule.Application/PremiumSchedule.Application.csproj" />
+    <Project Path="PremiumSchedule/PremiumSchedule.Domain/PremiumSchedule.Domain.csproj" />
+    <Project Path="PremiumSchedule/PremiumSchedule.Infrastructure/PremiumSchedule.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/QuoteGeneration/">
+    <Project Path="QuoteGeneration/QuoteGeneration.Api/QuoteGeneration.Api.csproj" />
+    <Project Path="QuoteGeneration/QuoteGeneration.Application/QuoteGeneration.Application.csproj" />
+    <Project Path="QuoteGeneration/QuoteGeneration.Domain/QuoteGeneration.Domain.csproj" />
+    <Project Path="QuoteGeneration/QuoteGeneration.Infrastructure/QuoteGeneration.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/ReportsDashboard/">
+    <Project Path="ReportsDashboard/ReportsDashboard.Api/ReportsDashboard.Api.csproj" />
+    <Project Path="ReportsDashboard/ReportsDashboard.Application/ReportsDashboard.Application.csproj" />
+    <Project Path="ReportsDashboard/ReportsDashboard.Domain/ReportsDashboard.Domain.csproj" />
+    <Project Path="ReportsDashboard/ReportsDashboard.Infrastructure/ReportsDashboard.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Underwriting/">
+    <Project Path="Underwriting/Underwriting.Api/Underwriting.Api.csproj" />
+    <Project Path="Underwriting/Underwriting.Application/Underwriting.Application.csproj" />
+    <Project Path="Underwriting/Underwriting.Domain/Underwriting.Domain.csproj" />
+    <Project Path="Underwriting/Underwriting.Infrastructure/Underwriting.Infrastructure.csproj" />
+  </Folder>
+</Solution>

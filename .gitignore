@@ -1,0 +1,61 @@
+# .NET 10 — Insurance-PAS `.gitignore`
+
+```gitignore
+# Build output
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio temporary files
+*.tmp
+*.cache
+*.log
+
+# Test results and coverage
+**/TestResults/
+coverage/
+coverage.*
+
+# IDE folders
+.idea/
+.vscode/
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
+
+# Development settings may contain local secrets
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# Local databases
+*.mdf
+*.ldf
+*.sqlite
+*.sqlite3
+*.db
+
+# Certificates and private keys
+*.pfx
+*.p12
+*.key
+
+# Publish output
+**/publish/
+**/artifacts/
+
+# Operating system files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Local backup files
+*.backup
+*.bak

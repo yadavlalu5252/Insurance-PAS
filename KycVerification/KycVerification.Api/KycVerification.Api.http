@@ -1,0 +1,6 @@
+@KycVerification.Api_HostAddress = http://localhost:5188
+
+GET {{KycVerification.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

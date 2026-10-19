@@ -1,0 +1,6 @@
+@PremiumSchedule.Api_HostAddress = http://localhost:5177
+
+GET {{PremiumSchedule.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
