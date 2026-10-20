@@ -3,6 +3,7 @@ using PremiumSchedule.Application.DTO;
 using PremiumSchedule.Application.Interfaces;
 using PremiumSchedule.Domain.Entities;
 using PremiumSchedule.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,93 +20,50 @@ namespace PremiumSchedule.Infrastructure.Repositories
             this.mapper = mapper;
         }
 
-        // Generate premium schedule automatically after policy is issued
-        public async Task GeneratePremiumSchedule(int policy_id)
+        public async Task GeneratePremiumSchedule(
+            GeneratePremiumScheduleDto dto)
         {
-            // Check whether schedule already exists
             bool scheduleExists = await db.PremiumSchedule
-                .AnyAsync(x => x.policy_id == policy_id);
+                .AnyAsync(x => x.policy_id == dto.policy_id);
 
             if (scheduleExists)
             {
                 return;
             }
 
-
-            // Get policy
-            var policy = await db.Policies
-                .FirstOrDefaultAsync(x => x.policy_id == policy_id);
-
-            if (policy == null)
-            {
-                throw new KeyNotFoundException(
-                    "Policy not found.");
-            }
-
-
-            // Schedule should be generated only
-            // after policy is issued/active
-            if (policy.policy_status != "Active")
-            {
-                throw new InvalidOperationException(
-                    "Premium schedule can be generated only for an active policy.");
-            }
-
-
-            /*
-             * Premium frequency and premium amount are coming
-             * from Quote because Policy does not contain
-             * premium_frequency or premium_amount.
-             */
-
-            var quote = await db.Quotes
-                .FirstOrDefaultAsync(
-                    x => x.quote_id == policy.quote_id);
-
-            if (quote == null)
-            {
-                throw new KeyNotFoundException(
-                    "Quote not found for this policy.");
-            }
-
-
-            string frequency = quote.premium_frequency;
-
-            decimal premiumAmount = quote.final_premium;
-
-
-            // Calculate number of installments
             int installmentCount = CalculateInstallmentCount(
-                policy.issue_date,
-                policy.expiry_date,
-                frequency);
+                dto.issue_date,
+                dto.expiry_date,
+                dto.premium_frequency);
 
+            decimal installmentAmount =
+                CalculateInstallmentAmount(
+                    dto.total_premium,
+                    dto.premium_frequency);
 
-            // Calculate months between installments
-            int months = GetFrequencyMonths(frequency);
-
+            int months = GetFrequencyMonths(
+                dto.premium_frequency);
 
             for (int i = 1; i <= installmentCount; i++)
             {
                 var schedule = new PremiumSchedules
                 {
-                    policy_id = policy_id,
+                    policy_id = dto.policy_id,
 
-                    premium_frequency = frequency,
+                    installment_no = i,
 
-                    installment_number = i,
-
-                    due_date = policy.effective_date.AddMonths(
+                    due_date = dto.effective_date.AddMonths(
                         (i - 1) * months),
 
-                    premium_amount = premiumAmount,
+                    premium_amount = installmentAmount,
+
+                    late_fee = 0,
 
                     status = "Pending"
                 };
 
                 db.PremiumSchedule.Add(schedule);
             }
-
 
             await db.SaveChangesAsync();
         }
@@ -117,12 +75,12 @@ namespace PremiumSchedule.Infrastructure.Repositories
         {
             var schedules = await db.PremiumSchedule
                 .Where(x => x.policy_id == policy_id)
-                .OrderBy(x => x.installment_number)
+                .OrderBy(x => x.installment_no)
                 .ToListAsync();
 
-
             // Entity -> DTO using AutoMapper
-            return mapper.Map<List<PremiumScheduleDto>>(schedules);
+            return mapper.Map<List<PremiumScheduleDto>>(
+                schedules);
         }
 
 
@@ -134,15 +92,14 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 .FirstOrDefaultAsync(
                     x => x.schedule_id == schedule_id);
 
-
             if (schedule == null)
             {
                 return null;
             }
 
-
             // Entity -> DTO using AutoMapper
-            return mapper.Map<PremiumScheduleDto>(schedule);
+            return mapper.Map<PremiumScheduleDto>(
+                schedule);
         }
 
 
@@ -165,7 +122,8 @@ namespace PremiumSchedule.Infrastructure.Repositories
 
 
         // Convert frequency into months
-        private int GetFrequencyMonths(string frequency)
+        private int GetFrequencyMonths(
+            string frequency)
         {
             return frequency.ToLower() switch
             {
@@ -180,6 +138,74 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 _ => throw new ArgumentException(
                     "Invalid premium frequency.")
             };
+        }
+
+
+        // Calculate installment amount
+        // based on total premium and frequency
+        private decimal CalculateInstallmentAmount(
+            decimal totalPremium,
+            string frequency)
+        {
+            return frequency.ToLower() switch
+            {
+                "monthly" => totalPremium / 12,
+
+                "quarterly" => totalPremium / 4,
+
+                "half-yearly" => totalPremium / 2,
+
+                "yearly" => totalPremium,
+
+                _ => throw new ArgumentException(
+                    "Invalid premium frequency.")
+            };
+        }
+
+        public async Task<PremiumScheduleDto?>
+    UpdatePremiumSchedule(
+        int schedule_id,
+        UpdatePremiumScheduleDto dto)
+        {
+            var schedule = await db.PremiumSchedule
+                .FirstOrDefaultAsync(
+                    x => x.schedule_id == schedule_id);
+
+            if (schedule == null)
+            {
+                return null;
+            }
+
+            // Paid installments cannot be modified
+            if (schedule.status == "Paid")
+            {
+                throw new InvalidOperationException(
+                    "Paid installments cannot be modified.");
+            }
+
+            // Validate status
+            var allowedStatuses = new[]
+            {
+        "Pending",
+        "Paid",
+        "Partial Paid",
+        "Overdue",
+        "Cancelled"
+    };
+
+            if (!allowedStatuses.Contains(dto.status))
+            {
+                throw new ArgumentException(
+                    "Invalid installment status.");
+            }
+
+            schedule.late_fee = dto.late_fee;
+            schedule.status = dto.status;
+
+            await db.SaveChangesAsync();
+
+            return mapper.Map<PremiumScheduleDto>(
+                schedule);
         }
     }
 }

@@ -33,18 +33,17 @@ namespace PremiumSchedule.Infrastructure.Migrations
                     b.Property<DateTime>("due_date")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("installment_number")
+                    b.Property<int>("installment_no")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("late_fee")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("policy_id")
                         .HasColumnType("int");
 
                     b.Property<decimal>("premium_amount")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("premium_frequency")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("status")
                         .IsRequired()

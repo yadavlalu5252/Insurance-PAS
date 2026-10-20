@@ -10,13 +10,13 @@ namespace PremiumSchedule.Application.DTO
 
         public int policy_id { get; set; }
 
-        public string premium_frequency { get; set; }
-
-        public int installment_number { get; set; }
+        public int installment_no { get; set; }
 
         public DateTime due_date { get; set; }
 
         public decimal premium_amount { get; set; }
+
+        public decimal late_fee { get; set; }
 
         public string status { get; set; }
     }

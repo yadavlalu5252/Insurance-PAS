@@ -18,6 +18,19 @@ namespace PremiumSchedule.Api.Controllers
             this.service = service;
         }
 
+        [HttpPost("internal/generate")]
+        public async Task<IActionResult> GeneratePremiumSchedule(
+    GeneratePremiumScheduleDto dto)
+        {
+            await service.GeneratePremiumSchedule(dto);
+
+            return Ok(
+                new ResponseWrapper<object>(
+                    true,
+                    "Premium schedule generated successfully.",
+                    null));
+        }
+
 
         [HttpGet("policy/{policy_id}")]
         public async Task<IActionResult> GetPremiumScheduleByPolicyId(
@@ -43,12 +56,15 @@ namespace PremiumSchedule.Api.Controllers
         }
 
 
-        [HttpGet("{schedule_id}")]
-        public async Task<IActionResult> GetPremiumScheduleById(
-            int schedule_id)
+        [HttpPut("{schedule_id}")]
+        public async Task<IActionResult> UpdatePremiumSchedule(
+    int schedule_id,
+    UpdatePremiumScheduleDto dto)
         {
             var schedule =
-                await service.GetPremiumScheduleById(schedule_id);
+                await service.UpdatePremiumSchedule(
+                    schedule_id,
+                    dto);
 
             if (schedule == null)
             {
@@ -62,7 +78,7 @@ namespace PremiumSchedule.Api.Controllers
             return Ok(
                 new ResponseWrapper<PremiumScheduleDto>(
                     true,
-                    "Premium schedule retrieved successfully.",
+                    "Premium schedule updated successfully.",
                     schedule));
         }
     }

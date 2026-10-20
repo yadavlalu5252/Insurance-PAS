@@ -8,10 +8,12 @@ namespace PremiumSchedule.Application.Interfaces
 {
     public interface IPremiumSchedule
     {
-        Task GeneratePremiumSchedule(int policy_id);
+        Task GeneratePremiumSchedule(GeneratePremiumScheduleDto dto);
 
         Task<List<PremiumScheduleDto>> GetPremiumScheduleByPolicyId(int policy_id);
 
         Task<PremiumScheduleDto?> GetPremiumScheduleById(int schedule_id);
+
+        Task<PremiumScheduleDto?>UpdatePremiumSchedule(int schedule_id,UpdatePremiumScheduleDto dto);
     }
 }
