@@ -1,17 +1,39 @@
+using Microsoft.EntityFrameworkCore;
+using PolicyIssuance.Api.Middleware;
+using PolicyIssuance.Application.Config;
+using PolicyIssuance.Application.Interface;
+using PolicyIssuance.Infrastructure.Data;
+using PolicyIssuance.Infrastructure.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("dbconn")
+    ));
+
+builder.Services.AddAutoMapper(
+    cfg => { },
+    typeof(MapperConfig).Assembly
+);
+
+builder.Services.AddScoped<IPolicyService, PolicyService>();
+builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
+builder.Services.AddScoped<IPolicyEndorsementService, PolicyEndorsementService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
