@@ -13,5 +13,6 @@ namespace ClaimManagement.Domain.Entities
         public const string Approved = "Approved";
         public const string Rejected = "Rejected";
         public const string Settled = "Settled";
+        public const string Cancelled = "Cancelled";
     }
 }
