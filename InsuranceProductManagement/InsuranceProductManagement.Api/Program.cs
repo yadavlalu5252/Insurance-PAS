@@ -1,4 +1,3 @@
-using InsuranceProductManagement.Api.Middleware;
 using InsuranceProductManagement.Application.Interface;
 using InsuranceProductManagement.Application.Mapper;
 using InsuranceProductManagement.Infrastructure.Data;
@@ -32,8 +31,6 @@ builder.Services.AddAutoMapper(
     typeof(ProductCategoryMappingProfile).Assembly);
 
 var app = builder.Build();
-
-app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // Enable Swagger in Development
 if (app.Environment.IsDevelopment())
