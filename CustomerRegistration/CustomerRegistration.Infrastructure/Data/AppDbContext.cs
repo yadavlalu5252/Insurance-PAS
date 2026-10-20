@@ -1,9 +1,5 @@
-﻿using CustomerRegistration.Application.DTO;
-using CustomerRegistration.Domain.Entities;
+﻿using CustomerRegistration.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CustomerRegistration.Infrastructure.Data
 {
