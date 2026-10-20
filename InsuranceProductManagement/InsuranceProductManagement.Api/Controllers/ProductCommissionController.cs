@@ -1,8 +1,9 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using InsuranceProductManagement.Api.Wrappers;
+
 using InsuranceProductManagement.Application.DTO;
 using InsuranceProductManagement.Application.Interface;
-using InsuranceProductManagement.Application.Common;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace InsuranceProductManagement.Api.Controllers
 {
@@ -22,10 +23,8 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var commissions = await service.GetAllAsync();
 
-            return Ok(SuccessResponse.Create(
-                "Product commissions retrieved successfully",
-                commissions
-            ));
+            return Ok(ApiResponse<List<ProductCommissionDTO>>.SuccessResponse(
+                commissions, "Product commissions retrieved successfully"));
         }
 
         [HttpGet("{id}")]
@@ -34,16 +33,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var commission = await service.GetByIdAsync(id);
 
             if (commission == null)
-            {
-                return NotFound(ErrorResponse.Create<ProductCommissionDTO>(
-                    "Product commission not found"
-                ));
-            }
+                return NotFound(ApiResponse<ProductCommissionDTO>.ErrorResponse("Product commission not found"));
 
-            return Ok(SuccessResponse.Create(
-                "Product commission retrieved successfully",
-                commission
-            ));
+            return Ok(ApiResponse<ProductCommissionDTO>.SuccessResponse(
+                commission, "Product commission retrieved successfully"));
         }
 
         [HttpPost]
@@ -51,10 +44,8 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var commission = await service.CreateAsync(dto);
 
-            return Ok(SuccessResponse.Create(
-                "Product commission created successfully",
-                commission
-            ));
+            return Ok(ApiResponse<ProductCommissionDTO>.SuccessResponse(
+                commission, "Product commission created successfully"));
         }
 
         [HttpPut("{id}")]
@@ -63,16 +54,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var commission = await service.UpdateAsync(id, dto);
 
             if (commission == null)
-            {
-                return NotFound(ErrorResponse.Create<ProductCommissionDTO>(
-                    "Product commission not found"
-                ));
-            }
+                return NotFound(ApiResponse<ProductCommissionDTO>.ErrorResponse("Product commission not found"));
 
-            return Ok(SuccessResponse.Create(
-                "Product commission updated successfully",
-                commission
-            ));
+            return Ok(ApiResponse<ProductCommissionDTO>.SuccessResponse(
+                commission, "Product commission updated successfully"));
         }
 
         [HttpDelete("{id}")]
@@ -81,16 +66,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var result = await service.DeleteAsync(id);
 
             if (!result)
-            {
-                return NotFound(ErrorResponse.Create<object>(
-                    "Product commission not found"
-                ));
-            }
+                return NotFound(ApiResponse<object>.ErrorResponse("Product commission not found"));
 
-            return Ok(SuccessResponse.Create<object>(
-                "Product commission deleted successfully",
-                null
-            ));
+            return Ok(ApiResponse<object>.SuccessResponse(
+                null, "Product commission deleted successfully"));
         }
     }
 }

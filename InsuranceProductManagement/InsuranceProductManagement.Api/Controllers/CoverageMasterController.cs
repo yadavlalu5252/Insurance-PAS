@@ -1,8 +1,9 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using InsuranceProductManagement.Api.Wrappers;
+
 using InsuranceProductManagement.Application.DTO;
 using InsuranceProductManagement.Application.Interface;
-using InsuranceProductManagement.Application.Common;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace InsuranceProductManagement.Api.Controllers
 {
@@ -22,10 +23,8 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var coverages = await service.GetAllAsync();
 
-            return Ok(SuccessResponse.Create(
-                "Coverages retrieved successfully",
-                coverages
-            ));
+            return Ok(ApiResponse<List<CoverageMasterDTO>>.SuccessResponse(
+                coverages, "Coverages retrieved successfully"));
         }
 
         [HttpGet("{id}")]
@@ -34,16 +33,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var coverage = await service.GetByIdAsync(id);
 
             if (coverage == null)
-            {
-                return NotFound(ErrorResponse.Create<CoverageMasterDTO>(
-                    "Coverage not found"
-                ));
-            }
+                return NotFound(ApiResponse<CoverageMasterDTO>.ErrorResponse("Coverage not found"));
 
-            return Ok(SuccessResponse.Create(
-                "Coverage retrieved successfully",
-                coverage
-            ));
+            return Ok(ApiResponse<CoverageMasterDTO>.SuccessResponse(
+                coverage, "Coverage retrieved successfully"));
         }
 
         [HttpPost]
@@ -51,10 +44,8 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var coverage = await service.CreateAsync(dto);
 
-            return Ok(SuccessResponse.Create(
-                "Coverage created successfully",
-                coverage
-            ));
+            return Ok(ApiResponse<CoverageMasterDTO>.SuccessResponse(
+                coverage, "Coverage created successfully"));
         }
 
         [HttpPut("{id}")]
@@ -63,16 +54,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var coverage = await service.UpdateAsync(id, dto);
 
             if (coverage == null)
-            {
-                return NotFound(ErrorResponse.Create<CoverageMasterDTO>(
-                    "Coverage not found"
-                ));
-            }
+                return NotFound(ApiResponse<CoverageMasterDTO>.ErrorResponse("Coverage not found"));
 
-            return Ok(SuccessResponse.Create(
-                "Coverage updated successfully",
-                coverage
-            ));
+            return Ok(ApiResponse<CoverageMasterDTO>.SuccessResponse(
+                coverage, "Coverage updated successfully"));
         }
 
         [HttpDelete("{id}")]
@@ -81,16 +66,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var result = await service.DeleteAsync(id);
 
             if (!result)
-            {
-                return NotFound(ErrorResponse.Create<object>(
-                    "Coverage not found"
-                ));
-            }
+                return NotFound(ApiResponse<object>.ErrorResponse("Coverage not found"));
 
-            return Ok(SuccessResponse.Create<object>(
-                "Coverage deleted successfully",
-                null
-            ));
+            return Ok(ApiResponse<object>.SuccessResponse(
+                null, "Coverage deleted successfully"));
         }
     }
 }

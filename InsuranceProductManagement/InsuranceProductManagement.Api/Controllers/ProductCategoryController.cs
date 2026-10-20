@@ -1,8 +1,9 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using InsuranceProductManagement.Api.Wrappers;
+
 using InsuranceProductManagement.Application.DTO;
 using InsuranceProductManagement.Application.Interface;
-using InsuranceProductManagement.Application.Common;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace InsuranceProductManagement.Api.Controllers
 {
@@ -22,9 +23,9 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var categories = await service.GetAllAsync();
 
-            return Ok(SuccessResponse.Create(
-                "Categories retrieved successfully",
-                categories
+            return Ok(ApiResponse<List<ProductCategoryDTO>>.SuccessResponse(
+                categories,
+                "Categories retrieved successfully"
             ));
         }
 
@@ -35,14 +36,14 @@ namespace InsuranceProductManagement.Api.Controllers
 
             if (category == null)
             {
-                return NotFound(ErrorResponse.Create<ProductCategoryDTO>(
+                return NotFound(ApiResponse<ProductCategoryDTO>.ErrorResponse(
                     "Category not found"
                 ));
             }
 
-            return Ok(SuccessResponse.Create(
-                "Category retrieved successfully",
-                category
+            return Ok(ApiResponse<ProductCategoryDTO>.SuccessResponse(
+                category,
+                "Category retrieved successfully"
             ));
         }
 
@@ -51,9 +52,9 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var category = await service.CreateAsync(dto);
 
-            return Ok(SuccessResponse.Create(
-                "Category created successfully",
-                category
+            return Ok(ApiResponse<ProductCategoryDTO>.SuccessResponse(
+                category,
+                "Category created successfully"
             ));
         }
 
@@ -64,15 +65,15 @@ namespace InsuranceProductManagement.Api.Controllers
 
             if (category == null)
             {
-                return NotFound(ErrorResponse.Create<ProductCategoryDTO>(
+                return NotFound(ApiResponse<ProductCategoryDTO>.ErrorResponse(
                     "Category not found"
                 ));
             }
 
-            return Ok(SuccessResponse.Create(
-                "Category updated successfully",
-                category
-            ));
+            return Ok(ApiResponse<object>.SuccessResponse(
+     null,
+     "Category deactivated successfully"
+ ));
         }
 
         [HttpDelete("{id}")]
@@ -82,14 +83,14 @@ namespace InsuranceProductManagement.Api.Controllers
 
             if (!result)
             {
-                return NotFound(ErrorResponse.Create<object>(
+                return NotFound(ApiResponse<object>.ErrorResponse(
                     "Category not found"
                 ));
             }
 
-            return Ok(SuccessResponse.Create<object>(
-                "Category deactivated successfully",
-                null
+            return Ok(ApiResponse<object>.SuccessResponse(
+                null,
+                "Category deactivated successfully"
             ));
         }
     }

@@ -1,8 +1,9 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using InsuranceProductManagement.Api.Wrappers;
+
 using InsuranceProductManagement.Application.DTO;
 using InsuranceProductManagement.Application.Interface;
-using InsuranceProductManagement.Application.Common;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace InsuranceProductManagement.Api.Controllers
 {
@@ -22,10 +23,8 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var riders = await service.GetAllAsync();
 
-            return Ok(SuccessResponse.Create(
-                "Riders retrieved successfully",
-                riders
-            ));
+            return Ok(ApiResponse<List<RiderMasterDTO>>.SuccessResponse(
+                riders, "Riders retrieved successfully"));
         }
 
         [HttpGet("{id}")]
@@ -34,16 +33,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var rider = await service.GetByIdAsync(id);
 
             if (rider == null)
-            {
-                return NotFound(ErrorResponse.Create<RiderMasterDTO>(
-                    "Rider not found"
-                ));
-            }
+                return NotFound(ApiResponse<RiderMasterDTO>.ErrorResponse("Rider not found"));
 
-            return Ok(SuccessResponse.Create(
-                "Rider retrieved successfully",
-                rider
-            ));
+            return Ok(ApiResponse<RiderMasterDTO>.SuccessResponse(
+                rider, "Rider retrieved successfully"));
         }
 
         [HttpPost]
@@ -51,10 +44,8 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var rider = await service.CreateAsync(dto);
 
-            return Ok(SuccessResponse.Create(
-                "Rider created successfully",
-                rider
-            ));
+            return Ok(ApiResponse<RiderMasterDTO>.SuccessResponse(
+                rider, "Rider created successfully"));
         }
 
         [HttpPut("{id}")]
@@ -63,16 +54,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var rider = await service.UpdateAsync(id, dto);
 
             if (rider == null)
-            {
-                return NotFound(ErrorResponse.Create<RiderMasterDTO>(
-                    "Rider not found"
-                ));
-            }
+                return NotFound(ApiResponse<RiderMasterDTO>.ErrorResponse("Rider not found"));
 
-            return Ok(SuccessResponse.Create(
-                "Rider updated successfully",
-                rider
-            ));
+            return Ok(ApiResponse<RiderMasterDTO>.SuccessResponse(
+                rider, "Rider updated successfully"));
         }
 
         [HttpDelete("{id}")]
@@ -81,16 +66,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var result = await service.DeleteAsync(id);
 
             if (!result)
-            {
-                return NotFound(ErrorResponse.Create<object>(
-                    "Rider not found"
-                ));
-            }
+                return NotFound(ApiResponse<object>.ErrorResponse("Rider not found"));
 
-            return Ok(SuccessResponse.Create<object>(
-                "Rider deactivated successfully",
-                null
-            ));
+            return Ok(ApiResponse<object>.SuccessResponse(
+                null, "Rider deactivated successfully"));
         }
     }
 }

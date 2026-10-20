@@ -1,8 +1,9 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using InsuranceProductManagement.Api.Wrappers;
+
 using InsuranceProductManagement.Application.DTO;
 using InsuranceProductManagement.Application.Interface;
-using InsuranceProductManagement.Application.Common;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace InsuranceProductManagement.Api.Controllers
 {
@@ -22,10 +23,8 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var frequencies = await service.GetAllAsync();
 
-            return Ok(SuccessResponse.Create(
-                "Premium frequencies retrieved successfully",
-                frequencies
-            ));
+            return Ok(ApiResponse<List<PremiumFrequencyDTO>>.SuccessResponse(
+                frequencies, "Premium frequencies retrieved successfully"));
         }
 
         [HttpGet("{id}")]
@@ -34,16 +33,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var frequency = await service.GetByIdAsync(id);
 
             if (frequency == null)
-            {
-                return NotFound(ErrorResponse.Create<PremiumFrequencyDTO>(
-                    "Premium frequency not found"
-                ));
-            }
+                return NotFound(ApiResponse<PremiumFrequencyDTO>.ErrorResponse("Premium frequency not found"));
 
-            return Ok(SuccessResponse.Create(
-                "Premium frequency retrieved successfully",
-                frequency
-            ));
+            return Ok(ApiResponse<PremiumFrequencyDTO>.SuccessResponse(
+                frequency, "Premium frequency retrieved successfully"));
         }
 
         [HttpPost]
@@ -51,10 +44,8 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var frequency = await service.CreateAsync(dto);
 
-            return Ok(SuccessResponse.Create(
-                "Premium frequency created successfully",
-                frequency
-            ));
+            return Ok(ApiResponse<PremiumFrequencyDTO>.SuccessResponse(
+                frequency, "Premium frequency created successfully"));
         }
 
         [HttpPut("{id}")]
@@ -63,16 +54,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var frequency = await service.UpdateAsync(id, dto);
 
             if (frequency == null)
-            {
-                return NotFound(ErrorResponse.Create<PremiumFrequencyDTO>(
-                    "Premium frequency not found"
-                ));
-            }
+                return NotFound(ApiResponse<PremiumFrequencyDTO>.ErrorResponse("Premium frequency not found"));
 
-            return Ok(SuccessResponse.Create(
-                "Premium frequency updated successfully",
-                frequency
-            ));
+            return Ok(ApiResponse<PremiumFrequencyDTO>.SuccessResponse(
+                frequency, "Premium frequency updated successfully"));
         }
 
         [HttpDelete("{id}")]
@@ -81,16 +66,10 @@ namespace InsuranceProductManagement.Api.Controllers
             var result = await service.DeleteAsync(id);
 
             if (!result)
-            {
-                return NotFound(ErrorResponse.Create<object>(
-                    "Premium frequency not found"
-                ));
-            }
+                return NotFound(ApiResponse<object>.ErrorResponse("Premium frequency not found"));
 
-            return Ok(SuccessResponse.Create<object>(
-                "Premium frequency deactivated successfully",
-                null
-            ));
+            return Ok(ApiResponse<object>.SuccessResponse(
+                null, "Premium frequency deactivated successfully"));
         }
     }
 }
