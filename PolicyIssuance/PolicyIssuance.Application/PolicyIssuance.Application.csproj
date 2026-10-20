@@ -7,9 +7,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="QuestPDF" Version="2026.9.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\InsuranceProductManagement\InsuranceProductManagement.Infrastructure\InsuranceProductManagement.Infrastructure.csproj" />
     <ProjectReference Include="..\PolicyIssuance.Domain\PolicyIssuance.Domain.csproj" />
   </ItemGroup>
 
