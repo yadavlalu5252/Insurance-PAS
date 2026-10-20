@@ -43,7 +43,15 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddDbContext<ClaimDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("dbconn")));
 
+var filePath = builder.Configuration["FileStorage:RootPath"]
+    ?? Path.Combine(builder.Environment.ContentRootPath, "ClaimFiles");
+
+builder.Services.AddScoped<IFileStorageService>(sp => new LocalFileStorageService(filePath));
+builder.Services.AddScoped<IClaimDocumentService, ClaimDocumentService>();
+builder.Services.AddScoped<IClaimWorkflowService, ClaimWorkflowService>();
+builder.Services.AddScoped<INotificationService, LogOnlyNotificationService>();
 builder.Services.AddScoped<IClaimService, ClaimService>();
+builder.Services.AddScoped<ISurveyService, SurveyService>();
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingData>());
 
 // Swagger configuration

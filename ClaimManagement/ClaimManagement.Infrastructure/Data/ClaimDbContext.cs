@@ -14,10 +14,9 @@ namespace ClaimManagement.Infrastructure.Data
         }
 
         public DbSet<ClaimMaster> claim_master { get; set; }
-
         public DbSet<ClaimDocument> claim_documents { get; set; }
-
         public DbSet<ClaimHistory> claim_history { get; set; }
+        public DbSet<SurveyAssignment> survey_assignment { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

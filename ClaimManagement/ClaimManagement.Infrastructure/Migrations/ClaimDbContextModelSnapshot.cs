@@ -134,6 +134,40 @@ namespace ClaimManagement.Infrastructure.Migrations
                     b.ToTable("claim_master");
                 });
 
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.SurveyAssignment", b =>
+                {
+                    b.Property<long>("survey_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("survey_id"));
+
+                    b.Property<DateTime>("assigned_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("claim_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("inspection_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("report_path")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("survey_status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("surveyor_id")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("survey_id");
+
+                    b.HasIndex("claim_id");
+
+                    b.ToTable("survey_assignment");
+                });
+
             modelBuilder.Entity("ClaimManagement.Domain.Entities.ClaimDocument", b =>
                 {
                     b.HasOne("ClaimManagement.Domain.Entities.ClaimMaster", null)
@@ -150,6 +184,17 @@ namespace ClaimManagement.Infrastructure.Migrations
                         .HasForeignKey("claim_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.SurveyAssignment", b =>
+                {
+                    b.HasOne("ClaimManagement.Domain.Entities.ClaimMaster", "claim")
+                        .WithMany()
+                        .HasForeignKey("claim_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("claim");
                 });
 
             modelBuilder.Entity("ClaimManagement.Domain.Entities.ClaimMaster", b =>
