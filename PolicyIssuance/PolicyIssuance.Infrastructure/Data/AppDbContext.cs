@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolicyIssuance.Domain.Entities;
 
+
 namespace PolicyIssuance.Infrastructure.Data
 {
     public class AppDbContext : DbContext
@@ -11,7 +12,7 @@ namespace PolicyIssuance.Infrastructure.Data
         {
         }
 
-        public DbSet<Policy> Policies { get; set; }
+        public DbSet<PolicyIssuance.Domain.Entities.Policy> Policies { get; set; }
 
         public DbSet<PolicyCoverage> PolicyCoverages { get; set; }
 
@@ -30,7 +31,7 @@ namespace PolicyIssuance.Infrastructure.Data
             base.OnModelCreating(modelBuilder);
 
 
-            modelBuilder.Entity<Policy>()
+            modelBuilder.Entity<PolicyIssuance.Domain.Entities.Policy>()
                 .Property(p => p.premium_amount)
                 .HasPrecision(15, 2);
 
