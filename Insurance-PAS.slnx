@@ -41,12 +41,6 @@
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Domain/InsuranceProductManagement.Domain.csproj" />
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Infrastructure/InsuranceProductManagement.Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/Investigation/">
-    <Project Path="Investigation/Investigation.Api/Investigation.Api.csproj" />
-    <Project Path="Investigation/Investigation.Application/Investigation.Application.csproj" />
-    <Project Path="Investigation/Investigation.Domain/Investigation.Domain.csproj" />
-    <Project Path="Investigation/Investigation.Infrastructure/Investigation.Infrastructure.csproj" />
-  </Folder>
   <Folder Name="/KycVerification/">
     <Project Path="KycVerification/KycVerification.Application/KycVerification.Application.csproj" />
     <Project Path="KycVerification/KycVerification.Domain/KycVerification.Domain.csproj" />
@@ -75,12 +69,6 @@
     <Project Path="PolicyServicing/PolicyServicing.Application/PolicyServicing.Application.csproj" />
     <Project Path="PolicyServicing/PolicyServicing.Domain/PolicyServicing.Domain.csproj" />
     <Project Path="PolicyServicing/PolicyServicing.Infrastructure/PolicyServicing.Infrastructure.csproj" />
-  </Folder>
-  <Folder Name="/PremiumPayment/">
-    <Project Path="PremiumPayment/PremiumPayment.Api/PremiumPayment.Api.csproj" />
-    <Project Path="PremiumPayment/PremiumPayment.Application/PremiumPayment.Application.csproj" />
-    <Project Path="PremiumPayment/PremiumPayment.Domain/PremiumPayment.Domain.csproj" />
-    <Project Path="PremiumPayment/PremiumPayment.Infrastructure/PremiumPayment.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/PremiumSchedule/">
     <Project Path="PremiumSchedule/PremiumSchedule.Api/PremiumSchedule.Api.csproj" />

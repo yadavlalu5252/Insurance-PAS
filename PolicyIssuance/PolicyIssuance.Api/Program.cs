@@ -27,6 +27,7 @@ builder.Services.AddAutoMapper(
 builder.Services.AddScoped<IPolicyService, PolicyService>();
 builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
 builder.Services.AddScoped<IPolicyEndorsementService, PolicyEndorsementService>();
+builder.Services.AddScoped<IPolicyClosureService, PolicyClosureService>();
 
 builder.Services.AddHttpClient<
     IPremiumScheduleClient,
