@@ -3,12 +3,14 @@ using CustomerRegistration.Api.Wrappers;
 using CustomerRegistration.Application.DTO.Customer;
 using CustomerRegistration.Application.DTOs.Customer;
 using CustomerRegistration.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CustomerRegistration.Api.Controllers;
 
 [ApiController]
 [Route("api/customers")]
+[Authorize]
 public class CustomerController : ControllerBase
 {
     private readonly ICustomerService service;

@@ -7,8 +7,8 @@ using PolicyIssuance.Application.Interface;
 using PolicyIssuance.Domain.Entities;
 using PolicyIssuance.Infrastructure.Data;
 
-namespace PolicyClosureMicroservice.Service
-{
+namespace PolicyIssuance.Infrastructure.Services
+{ 
     public class PolicyClosureService : IPolicyClosureService
     {
         AppDbContext db;
