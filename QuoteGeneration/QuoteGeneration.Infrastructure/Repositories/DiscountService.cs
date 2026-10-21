@@ -23,10 +23,7 @@ namespace QuoteGeneration.Infrastructure.Services
             var today = DateTime.UtcNow.Date;
 
             var discounts = await db.DiscountMasters
-                .Where(d => d.status == "Active"
-                    && d.valid_from <= today
-                    && d.valid_to >= today)
-                .ToListAsync();
+                .Where(d => d.status == "Active" && d.valid_from <= today&& d.valid_to >= today).ToListAsync();
 
             return mapper.Map<List<DiscountMasterDTO>>(discounts);
         }

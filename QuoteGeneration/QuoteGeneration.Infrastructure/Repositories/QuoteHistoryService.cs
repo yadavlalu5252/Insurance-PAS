@@ -35,10 +35,7 @@ namespace QuoteGeneration.Infrastructure.Services
 
         public async Task<List<QuoteHistoryDTO>> GetHistoryByQuoteIdAsync(int quoteId)
         {
-            var history = await db.QuoteHistories
-                .Where(h => h.quote_id == quoteId)
-                .OrderByDescending(h => h.action_date)
-                .ToListAsync();
+            var history = await db.QuoteHistories.Where(h => h.quote_id == quoteId).OrderByDescending(h => h.action_date).ToListAsync();
 
             return mapper.Map<List<QuoteHistoryDTO>>(history);
         }

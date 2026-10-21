@@ -25,8 +25,7 @@ namespace QuoteGeneration.Infrastructure.Services
 
         public async Task<PremiumCalculationDTO?> CalculatePremiumAsync(int quoteId)
         {
-            var quote = await db.Quotes
-                .FirstOrDefaultAsync(q => q.quote_id == quoteId);
+            var quote = await db.Quotes.FirstOrDefaultAsync(q => q.quote_id == quoteId);
 
             if (quote == null)
             {
@@ -40,15 +39,33 @@ namespace QuoteGeneration.Infrastructure.Services
                 return null;
             }
 
-            if ((product.minimum_sum_insured.HasValue && quote.sum_insured < product.minimum_sum_insured.Value) ||
-                (product.maximum_sum_insured.HasValue && quote.sum_insured > product.maximum_sum_insured.Value))
+            if ((product.minimum_sum_insured.HasValue && quote.sum_insured < product.minimum_sum_insured.Value) || (product.maximum_sum_insured.HasValue && quote.sum_insured > product.maximum_sum_insured.Value))
             {
                 return null;
             }
 
-            decimal productRate = 2.50m;
+            decimal productRate;
+
+            if (string.Equals(product.product_type, "Health", StringComparison.OrdinalIgnoreCase))
+            {
+                productRate = 1.1m;
+            }
+            else if (string.Equals(product.product_type, "Life", StringComparison.OrdinalIgnoreCase))
+            {
+                productRate = 1.2m;
+            }
+            else if (string.Equals(product.product_type, "Vehicle", StringComparison.OrdinalIgnoreCase))
+            {
+                productRate = 1.3m;
+            }
+            else
+            {
+                return null;
+            }
+
             decimal riskPercentage = 10m;
             decimal gstPercentage = 18m;
+           
 
             var selectedRiders = await db.QuoteRiders.Where(qr => qr.quote_id == quoteId).ToListAsync();
 
@@ -60,8 +77,7 @@ namespace QuoteGeneration.Infrastructure.Services
 
             foreach (var selected in selectedRiders)
             {
-                var rider = activeRiders
-                    .FirstOrDefault(r => r.rider_id == selected.rider_id);
+                var rider = activeRiders.FirstOrDefault(r => r.rider_id == selected.rider_id);
 
                 if (rider != null)
                 {
@@ -83,8 +99,7 @@ namespace QuoteGeneration.Infrastructure.Services
 
             if (discount != null)
             {
-                discountAmount = (quote.sum_insured * productRate / 1000m) *
-                                 discount.discount_percentage!.Value / 100m;
+                discountAmount = (quote.sum_insured * productRate / 1000m) * discount.discount_percentage!.Value / 100m;
             }
 
             decimal basePremium = (quote.sum_insured * productRate) / 1000m;
@@ -95,8 +110,7 @@ namespace QuoteGeneration.Infrastructure.Services
             decimal gstAmount = premiumBeforeGST * gstPercentage / 100m;
             decimal finalPremium = premiumBeforeGST + gstAmount;
 
-            var calculation = await db.PremiumCalculations
-                .FirstOrDefaultAsync(p => p.quote_id == quoteId);
+            var calculation = await db.PremiumCalculations .FirstOrDefaultAsync(p => p.quote_id == quoteId);
 
             if (calculation == null)
             {
@@ -123,8 +137,7 @@ namespace QuoteGeneration.Infrastructure.Services
 
         public async Task<PremiumCalculationDTO?> GetPremiumByQuoteIdAsync(int quoteId)
         {
-            var calculation = await db.PremiumCalculations
-                .FirstOrDefaultAsync(p => p.quote_id == quoteId);
+            var calculation = await db.PremiumCalculations.FirstOrDefaultAsync(p => p.quote_id == quoteId);
 
             if (calculation == null)
             {
