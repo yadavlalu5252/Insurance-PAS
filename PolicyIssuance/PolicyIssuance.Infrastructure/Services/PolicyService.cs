@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolicyIssuance.Application.DTOs;
 using PolicyIssuance.Application.Interface;
+using PolicyIssuance.Application.Interfaces;
 using PolicyIssuance.Domain.Entities;
 using PolicyIssuance.Domain.Enums;
 using PolicyIssuance.Infrastructure.Data;
@@ -11,10 +12,13 @@ namespace PolicyIssuance.Infrastructure.Services
     public class PolicyService : IPolicyService
     {
         private readonly AppDbContext db;
+        IPremiumScheduleClient premiumScheduleClient;
 
-        public PolicyService(AppDbContext db)
+
+        public PolicyService(AppDbContext db, IPremiumScheduleClient premiumScheduleClient)
         {
             this.db = db;
+            this.premiumScheduleClient = premiumScheduleClient;
         }
 
         public async Task<List<PolicyResponseDTO>> GetAllAsync()
@@ -146,7 +150,35 @@ namespace PolicyIssuance.Infrastructure.Services
                 return false;
             }
 
-            return false;
+            // Change policy status to Active
+            policy.policy_status = PolicyStatus.Active;
+
+            await db.SaveChangesAsync();
+
+            // Create request for Premium Schedule Service
+            var request = new GeneratePremiumScheduleDto
+            {
+                policy_id = (int)policy.policy_id,
+                issue_date = policy.issue_date,
+                effective_date = policy.effective_date,
+                expiry_date = policy.expiry_date,
+
+                // These must come from your Quote/Premium data
+                premium_frequency = "monthly",
+                total_premium = policy.premium_amount
+            };
+
+            // Call Premium Schedule microservice
+            bool scheduleCreated =
+                await premiumScheduleClient.GeneratePremiumSchedule(request);
+
+            if (!scheduleCreated)
+            {
+                return false;
+            }
+
+            return true;
+            //return false;
         }
 
         public async Task<bool> SuspendAsync(

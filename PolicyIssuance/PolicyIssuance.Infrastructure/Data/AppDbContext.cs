@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolicyIssuance.Domain.Entities;
 
+
 namespace PolicyIssuance.Infrastructure.Data
 {
     public class AppDbContext : DbContext
