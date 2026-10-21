@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CustomerRegistration.Application.DTO
+﻿namespace CustomerRegistration.Application.DTO
 {
     public class DummyDTO
     {
+        public int d_id { get; set; }
+
+        public string d_name { get; set; } = string.Empty;
     }
 }
