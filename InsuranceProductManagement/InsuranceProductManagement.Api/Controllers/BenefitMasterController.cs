@@ -1,9 +1,8 @@
-﻿using InsuranceProductManagement.Api.Wrappers;
-
+﻿
+using Microsoft.AspNetCore.Mvc;
 using InsuranceProductManagement.Application.DTO;
 using InsuranceProductManagement.Application.Interface;
-
-using Microsoft.AspNetCore.Mvc;
+using InsuranceProductManagement.Application.Common;
 
 namespace InsuranceProductManagement.Api.Controllers
 {
@@ -23,8 +22,10 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var benefits = await service.GetAllAsync();
 
-            return Ok(ApiResponse<List<BenefitMasterDTO>>.SuccessResponse(
-                benefits, "Benefits retrieved successfully"));
+            return Ok(SuccessResponse.Create(
+                "Benefits retrieved successfully",
+                benefits
+            ));
         }
 
         [HttpGet("{id}")]
@@ -33,10 +34,16 @@ namespace InsuranceProductManagement.Api.Controllers
             var benefit = await service.GetByIdAsync(id);
 
             if (benefit == null)
-                return NotFound(ApiResponse<BenefitMasterDTO>.ErrorResponse("Benefit not found"));
+            {
+                return NotFound(ErrorResponse.Create<BenefitMasterDTO>(
+                    "Benefit not found"
+                ));
+            }
 
-            return Ok(ApiResponse<BenefitMasterDTO>.SuccessResponse(
-                benefit, "Benefit retrieved successfully"));
+            return Ok(SuccessResponse.Create(
+                "Benefit retrieved successfully",
+                benefit
+            ));
         }
 
         [HttpPost]
@@ -44,8 +51,10 @@ namespace InsuranceProductManagement.Api.Controllers
         {
             var benefit = await service.CreateAsync(dto);
 
-            return Ok(ApiResponse<BenefitMasterDTO>.SuccessResponse(
-                benefit, "Benefit created successfully"));
+            return Ok(SuccessResponse.Create(
+                "Benefit created successfully",
+                benefit
+            ));
         }
 
         [HttpPut("{id}")]
@@ -54,10 +63,16 @@ namespace InsuranceProductManagement.Api.Controllers
             var benefit = await service.UpdateAsync(id, dto);
 
             if (benefit == null)
-                return NotFound(ApiResponse<BenefitMasterDTO>.ErrorResponse("Benefit not found"));
+            {
+                return NotFound(ErrorResponse.Create<BenefitMasterDTO>(
+                    "Benefit not found"
+                ));
+            }
 
-            return Ok(ApiResponse<BenefitMasterDTO>.SuccessResponse(
-                benefit, "Benefit updated successfully"));
+            return Ok(SuccessResponse.Create(
+                "Benefit updated successfully",
+                benefit
+            ));
         }
 
         [HttpDelete("{id}")]
@@ -66,10 +81,16 @@ namespace InsuranceProductManagement.Api.Controllers
             var result = await service.DeleteAsync(id);
 
             if (!result)
-                return NotFound(ApiResponse<object>.ErrorResponse("Benefit not found"));
+            {
+                return NotFound(ErrorResponse.Create<object>(
+                    "Benefit not found"
+                ));
+            }
 
-            return Ok(ApiResponse<object>.SuccessResponse(
-                null, "Benefit deleted successfully"));
+            return Ok(SuccessResponse.Create<object>(
+                "Benefit deleted successfully",
+                null
+            ));
         }
     }
 }

@@ -1,11 +1,10 @@
+using QuoteGeneration.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using QuoteGeneration.Api.Middleware;
 using QuoteGeneration.Application.Interfaces;
-using QuoteGeneration.Application.QuoteGeneration.Mapper;
-using QuoteGeneration.Infrastructure.Data;
 using QuoteGeneration.Infrastructure.Services;
-using QuoteGeneration.Application.QuoteGeneration.Mapper;
 using QuoteGeneration.Infrastructure.Config;
+using QuoteGeneration.Application.QuoteGeneration.Mapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +37,7 @@ builder.Services.AddHttpClient<InsuranceProductClient>(client =>
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
 
 // Enable Swagger in Development
 if (app.Environment.IsDevelopment())
