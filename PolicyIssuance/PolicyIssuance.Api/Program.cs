@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Policy.Infrastructure.Clients;
 using PolicyIssuance.Api.Middleware;
 using PolicyIssuance.Application.Config;
 using PolicyIssuance.Application.Interface;
+using PolicyIssuance.Application.Interfaces;
 using PolicyIssuance.Infrastructure.Data;
 using PolicyIssuance.Infrastructure.Services;
 
@@ -25,6 +27,15 @@ builder.Services.AddAutoMapper(
 builder.Services.AddScoped<IPolicyService, PolicyService>();
 builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
 builder.Services.AddScoped<IPolicyEndorsementService, PolicyEndorsementService>();
+
+builder.Services.AddHttpClient<
+    IPremiumScheduleClient,
+    PremiumScheduleClient>(
+    client =>
+    {
+        client.BaseAddress =
+            new Uri("https://localhost:7129/");
+    });
 
 var app = builder.Build();
 
