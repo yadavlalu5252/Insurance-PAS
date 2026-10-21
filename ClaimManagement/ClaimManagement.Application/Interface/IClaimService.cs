@@ -7,7 +7,7 @@ namespace ClaimManagement.Application.Interface
 {
     public interface IClaimService
     {
-        Task<ClaimResponseDto> AddClaimAsync(ClaimCreateDto dto, long performedBy);
+        Task<(string Result, ClaimResponseDto? Claim, string? Reason)> AddClaimAsync(ClaimCreateDto dto, long performedBy);
 
         Task<List<ClaimResponseDto>> FetchClaimsAsync();
 
@@ -17,5 +17,6 @@ namespace ClaimManagement.Application.Interface
 
         // returns "Success", "NotFound" or "NotAllowed"
         Task<string> UpdateClaimAsync(long id, ClaimUpdateDto dto, long performedBy);
+        Task<List<ClaimHistoryDTO>?> FetchClaimHistoryAsync(long id);
     }
 }

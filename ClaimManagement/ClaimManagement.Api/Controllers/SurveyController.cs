@@ -63,22 +63,24 @@ namespace ClaimManagement.Api.Controllers
         }
 
         // Surveyor or Admin once JWT is added
+        // Surveyor or Admin once JWT is added
         [HttpPut]
         [Route("surveys/{surveyId}")]
-        public async Task<IActionResult> SubmitReport(long surveyId, [FromForm] DateTime inspection_date, [FromForm] IFormFile report_file)
+        public async Task<IActionResult> SubmitReport(long surveyId, [FromForm] SubmitSurveyReportDTO dto)
         {
-            if (report_file == null || report_file.Length == 0)
+            if (dto.report_file == null || dto.report_file.Length == 0)
                 return BadRequest(ApiResponse<object>.Fail("Report file is required"));
 
-            var ext = Path.GetExtension(report_file.FileName).ToLowerInvariant();
+            var ext = Path.GetExtension(dto.report_file.FileName).ToLowerInvariant();
             if (!AllowedExtensions.Contains(ext))
                 return BadRequest(ApiResponse<object>.Fail("Only pdf, jpg, jpeg and png files are allowed"));
 
-            if (inspection_date.Date > DateTime.Now.Date)
+            if (dto.inspection_date.Date > DateTime.Now.Date)
                 return BadRequest(ApiResponse<object>.Fail("Inspection date cannot be in the future"));
 
-            using var stream = report_file.OpenReadStream();
-            var result = await service.SubmitReportAsync(surveyId, inspection_date, ext, stream, TempUserId);
+            using var stream = dto.report_file.OpenReadStream();
+
+            var result = await service.SubmitReportAsync(surveyId, dto.inspection_date, dto.report_file.FileName, stream, TempUserId);
 
             if (result == "NotFound")
                 return NotFound(ApiResponse<object>.Fail("Survey not found"));

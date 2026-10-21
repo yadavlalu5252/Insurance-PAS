@@ -1,5 +1,10 @@
 using QuoteGeneration.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using QuoteGeneration.Api.Middleware;
+using QuoteGeneration.Application.Interfaces;
+using QuoteGeneration.Infrastructure.Services;
+using QuoteGeneration.Infrastructure.Config;
+using QuoteGeneration.Application.QuoteGeneration.Mapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,8 +38,6 @@ var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-
-var app = builder.Build();
 
 // Enable Swagger in Development
 if (app.Environment.IsDevelopment())
