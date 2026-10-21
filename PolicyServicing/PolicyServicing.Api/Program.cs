@@ -6,6 +6,14 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddHttpClient(
+    "PremiumSchedule",
+    client =>
+    {
+        client.BaseAddress =
+            new Uri("https://localhost:7129/");
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
