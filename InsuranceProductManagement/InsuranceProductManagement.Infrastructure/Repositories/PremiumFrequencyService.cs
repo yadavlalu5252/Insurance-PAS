@@ -27,8 +27,7 @@ namespace InsuranceProductManagement.Infrastructure.Repositories
 
         public async Task<PremiumFrequencyDTO?> GetByIdAsync(int id)
         {
-            var frequency = await db.PremiumFrequencies
-                .FirstOrDefaultAsync(x => x.frequency_id == id);
+            var frequency = await db.PremiumFrequencies .FirstOrDefaultAsync(x => x.frequency_id == id);
 
             if (frequency == null)
                 return null;
@@ -48,8 +47,7 @@ namespace InsuranceProductManagement.Infrastructure.Repositories
 
         public async Task<PremiumFrequencyDTO?> UpdateAsync(int id, PremiumFrequencyDTO dto)
         {
-            var frequency = await db.PremiumFrequencies
-                .FirstOrDefaultAsync(x => x.frequency_id == id);
+            var frequency = await db.PremiumFrequencies.FirstOrDefaultAsync(x => x.frequency_id == id);
 
             if (frequency == null)
                 return null;
@@ -62,8 +60,7 @@ namespace InsuranceProductManagement.Infrastructure.Repositories
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var frequency = await db.PremiumFrequencies
-                .FirstOrDefaultAsync(x => x.frequency_id == id);
+            var frequency = await db.PremiumFrequencies.FirstOrDefaultAsync(x => x.frequency_id == id);
 
             if (frequency == null)
                 return false;

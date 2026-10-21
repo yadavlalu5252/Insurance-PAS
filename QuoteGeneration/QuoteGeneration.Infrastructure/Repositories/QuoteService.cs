@@ -3,6 +3,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using QuoteGeneration.Application.DTO;
 using QuoteGeneration.Application.Interfaces;
+using QuoteGeneration.Domain.Entities;
 using QuoteGeneration.Infrastructure.Config;
 using QuoteGeneration.Infrastructure.Data;
 
@@ -38,19 +39,17 @@ namespace QuoteGeneration.Infrastructure.Services
                 return null;
             }
 
-            if (product.minimum_sum_insured.HasValue &&
-                dto.sum_insured < product.minimum_sum_insured.Value)
+            if (product.minimum_sum_insured.HasValue &&dto.sum_insured < product.minimum_sum_insured.Value)
             {
                 return null;
             }
 
-            if (product.maximum_sum_insured.HasValue &&
-                dto.sum_insured > product.maximum_sum_insured.Value)
+            if (product.maximum_sum_insured.HasValue &&dto.sum_insured > product.maximum_sum_insured.Value)
             {
                 return null;
             }
 
-            var quote = mapper.Map<QuoteGeneration.Domain.Entities.Quote>(dto);
+            var quote = mapper.Map<Quote>(dto);
 
             quote.quote_date = DateTime.UtcNow;
             quote.expiry_date = quote.quote_date.AddDays(30);
@@ -63,11 +62,7 @@ namespace QuoteGeneration.Infrastructure.Services
 
             await db.SaveChangesAsync();
 
-            await quoteHistoryService.CreateHistoryAsync(
-                quote.quote_id,
-                "Quote Created",
-                "Quote created successfully."
-            );
+            await quoteHistoryService.CreateHistoryAsync(quote.quote_id,"Quote Created", "Quote created successfully.");
 
             return mapper.Map<QuoteDTO>(quote);
         }

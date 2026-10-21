@@ -27,8 +27,7 @@ namespace InsuranceProductManagement.Infrastructure.Repositories
 
         public async Task<CoverageMasterDTO?> GetByIdAsync(int id)
         {
-            var coverage = await db.CoverageMasters
-                .FirstOrDefaultAsync(x => x.coverage_id == id);
+            var coverage = await db.CoverageMasters.FirstOrDefaultAsync(x => x.coverage_id == id);
 
             if (coverage == null)
                 return null;
@@ -48,8 +47,7 @@ namespace InsuranceProductManagement.Infrastructure.Repositories
 
         public async Task<CoverageMasterDTO?> UpdateAsync(int id, CoverageMasterDTO dto)
         {
-            var coverage = await db.CoverageMasters
-                .FirstOrDefaultAsync(x => x.coverage_id == id);
+            var coverage = await db.CoverageMasters.FirstOrDefaultAsync(x => x.coverage_id == id);
 
             if (coverage == null)
                 return null;
@@ -62,8 +60,7 @@ namespace InsuranceProductManagement.Infrastructure.Repositories
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var coverage = await db.CoverageMasters
-                .FirstOrDefaultAsync(x => x.coverage_id == id);
+            var coverage = await db.CoverageMasters .FirstOrDefaultAsync(x => x.coverage_id == id);
 
             if (coverage == null)
                 return false;
