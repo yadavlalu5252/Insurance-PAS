@@ -14,9 +14,11 @@ builder.Services.AddControllers();
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("dbconn")));
+
 builder.Services.AddAutoMapper(
     cfg => { },
     typeof(QuoteMappingProfile).Assembly
@@ -28,6 +30,7 @@ builder.Services.AddScoped<IRiskAssessmentService, RiskAssessmentService>();
 builder.Services.AddScoped<IQuoteRiderService, QuoteRiderService>();
 builder.Services.AddScoped<IDiscountService, DiscountService>();
 builder.Services.AddScoped<IQuoteHistoryService, QuoteHistoryService>();
+
 builder.Services.AddHttpClient<InsuranceProductClient>(client =>
 {
     client.BaseAddress = new Uri(
@@ -37,9 +40,6 @@ builder.Services.AddHttpClient<InsuranceProductClient>(client =>
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
-
-
-
 
 // Enable Swagger in Development
 if (app.Environment.IsDevelopment())

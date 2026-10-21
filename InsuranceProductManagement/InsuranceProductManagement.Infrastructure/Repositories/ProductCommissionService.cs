@@ -27,8 +27,7 @@ namespace InsuranceProductManagement.Infrastructure.Repositories
 
         public async Task<ProductCommissionDTO?> GetByIdAsync(int id)
         {
-            var commission = await db.ProductCommissions
-                .FirstOrDefaultAsync(x => x.commission_id == id);
+            var commission = await db.ProductCommissions.FirstOrDefaultAsync(x => x.commission_id == id);
 
             if (commission == null)
                 return null;
@@ -62,8 +61,7 @@ namespace InsuranceProductManagement.Infrastructure.Repositories
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var commission = await db.ProductCommissions
-                .FirstOrDefaultAsync(x => x.commission_id == id);
+            var commission = await db.ProductCommissions.FirstOrDefaultAsync(x => x.commission_id == id);
 
             if (commission == null)
                 return false;

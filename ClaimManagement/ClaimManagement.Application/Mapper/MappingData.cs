@@ -13,6 +13,7 @@ namespace ClaimManagement.Application.Mapper
             CreateMap<ClaimCreateDto, ClaimMaster>();
             CreateMap<ClaimUpdateDto, ClaimMaster>();
             CreateMap<ClaimDocument, DocumentResponseDTO>();
+            CreateMap<ClaimHistory, ClaimHistoryDTO>();
             CreateMap<SurveyAssignment, SurveyResponseDTO>()
             .ForMember(d => d.report_uploaded, o => o.MapFrom(s => s.report_path != null));
         }

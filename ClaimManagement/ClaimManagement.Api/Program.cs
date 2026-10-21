@@ -3,6 +3,7 @@ using ClaimManagement.Api.Middleware;
 using ClaimManagement.Application.Interface;
 using ClaimManagement.Application.Mapper;
 using ClaimManagement.Application.Wrapper;
+using ClaimManagement.Infrastructure.Config;
 using ClaimManagement.Infrastructure.Data;
 using ClaimManagement.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +58,16 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingData>());
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddHttpClient<PolicyClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["policyAddress"] ?? "http://localhost:5002");
+});
+
+builder.Services.AddHttpClient<PremiumClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["premiumAddress"] ?? "http://localhost:5003");
+});
 
 var app = builder.Build();
 

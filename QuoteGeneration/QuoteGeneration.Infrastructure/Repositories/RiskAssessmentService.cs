@@ -3,6 +3,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using QuoteGeneration.Application.DTO;
 using QuoteGeneration.Application.Interfaces;
+using QuoteGeneration.Domain.Entities;
 using QuoteGeneration.Infrastructure.Data;
 
 namespace QuoteGeneration.Infrastructure.Services
@@ -20,7 +21,7 @@ namespace QuoteGeneration.Infrastructure.Services
 
         public async Task<RiskAssessmentDTO> AssessRiskAsync(RiskAssessmentDTO dto)
         {
-            var risk = mapper.Map<QuoteGeneration.Domain.Entities.RiskAssessment>(dto);
+            var risk = mapper.Map<RiskAssessment>(dto);
 
           
             risk.total_score =(risk.age_score ?? 0) + (risk.occupation_score ?? 0) +(risk.medical_score ?? 0) +(risk.lifestyle_score ?? 0);
@@ -33,8 +34,7 @@ namespace QuoteGeneration.Infrastructure.Services
 
         public async Task<RiskAssessmentDTO?> GetRiskByQuoteIdAsync(int quoteId)
         {
-            var risk = await db.RiskAssessments
-                .FirstOrDefaultAsync(r => r.quote_id == quoteId);
+            var risk = await db.RiskAssessments.FirstOrDefaultAsync(r => r.quote_id == quoteId);
 
             if (risk == null)
             {

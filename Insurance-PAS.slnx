@@ -1,4 +1,10 @@
 <Solution>
+  <Folder Name="/Authentication/">
+    <Project Path="Authentication/Authentication.Api/Authentication.Api.csproj" />
+    <Project Path="Authentication/Authentication.Application/Authentication.Application.csproj" />
+    <Project Path="Authentication/Authentication.Domain/Authentication.Domain.csproj" />
+    <Project Path="Authentication/Authentication.Infrastructure/Authentication.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/ClaimManagement/">
     <Project Path="ClaimManagement/ClaimManagement.Api/ClaimManagement.Api.csproj" />
     <Project Path="ClaimManagement/ClaimManagement.Application/ClaimManagement.Application.csproj" />

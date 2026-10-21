@@ -45,11 +45,17 @@ namespace ClaimManagement.Api.Controllers
             if (dto.estimated_loss <= 0)
                 return BadRequest(ApiResponse<object>.Fail("Estimated loss must be greater than 0"));
 
-            var d = await service.AddClaimAsync(dto, TempUserId);
+            var (result, claim, reason) = await service.AddClaimAsync(dto, TempUserId);
 
-            logger.LogInformation("Claim {ClaimNumber} registered", d.claim_number);
+            if (result == "NotEligible")
+                return UnprocessableEntity(ApiResponse<object>.Fail(reason ?? "Claim is not eligible"));
 
-            return StatusCode(201, ApiResponse<ClaimResponseDto>.Ok(d, "Claim registered successfully"));
+            if (result == "ServiceUnavailable")
+                return StatusCode(503, ApiResponse<object>.Fail(reason ?? "Service not available"));
+
+            logger.LogInformation("Claim {ClaimNumber} registered", claim!.claim_number);
+
+            return StatusCode(201, ApiResponse<ClaimResponseDto>.Ok(claim, "Claim registered successfully"));
         }
 
         [HttpGet]
@@ -104,6 +110,18 @@ namespace ClaimManagement.Api.Controllers
             logger.LogInformation("Claim {ClaimId} updated", id);
 
             return Ok(ApiResponse<object>.Ok(null, "Claim updated successfully"));
+        }
+
+        [HttpGet]
+        [Route("{id}/history")]
+        public async Task<IActionResult> ClaimHistory(long id)
+        {
+            var d = await service.FetchClaimHistoryAsync(id);
+
+            if (d == null)
+                return NotFound(ApiResponse<object>.Fail("Claim not found"));
+
+            return Ok(ApiResponse<List<ClaimHistoryDTO>>.Ok(d));
         }
     }
 }
