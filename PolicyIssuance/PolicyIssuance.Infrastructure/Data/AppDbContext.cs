@@ -6,10 +6,12 @@ namespace PolicyIssuance.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
+        public AppDbContext(
+            DbContextOptions<AppDbContext> options)
             : base(options)
         {
         }
+
 
         public DbSet<Policy> Policies { get; set; }
 
@@ -24,6 +26,7 @@ namespace PolicyIssuance.Infrastructure.Data
         public DbSet<PolicyEndorsement> PolicyEndorsements { get; set; }
 
         public DbSet<PolicyHistory> PolicyHistories { get; set; }
+        public DbSet<PolicyClosure> policyclosures { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

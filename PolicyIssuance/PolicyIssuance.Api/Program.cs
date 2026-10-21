@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PolicyClosureMicroservice.Service;
 using PolicyIssuance.Api.Middleware;
 using PolicyIssuance.Application.Config;
 using PolicyIssuance.Application.Interface;
@@ -25,6 +26,7 @@ builder.Services.AddAutoMapper(
 builder.Services.AddScoped<IPolicyService, PolicyService>();
 builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
 builder.Services.AddScoped<IPolicyEndorsementService, PolicyEndorsementService>();
+builder.Services.AddScoped< IPolicyClosureService, PolicyClosureService>();
 
 var app = builder.Build();
 

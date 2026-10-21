@@ -51,6 +51,9 @@ namespace PolicyIssuance.Application.Config
 
             CreateMap<PolicyHistory, PolicyHistoryDTO>()
                 .ReverseMap();
+            CreateMap<PolicyClosure, PolicyClosureDTO>().ReverseMap();
+
+            CreateMap<PolicyClosure, PolicyClosureDTO2>().ReverseMap();
         }
     }
 }
