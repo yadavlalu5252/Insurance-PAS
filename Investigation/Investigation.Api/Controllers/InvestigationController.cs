@@ -11,6 +11,8 @@ namespace InvestigationService.Controllers
     {
        IInvestigationService service;
 
+
+
         public InvestigationController(IInvestigationService service)
         {
             this.service = service;

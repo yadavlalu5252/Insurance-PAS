@@ -17,7 +17,6 @@ namespace ClaimManagement.Api.Controllers
         // Temporary user id until JWT login is added
         const long TempUserId = 0;
 
-        // Recommended limits (not in the BRD)
         static readonly string[] AllowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
         const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
 

@@ -14,8 +14,6 @@ namespace ClaimManagement.Api.Controllers
     {
         IClaimWorkflowService service;
         ILogger<ClaimWorkflowController> logger;
-
-        // Temporary user id until JWT login is added
         const long TempUserId = 0;
 
         public ClaimWorkflowController(IClaimWorkflowService service, ILogger<ClaimWorkflowController> logger)
@@ -24,7 +22,6 @@ namespace ClaimManagement.Api.Controllers
             this.logger = logger;
         }
 
-        // Admin only once JWT is added
         [HttpPut]
         [Route("approve")]
         public async Task<IActionResult> ApproveClaim(long id, ApproveClaimDTO dto)
@@ -48,7 +45,6 @@ namespace ClaimManagement.Api.Controllers
             return Ok(ApiResponse<object>.Ok(null, "Claim approved successfully"));
         }
 
-        // Admin only once JWT is added
         [HttpPut]
         [Route("reject")]
         public async Task<IActionResult> RejectClaim(long id, RejectClaimDTO dto)
