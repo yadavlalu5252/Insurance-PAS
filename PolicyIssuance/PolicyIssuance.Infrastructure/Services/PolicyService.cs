@@ -68,7 +68,7 @@ namespace PolicyIssuance.Infrastructure.Services
                 status = PolicyStatus.Draft;
             }
 
-            var policy = new PolicyIssuance.Domain.Entities.Policy
+            var policy = new PolicyIssuance.Domain.Entities.PolicyEntity
             {
                 policy_number = "POL-" +
                     Guid.NewGuid().ToString("N").ToUpperInvariant(),
@@ -232,7 +232,7 @@ namespace PolicyIssuance.Infrastructure.Services
         }
 
         private static PolicyResponseDTO ToResponse(
-            PolicyIssuance.Domain.Entities.Policy policy)
+            PolicyIssuance.Domain.Entities.PolicyEntity policy)
         {
             return new PolicyResponseDTO
             {

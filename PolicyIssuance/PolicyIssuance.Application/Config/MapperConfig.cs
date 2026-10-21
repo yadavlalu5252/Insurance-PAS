@@ -10,7 +10,7 @@ namespace PolicyIssuance.Application.Config
     {
         public MapperConfig()
         {
-            CreateMap<Policy, PolicyDTO>()
+            CreateMap<PolicyEntity, PolicyDTO>()
                 .ForMember(
                     dest => dest.policy_status,
                     opt => opt.MapFrom(
@@ -22,7 +22,7 @@ namespace PolicyIssuance.Application.Config
                         src => Enum.Parse<PolicyStatus>(
                             src.policy_status, true)));
 
-            CreateMap<Policy, PolicyResponseDTO>()
+            CreateMap<PolicyEntity, PolicyResponseDTO>()
                 .ForMember(
                     dest => dest.policy_status,
                     opt => opt.MapFrom(

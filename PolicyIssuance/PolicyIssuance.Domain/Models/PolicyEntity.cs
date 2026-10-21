@@ -5,7 +5,7 @@ using PolicyIssuance.Domain.Enums;
 
 namespace PolicyIssuance.Domain.Entities
 {
-    public class Policy
+    public class PolicyEntity
     {
         [Key]
         public long policy_id { get; set; }

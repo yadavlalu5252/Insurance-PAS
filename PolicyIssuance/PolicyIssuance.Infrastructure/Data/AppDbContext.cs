@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using PolicyIssuance.Domain.Entities;
 
-
 namespace PolicyIssuance.Infrastructure.Data
 {
     public class AppDbContext : DbContext
@@ -13,12 +12,7 @@ namespace PolicyIssuance.Infrastructure.Data
         {
         }
 
-<<<<<<< HEAD
-
-        public DbSet<Policy> Policies { get; set; }
-=======
-        public DbSet<PolicyIssuance.Domain.Entities.Policy> Policies { get; set; }
->>>>>>> ad9d2d2e16ea79e6e177dffad79237f6128949ed
+        public DbSet<PolicyEntity> Policies { get; set; }
 
         public DbSet<PolicyCoverage> PolicyCoverages { get; set; }
 
@@ -31,17 +25,16 @@ namespace PolicyIssuance.Infrastructure.Data
         public DbSet<PolicyEndorsement> PolicyEndorsements { get; set; }
 
         public DbSet<PolicyHistory> PolicyHistories { get; set; }
-        public DbSet<PolicyClosure> policyclosures { get; set; }
+
+        public DbSet<PolicyClosure> PolicyClosures { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-
-            modelBuilder.Entity<PolicyIssuance.Domain.Entities.Policy>()
+            modelBuilder.Entity<PolicyEntity>()
                 .Property(p => p.premium_amount)
                 .HasPrecision(15, 2);
-
 
             modelBuilder.Entity<PolicyCoverage>()
                 .Property(p => p.sum_insured)
@@ -54,8 +47,6 @@ namespace PolicyIssuance.Infrastructure.Data
             modelBuilder.Entity<PolicyNominee>()
                 .Property(p => p.share_percentage)
                 .HasPrecision(5, 2);
-
-
         }
     }
 }

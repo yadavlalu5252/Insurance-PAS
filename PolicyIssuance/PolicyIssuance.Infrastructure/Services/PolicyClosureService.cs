@@ -31,7 +31,7 @@ namespace PolicyIssuance.Infrastructure.Services
             if (string.IsNullOrWhiteSpace(dto.requested_by))
                 throw new ArgumentException("Requester is required.");
 
-            var pendingExists = await db.policyclosures.AnyAsync(
+            var pendingExists = await db.PolicyClosures.AnyAsync(
                 x => x.policy_id == dto.policy_id &&
                      x.closure_status == "Pending");
 
@@ -47,13 +47,13 @@ namespace PolicyIssuance.Infrastructure.Services
             data.requested_at = DateTime.UtcNow;
             data.closure_status = "Pending";
 
-            await db.policyclosures.AddAsync(data);
+            await db.PolicyClosures.AddAsync(data);
             await db.SaveChangesAsync();
         }
 
         public async Task<PolicyClosureDTO2?> FindClosureById(long id)
         {
-            var data = await db.policyclosures.FindAsync(id);
+            var data = await db.PolicyClosures.FindAsync(id);
 
             if (data == null)
                 return null;
@@ -63,7 +63,7 @@ namespace PolicyIssuance.Infrastructure.Services
 
         public async Task<List<PolicyClosureDTO2>> FetchAllClosure()
         {
-            var data = await db.policyclosures
+            var data = await db.PolicyClosures  
                 .OrderByDescending(x => x.requested_at)
                 .ToListAsync();
 
@@ -72,7 +72,7 @@ namespace PolicyIssuance.Infrastructure.Services
 
         public async Task<List<PolicyClosureDTO2>> FetchPendingClosure()
         {
-            var data = await db.policyclosures
+            var data = await db.PolicyClosures
                 .Where(x => x.closure_status == "Pending")
                 .OrderByDescending(x => x.requested_at)
                 .ToListAsync();
@@ -89,7 +89,7 @@ namespace PolicyIssuance.Infrastructure.Services
             if (refundAmount.HasValue && refundAmount.Value < 0)
                 return false;
 
-            var data = await db.policyclosures.FindAsync(id);
+            var data = await db.PolicyClosures.FindAsync(id);
 
             if (data == null || data.closure_status != "Pending")
                 return false;
@@ -112,7 +112,7 @@ namespace PolicyIssuance.Infrastructure.Services
                 string.IsNullOrWhiteSpace(rejectedBy))
                 return false;
 
-            var data = await db.policyclosures.FindAsync(id);
+            var data = await db.PolicyClosures.FindAsync(id);
 
             if (data == null || data.closure_status != "Pending")
                 return false;
