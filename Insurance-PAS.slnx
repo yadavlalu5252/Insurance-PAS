@@ -1,4 +1,10 @@
 <Solution>
+  <Folder Name="/AgentManagement/">
+    <Project Path="AgentManagement/AgentManagement.Api/AgentManagement.Api.csproj" />
+    <Project Path="AgentManagement/AgentManagement.Application/AgentManagement.Application.csproj" />
+    <Project Path="AgentManagement/AgentManagement.Domain/AgentManagement.Domain.csproj" />
+    <Project Path="AgentManagement/AgentManagement.Infrastructure/AgentManagement.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/Authentication/">
     <Project Path="Authentication/Authentication.Api/Authentication.Api.csproj" />
     <Project Path="Authentication/Authentication.Application/Authentication.Application.csproj" />
@@ -22,6 +28,12 @@
     <Project Path="CustomerRegistration/CustomerRegistration.Application/CustomerRegistration.Application.csproj" />
     <Project Path="CustomerRegistration/CustomerRegistration.Domain/CustomerRegistration.Domain.csproj" />
     <Project Path="CustomerRegistration/CustomerRegistration.Infrastructure/CustomerRegistration.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/DashboardNotification/">
+    <Project Path="DashboardNotification/DashboardNotification.Api/DashboardNotification.Api.csproj" />
+    <Project Path="DashboardNotification/DashboardNotification.Application/DashboardNotification.Application.csproj" />
+    <Project Path="DashboardNotification/DashboardNotification.Domain/DashboardNotification.Domain.csproj" />
+    <Project Path="DashboardNotification/DashboardNotification.Infrastructure/DashboardNotification.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/InsuranceProductManagement/">
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Api/InsuranceProductManagement.Api.csproj" />
@@ -87,6 +99,12 @@
     <Project Path="ReportsDashboard/ReportsDashboard.Application/ReportsDashboard.Application.csproj" />
     <Project Path="ReportsDashboard/ReportsDashboard.Domain/ReportsDashboard.Domain.csproj" />
     <Project Path="ReportsDashboard/ReportsDashboard.Infrastructure/ReportsDashboard.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/SupportAudit/">
+    <Project Path="SupportAudit/SupportAudit.Api/SupportAudit.Api.csproj" />
+    <Project Path="SupportAudit/SupportAudit.Application/SupportAudit.Application.csproj" />
+    <Project Path="SupportAudit/SupportAudit.Domain/SupportAudit.Domain.csproj" />
+    <Project Path="SupportAudit/SupportAudit.Infrastructure/SupportAudit.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Underwriting/">
     <Project Path="Underwriting/Underwriting.Api/Underwriting.Api.csproj" />
