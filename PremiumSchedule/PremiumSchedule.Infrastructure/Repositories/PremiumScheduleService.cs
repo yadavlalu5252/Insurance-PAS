@@ -10,14 +10,17 @@ using System.Text;
 
 namespace PremiumSchedule.Infrastructure.Repositories
 {
-    public class PremiumScheduleService:IPremiumSchedule
+    public class PremiumScheduleService : IPremiumSchedule
     {
         AppDbContext db;
         IMapper mapper;
-        public PremiumScheduleService(AppDbContext db, IMapper mapper)
+        IPolicyIssuanceClient policyIssuanceClient;
+
+        public PremiumScheduleService(AppDbContext db, IMapper mapper, IPolicyIssuanceClient policyIssuanceClient)
         {
             this.db = db;
             this.mapper = mapper;
+            this.policyIssuanceClient = policyIssuanceClient;
         }
 
         public async Task GeneratePremiumSchedule(
@@ -162,10 +165,148 @@ namespace PremiumSchedule.Infrastructure.Repositories
             };
         }
 
+
+        // =========================================================
+        // GRACE PERIOD
+        // =========================================================
+        // Monthly       = 15 days
+        // Quarterly     = 30 days
+        // Half-Yearly   = 30 days
+        // Yearly        = 30 days
+        // =========================================================
+
+        private int GetGracePeriodDays(string frequency)
+        {
+            return frequency.ToLower() switch
+            {
+                "monthly" => 15,
+
+                "quarterly" => 30,
+
+                "half-yearly" => 30,
+
+                "yearly" => 30,
+
+                _ => throw new ArgumentException(
+                    "Invalid premium frequency.")
+            };
+        }
+
+
+        // =========================================================
+        // LATE FEE CALCULATION
+        // =========================================================
+        // Late Fee = Overdue Days × Daily Penalty Rate
+        //
+        // Late fee starts only after grace period expires.
+        // Maximum late fee is also supported.
+        // =========================================================
+
+        private decimal CalculateLateFee(
+            DateTime dueDate,
+            DateTime currentDate,
+            string frequency,
+            decimal dailyPenaltyRate,
+            decimal maxLateFee)
+        {
+            int gracePeriodDays =
+                GetGracePeriodDays(frequency);
+
+            DateTime gracePeriodEndDate =
+                dueDate.AddDays(gracePeriodDays);
+
+            // Payment is still within grace period
+            if (currentDate <= gracePeriodEndDate)
+            {
+                return 0;
+            }
+
+            int overdueDays =
+                (currentDate - gracePeriodEndDate).Days;
+
+            decimal lateFee =
+                overdueDays * dailyPenaltyRate;
+
+            // Do not exceed maximum late fee
+            if (lateFee > maxLateFee)
+            {
+                lateFee = maxLateFee;
+            }
+
+            return lateFee;
+        }
+
+
+        // =========================================================
+        // UPDATE OVERDUE SCHEDULES AND CALCULATE LATE FEES
+        // =========================================================
+        //
+        // This method can be called daily by Hangfire/background job.
+        //
+        // Example:
+        // Due Date       = 10 Oct
+        // Grace Period   = 15 days
+        // Grace Ends     = 25 Oct
+        // Current Date   = 30 Oct
+        // Overdue Days   = 5
+        // Daily Rate     = 10
+        // Late Fee       = 50
+        // =========================================================
+
+        public async Task UpdateOverdueSchedules(
+    decimal dailyPenaltyRate,
+    decimal maxLateFee)
+        {
+            var schedules = await db.PremiumSchedule
+                .Where(x =>
+                    x.status == "Pending" ||
+                    x.status == "Partial Paid")
+                .ToListAsync();
+
+            DateTime currentDate = DateTime.Now;
+
+            foreach (var schedule in schedules)
+            {
+                string? premiumFrequency =
+                    await policyIssuanceClient.GetPremiumFrequency(
+                        schedule.policy_id);
+
+                if (string.IsNullOrEmpty(premiumFrequency))
+                {
+                    continue;
+                }
+
+                int gracePeriodDays =
+                    GetGracePeriodDays(premiumFrequency);
+
+                DateTime gracePeriodEndDate =
+                    schedule.due_date.AddDays(gracePeriodDays);
+
+                if (currentDate <= gracePeriodEndDate)
+                {
+                    schedule.late_fee = 0;
+                    continue;
+                }
+
+                int overdueDays =
+                    (currentDate - gracePeriodEndDate).Days;
+
+                decimal lateFee =
+                    overdueDays * dailyPenaltyRate;
+
+                schedule.late_fee =
+                    Math.Min(lateFee, maxLateFee);
+
+                schedule.status = "Overdue";
+            }
+
+            await db.SaveChangesAsync();
+        }
+
         public async Task<PremiumScheduleDto?>
-    UpdatePremiumSchedule(
-        int schedule_id,
-        UpdatePremiumScheduleDto dto)
+            UpdatePremiumSchedule(
+                int schedule_id,
+                UpdatePremiumScheduleDto dto)
         {
             var schedule = await db.PremiumSchedule
                 .FirstOrDefaultAsync(
@@ -186,12 +327,12 @@ namespace PremiumSchedule.Infrastructure.Repositories
             // Validate status
             var allowedStatuses = new[]
             {
-        "Pending",
-        "Paid",
-        "Partial Paid",
-        "Overdue",
-        "Cancelled"
-    };
+                "Pending",
+                "Paid",
+                "Partial Paid",
+                "Overdue",
+                "Cancelled"
+            };
 
             if (!allowedStatuses.Contains(dto.status))
             {

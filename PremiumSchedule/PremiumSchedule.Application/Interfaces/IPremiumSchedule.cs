@@ -15,5 +15,9 @@ namespace PremiumSchedule.Application.Interfaces
         Task<PremiumScheduleDto?> GetPremiumScheduleById(int schedule_id);
 
         Task<PremiumScheduleDto?>UpdatePremiumSchedule(int schedule_id,UpdatePremiumScheduleDto dto);
+
+        Task UpdateOverdueSchedules(
+   decimal dailyPenaltyRate,
+   decimal maxLateFee);
     }
 }

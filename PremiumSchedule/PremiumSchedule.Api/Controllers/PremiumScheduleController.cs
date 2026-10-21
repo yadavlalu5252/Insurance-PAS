@@ -7,11 +7,11 @@ using PremiumSchedule.Domain.Entities;
 
 namespace PremiumSchedule.Api.Controllers
 {
-    [Route("api/v1/premium-schedules ")]
+    [Route("api/v1/premium-schedules")]
     [ApiController]
     public class PremiumScheduleController : ControllerBase
     {
-        IPremiumSchedule service;
+        private readonly IPremiumSchedule service;
 
         public PremiumScheduleController(IPremiumSchedule service)
         {
@@ -20,7 +20,7 @@ namespace PremiumSchedule.Api.Controllers
 
         [HttpPost("internal/generate")]
         public async Task<IActionResult> GeneratePremiumSchedule(
-    GeneratePremiumScheduleDto dto)
+            GeneratePremiumScheduleDto dto)
         {
             await service.GeneratePremiumSchedule(dto);
 
@@ -30,7 +30,6 @@ namespace PremiumSchedule.Api.Controllers
                     "Premium schedule generated successfully.",
                     null));
         }
-
 
         [HttpGet("{policy_id}")]
         public async Task<IActionResult> GetPremiumScheduleByPolicyId(
@@ -55,11 +54,10 @@ namespace PremiumSchedule.Api.Controllers
                     schedules));
         }
 
-
         [HttpPut("{schedule_id}")]
         public async Task<IActionResult> UpdatePremiumSchedule(
-    int schedule_id,
-    UpdatePremiumScheduleDto dto)
+            int schedule_id,
+            UpdatePremiumScheduleDto dto)
         {
             var schedule =
                 await service.UpdatePremiumSchedule(
@@ -80,6 +78,22 @@ namespace PremiumSchedule.Api.Controllers
                     true,
                     "Premium schedule updated successfully.",
                     schedule));
+        }
+
+        [HttpPost("internal/update-overdue")]
+        public async Task<IActionResult> UpdateOverdueSchedules(
+            decimal dailyPenaltyRate,
+            decimal maxLateFee)
+        {
+            await service.UpdateOverdueSchedules(
+                dailyPenaltyRate,
+                maxLateFee);
+
+            return Ok(
+                new ResponseWrapper<object>(
+                    true,
+                    "Overdue premium schedules updated successfully.",
+                    null));
         }
     }
 }

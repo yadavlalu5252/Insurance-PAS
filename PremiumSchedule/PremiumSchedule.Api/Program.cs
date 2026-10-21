@@ -1,9 +1,10 @@
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
-using PremiumSchedule.Infrastructure.Data;
 using PremiumSchedule.Api.Middleware;
 using PremiumSchedule.Application.Interfaces;
-using PremiumSchedule.Infrastructure.Repositories;
 using PremiumSchedule.Application.Mapper;
+using PremiumSchedule.Infrastructure.Data;
+using PremiumSchedule.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +32,33 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddMaps(typeof(PremiumScheduleMapper).Assembly);
 });
 
+// Hangfire
+builder.Services.AddHangfire(config =>
+    config.UseSqlServerStorage(
+        builder.Configuration.GetConnectionString("dbconn")));
+
+builder.Services.AddHangfireServer();
+
+
+builder.Services.AddHttpClient<IPolicyIssuanceClient, PolicyIssuanceClient>(
+    client =>
+    {
+        client.BaseAddress = new Uri(
+            "https://localhost:7179/");
+    });
+
+
 var app = builder.Build();
+
+// Hangfire Dashboard
+app.UseHangfireDashboard("/hangfire");
+
+RecurringJob.AddOrUpdate<IPremiumSchedule>(
+    "update-overdue-premium-schedules",
+    service => service.UpdateOverdueSchedules(
+        10,
+        500),
+    Cron.Daily);
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
@@ -46,6 +73,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
 
 app.MapControllers();
 
