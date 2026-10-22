@@ -9,16 +9,16 @@ namespace Underwriting.Domain.Entities
     public class underwriting_audit_log
     {
         [Key]
-        public long audit_id { get; set; }
+        public int audit_id { get; set; }
 
         [Required]
-        public long underwriting_id { get; set; }
+        public int underwriting_id { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         public string? action { get; set; }
 
         [Required]
-        public long performed_by { get; set; }
+        public int performed_by { get; set; }
 
         public string? remarks { get; set; }
 

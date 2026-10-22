@@ -18,14 +18,14 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> addmedical(long id, savemedicaldto dto)
+        public async Task<IActionResult> addmedical(int id, savemedicaldto dto)
         {
             await service.addmedical(id, dto);
             return Ok(ApiResponse<string>.SuccessResponse("Medical details saved successfully"));
 
         }
         [HttpGet]
-        public async Task<IActionResult> fetchmedical(long id)
+        public async Task<IActionResult> fetchmedical(int id)
         {
             var data = await service.fetchmedical(id);
             if (data == null)
@@ -36,7 +36,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> updatemedical(long id,savemedicaldto dto)
+        public async Task<IActionResult> updatemedical(int id,savemedicaldto dto)
         {
             await service.updatemedical(id,dto);
             return Ok(ApiResponse<string>.SuccessResponse("Medical details updated successfully"));

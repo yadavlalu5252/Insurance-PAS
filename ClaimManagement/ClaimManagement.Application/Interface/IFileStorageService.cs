@@ -6,7 +6,6 @@ namespace ClaimManagement.Application.Interface
 {
     public interface IFileStorageService
     {
-        // saves the file and returns the stored (random) file name
         Task<string> SaveFileAsync(Stream content, string extension);
     }
 }

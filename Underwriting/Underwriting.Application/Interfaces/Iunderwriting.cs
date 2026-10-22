@@ -12,14 +12,15 @@ namespace Underwriting.Application.Interfaces
 
         Task<List<underwriting_case>> fetchunderwriting();
 
-        Task<underwriting_case?> fetchunderwritingbyid(long id);
+        Task<underwriting_case?> fetchunderwritingbyid(int id);
 
-        Task updateunderwritingbyid(long id, createunderwritingdto dto);
+        Task updateunderwritingbyid(int id, createunderwritingdto dto);
 
-        Task approveunderwriting(long id);
+        Task approveunderwriting(int id);
 
-        Task rejectunderwriting(long id, string reason);
-        Task loadingunderwriting(long id);
-        Task<underwriting_decision?> fetchdecision(long id);
+        Task rejectunderwriting(int id, string reason);
+        Task loadingunderwriting(int id);
+        Task<underwriting_decision?> fetchdecision(int id);
+        Task<underwriting_case?> fetchunderwritingbyquoteid(int quoteId);
     }
 }

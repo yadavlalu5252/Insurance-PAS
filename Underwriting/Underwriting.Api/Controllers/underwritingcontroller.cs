@@ -37,7 +37,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> fetchunderwritingbyid(long id)
+        public async Task<IActionResult> fetchunderwritingbyid(int id)
         {
             var data = await service.fetchunderwritingbyid(id);
             if (data == null)
@@ -48,27 +48,27 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> updateunderwritingbyid(long id, createunderwritingdto dto)
+        public async Task<IActionResult> updateunderwritingbyid(int id, createunderwritingdto dto)
         {
             await service.updateunderwritingbyid(id, dto);
             return Ok(ApiResponse<string>.SuccessResponse("Underwriting case updated successfully"));
         }
 
         [HttpPut("{id}/approve")]
-        public async Task<IActionResult> approveunderwriting(long id)
+        public async Task<IActionResult> approveunderwriting(int id)
         {
             await service.approveunderwriting(id);
             return Ok(ApiResponse<string>.SuccessResponse("Underwriting case approved successfully"));
         }
         [HttpPut("{id}/reject")]
-        public async Task<IActionResult> rejectunderwriting(long id, [FromBody] string reason)
+        public async Task<IActionResult> rejectunderwriting(int id, [FromBody] string reason)
         {
             await service.rejectunderwriting(id, reason);
 
             return Ok(ApiResponse<string>.SuccessResponse("Underwriting case rejected successfully"));
         }
         [HttpPut("{id}/loading")]
-        public async Task<IActionResult> loadingunderwriting(long id)
+        public async Task<IActionResult> loadingunderwriting(int id)
         {
             await service.loadingunderwriting(id);
 
@@ -79,7 +79,7 @@ namespace Underwriting.Api.Controllers
             );
         }
         [HttpGet("{id}/decision")]
-        public async Task<IActionResult> fetchdecision(long id)
+        public async Task<IActionResult> fetchdecision(int id)
         {
             var data = await service.fetchdecision(id);
 
@@ -88,6 +88,17 @@ namespace Underwriting.Api.Controllers
                 return Ok(ApiResponse<underwriting_decision>.SuccessResponse(data,"Underwriting decision fetched successfully"));
             }
             return NotFound(ApiResponse<string>.ErrorResponse("Underwriting decision not found"));
+        }
+        [HttpGet("quote/{quoteId}")]
+        public async Task<IActionResult> fetchunderwritingbyquoteid(int quoteId)
+        {
+            var data = await service.fetchunderwritingbyquoteid(quoteId);
+
+            if (data == null)
+                return NotFound(ApiResponse<string>.ErrorResponse(
+                    "Underwriting case not found for this quote"));
+
+            return Ok(ApiResponse<underwriting_case>.SuccessResponse(data));
         }
     }
 }

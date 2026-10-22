@@ -34,18 +34,13 @@
     <Project Path="DashboardNotification/DashboardNotification.Application/DashboardNotification.Application.csproj" />
     <Project Path="DashboardNotification/DashboardNotification.Domain/DashboardNotification.Domain.csproj" />
     <Project Path="DashboardNotification/DashboardNotification.Infrastructure/DashboardNotification.Infrastructure.csproj" />
+    <Project Path="PlaceholderTest/PlaceholderTest.csproj" Id="0627776a-10ef-4bfc-b1a3-afb9a368d66e" />
   </Folder>
   <Folder Name="/InsuranceProductManagement/">
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Api/InsuranceProductManagement.Api.csproj" />
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Application/InsuranceProductManagement.Application.csproj" />
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Domain/InsuranceProductManagement.Domain.csproj" />
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Infrastructure/InsuranceProductManagement.Infrastructure.csproj" />
-  </Folder>
-  <Folder Name="/Investigation/">
-    <Project Path="Investigation/Investigation.Api/Investigation.Api.csproj" />
-    <Project Path="Investigation/Investigation.Application/Investigation.Application.csproj" />
-    <Project Path="Investigation/Investigation.Domain/Investigation.Domain.csproj" />
-    <Project Path="Investigation/Investigation.Infrastructure/Investigation.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/KycVerification/">
     <Project Path="KycVerification/KycVerification.Application/KycVerification.Application.csproj" />
@@ -75,12 +70,6 @@
     <Project Path="PolicyServicing/PolicyServicing.Application/PolicyServicing.Application.csproj" />
     <Project Path="PolicyServicing/PolicyServicing.Domain/PolicyServicing.Domain.csproj" />
     <Project Path="PolicyServicing/PolicyServicing.Infrastructure/PolicyServicing.Infrastructure.csproj" />
-  </Folder>
-  <Folder Name="/PremiumPayment/">
-    <Project Path="PremiumPayment/PremiumPayment.Api/PremiumPayment.Api.csproj" />
-    <Project Path="PremiumPayment/PremiumPayment.Application/PremiumPayment.Application.csproj" />
-    <Project Path="PremiumPayment/PremiumPayment.Domain/PremiumPayment.Domain.csproj" />
-    <Project Path="PremiumPayment/PremiumPayment.Infrastructure/PremiumPayment.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/PremiumSchedule/">
     <Project Path="PremiumSchedule/PremiumSchedule.Api/PremiumSchedule.Api.csproj" />

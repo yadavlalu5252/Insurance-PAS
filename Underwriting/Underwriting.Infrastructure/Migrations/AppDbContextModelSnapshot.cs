@@ -24,11 +24,11 @@ namespace Underwriting.Infrastructure.Migrations
 
             modelBuilder.Entity("Underwriting.Domain.Entities.financial_underwriting", b =>
                 {
-                    b.Property<long>("financial_id")
+                    b.Property<int>("financial_id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("financial_id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("financial_id"));
 
                     b.Property<decimal>("annual_income")
                         .HasColumnType("decimal(15,2)");
@@ -47,8 +47,8 @@ namespace Underwriting.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("underwriting_id")
-                        .HasColumnType("bigint");
+                    b.Property<int>("underwriting_id")
+                        .HasColumnType("int");
 
                     b.HasKey("financial_id");
 
@@ -57,11 +57,11 @@ namespace Underwriting.Infrastructure.Migrations
 
             modelBuilder.Entity("Underwriting.Domain.Entities.medical_underwriting", b =>
                 {
-                    b.Property<long>("medical_id")
+                    b.Property<int>("medical_id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("medical_id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("medical_id"));
 
                     b.Property<bool>("alcohol")
                         .HasColumnType("bit");
@@ -83,8 +83,8 @@ namespace Underwriting.Infrastructure.Migrations
                     b.Property<bool>("smoking")
                         .HasColumnType("bit");
 
-                    b.Property<long>("underwriting_id")
-                        .HasColumnType("bigint");
+                    b.Property<int>("underwriting_id")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("weight")
                         .HasColumnType("decimal(5,2)");
@@ -96,11 +96,14 @@ namespace Underwriting.Infrastructure.Migrations
 
             modelBuilder.Entity("Underwriting.Domain.Entities.risk_score", b =>
                 {
-                    b.Property<long>("risk_id")
+                    b.Property<int>("risk_id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("risk_id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("risk_id"));
+
+                    b.Property<int>("age_score")
+                        .HasColumnType("int");
 
                     b.Property<int>("financial_score")
                         .HasColumnType("int");
@@ -121,8 +124,8 @@ namespace Underwriting.Infrastructure.Migrations
                     b.Property<int>("total_score")
                         .HasColumnType("int");
 
-                    b.Property<long>("underwriting_id")
-                        .HasColumnType("bigint");
+                    b.Property<int>("underwriting_id")
+                        .HasColumnType("int");
 
                     b.HasKey("risk_id");
 
@@ -131,11 +134,11 @@ namespace Underwriting.Infrastructure.Migrations
 
             modelBuilder.Entity("Underwriting.Domain.Entities.underwriting_audit_log", b =>
                 {
-                    b.Property<long>("audit_id")
+                    b.Property<int>("audit_id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("audit_id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("audit_id"));
 
                     b.Property<string>("action")
                         .HasColumnType("varchar(100)");
@@ -143,14 +146,14 @@ namespace Underwriting.Infrastructure.Migrations
                     b.Property<DateTime>("action_date")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("performed_by")
-                        .HasColumnType("bigint");
+                    b.Property<int>("performed_by")
+                        .HasColumnType("int");
 
                     b.Property<string>("remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("underwriting_id")
-                        .HasColumnType("bigint");
+                    b.Property<int>("underwriting_id")
+                        .HasColumnType("int");
 
                     b.HasKey("audit_id");
 
@@ -159,27 +162,27 @@ namespace Underwriting.Infrastructure.Migrations
 
             modelBuilder.Entity("Underwriting.Domain.Entities.underwriting_case", b =>
                 {
-                    b.Property<long>("underwriting_id")
+                    b.Property<int>("underwriting_id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("underwriting_id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("underwriting_id"));
 
-                    b.Property<long>("customer_id")
-                        .HasColumnType("bigint");
+                    b.Property<int>("customer_id")
+                        .HasColumnType("int");
 
-                    b.Property<long>("product_id")
-                        .HasColumnType("bigint");
+                    b.Property<int>("product_id")
+                        .HasColumnType("int");
 
-                    b.Property<long>("quote_id")
-                        .HasColumnType("bigint");
+                    b.Property<int>("quote_id")
+                        .HasColumnType("int");
 
                     b.Property<string>("status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly>("underwriting_date")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("underwriting_date")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("underwriting_id");
 
@@ -188,14 +191,14 @@ namespace Underwriting.Infrastructure.Migrations
 
             modelBuilder.Entity("Underwriting.Domain.Entities.underwriting_decision", b =>
                 {
-                    b.Property<long>("decision_id")
+                    b.Property<int>("decision_id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("decision_id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("decision_id"));
 
-                    b.Property<long>("approved_by")
-                        .HasColumnType("bigint");
+                    b.Property<int>("approved_by")
+                        .HasColumnType("int");
 
                     b.Property<string>("decision")
                         .IsRequired()
@@ -213,8 +216,8 @@ namespace Underwriting.Infrastructure.Migrations
                     b.Property<string>("rejection_reason")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("underwriting_id")
-                        .HasColumnType("bigint");
+                    b.Property<int>("underwriting_id")
+                        .HasColumnType("int");
 
                     b.HasKey("decision_id");
 

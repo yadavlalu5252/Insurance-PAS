@@ -22,50 +22,53 @@ namespace PolicyIssuance.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("PolicyIssuance.Domain.Entities.Policy", b =>
+            modelBuilder.Entity("PolicyIssuance.Domain.Entities.PolicyClosure", b =>
                 {
-                    b.Property<long>("policy_id")
+                    b.Property<long>("policy_closure_id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("policy_id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("policy_closure_id"));
 
-                    b.Property<long>("customer_id")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("effective_date")
+                    b.Property<DateTime?>("approved_at")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("expiry_date")
+                    b.Property<string>("approved_by")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("closed_at")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("issue_date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("policy_number")
+                    b.Property<string>("closure_reason")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("policy_status")
-                        .HasColumnType("int");
+                    b.Property<string>("closure_status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("premium_amount")
-                        .HasPrecision(15, 2)
-                        .HasColumnType("decimal(15,2)");
-
-                    b.Property<long>("product_id")
+                    b.Property<long>("policy_id")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("quote_id")
-                        .HasColumnType("bigint");
+                    b.Property<decimal?>("refund_amount")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<long>("underwriting_id")
-                        .HasColumnType("bigint");
+                    b.Property<string>("rejection_reason")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("policy_id");
+                    b.Property<string>("remarks")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("Policies");
+                    b.Property<DateTime>("requested_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("requested_by")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("policy_closure_id");
+
+                    b.ToTable("PolicyClosures");
                 });
 
             modelBuilder.Entity("PolicyIssuance.Domain.Entities.PolicyCoverage", b =>
@@ -136,8 +139,8 @@ namespace PolicyIssuance.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("endorsement_id"));
 
-                    b.Property<long?>("approved_by")
-                        .HasColumnType("bigint");
+                    b.Property<string>("approved_by")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("approved_date")
                         .HasColumnType("datetime2");
@@ -171,6 +174,52 @@ namespace PolicyIssuance.Infrastructure.Migrations
                     b.HasKey("endorsement_id");
 
                     b.ToTable("PolicyEndorsements");
+                });
+
+            modelBuilder.Entity("PolicyIssuance.Domain.Entities.PolicyEntity", b =>
+                {
+                    b.Property<long>("policy_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("policy_id"));
+
+                    b.Property<long>("customer_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("effective_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("expiry_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("issue_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("policy_number")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("policy_status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("premium_amount")
+                        .HasPrecision(15, 2)
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<long>("product_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("quote_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("underwriting_id")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("policy_id");
+
+                    b.ToTable("Policies");
                 });
 
             modelBuilder.Entity("PolicyIssuance.Domain.Entities.PolicyHistory", b =>
