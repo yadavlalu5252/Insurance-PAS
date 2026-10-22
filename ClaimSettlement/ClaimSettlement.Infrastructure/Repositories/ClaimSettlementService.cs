@@ -22,28 +22,22 @@ namespace ClaimSettlement.Infrastructure.Repositories
             return data;
         }
 
-        public async Task Add(Settlement s)
-        {
-            if (s.ApprovedAmount <= 0)
-                throw new Exception("Approved amount must be greater than zero");
+        //public async Task Add(Settlement s)
+        //{
+        //    var response = await http.GetAsync(
+        //        "http://localhost:5129/api/v1/claims/" + s.ClaimId + "/status");
 
-            if (string.IsNullOrWhiteSpace(s.PaymentMode))
-                throw new Exception("Payment mode is required");
+        //    if (!response.IsSuccessStatusCode)
+        //        throw new Exception("Unable to get claim status");
 
-            if (s.PaymentMode != "NEFT" &&
-                s.PaymentMode != "RTGS" &&
-                s.PaymentMode != "IMPS" &&
-                s.PaymentMode != "UPI" &&
-                s.PaymentMode != "Cheque")
-            {
-                throw new Exception("Invalid payment mode");
-            }
+        //    var claim = await response.Content.ReadFromJsonAsync<ClaimStatusDTO>();
 
-            s.SettlementStatus = "Pending";
+        //    if (claim == null || claim.claim_status != "Approved")
+        //        throw new Exception("Claim is not approved");
 
-            db.ClaimSettlements.Add(s);
-            await db.SaveChangesAsync();
-        }
+        //    db.ClaimSettlements.Add(s);
+        //    await db.SaveChangesAsync();
+        //}
 
         public async Task Update(Settlement s)
         {

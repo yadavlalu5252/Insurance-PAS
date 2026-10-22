@@ -9,10 +9,10 @@ namespace Underwriting.Domain.Entities
     public class underwriting_decision
     {
         [Key]
-        public long decision_id { get; set; }
+        public int decision_id { get; set; }
 
         [Required]
-        public long underwriting_id { get; set; }
+        public int underwriting_id { get; set; }
 
         [Required]
         public string  decision { get; set; }
@@ -28,7 +28,7 @@ namespace Underwriting.Domain.Entities
         public string? rejection_reason { get; set; }
 
         [Required]
-        public long approved_by { get; set; }
+        public int approved_by { get; set; }
 
         [Required]
         public DateTime decision_date { get; set; }

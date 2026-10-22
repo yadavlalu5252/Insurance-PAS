@@ -36,7 +36,12 @@ builder.Services.AddHttpClient<InsuranceProductClient>(client =>
     client.BaseAddress = new Uri(
         builder.Configuration["ServiceUrls:ProductManagement"]!);
 });
-
+builder.Services.AddHttpClient<UnderwritingClient>(client =>
+{
+    client.BaseAddress = new Uri(
+        builder.Configuration["underwritingAddress"]
+        ?? throw new InvalidOperationException("Underwriting URL is missing."));
+});
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();

@@ -19,14 +19,14 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> addfinancial(long id, savefinancialdto dto)
+        public async Task<IActionResult> addfinancial(int id, savefinancialdto dto)
         {
             await service.addfinancial(id, dto);
             return Ok(ApiResponse<string>.SuccessResponse("Financial details saved successfully"));
         }
 
         [HttpGet]
-        public async Task<IActionResult> fetchfinancial(long id)
+        public async Task<IActionResult> fetchfinancial(int id)
         {
             var data=await service.fetchfinancial(id);
             if (data == null)
@@ -37,7 +37,7 @@ namespace Underwriting.Api.Controllers
             return Ok(ApiResponse<financial_underwriting>.SuccessResponse(data));
         }
         [HttpPut]
-        public async Task<IActionResult> updatefinancial(long id, savefinancialdto dto)
+        public async Task<IActionResult> updatefinancial(int id, savefinancialdto dto)
         {
             await service.updatefinancial(id, dto);
 

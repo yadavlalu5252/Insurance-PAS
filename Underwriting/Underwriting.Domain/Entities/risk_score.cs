@@ -8,10 +8,12 @@ namespace Underwriting.Domain.Entities
     public class risk_score
     {
         [Key]
-        public long risk_id { get; set; }
+        public int risk_id { get; set; }
 
         [Required]
-        public long underwriting_id { get; set; }
+        public int underwriting_id { get; set; }
+        [Required]
+        public int age_score { get; set; }
 
         [Required]
         public int medical_score { get; set; }

@@ -9,10 +9,10 @@ namespace Underwriting.Domain.Entities
     public class financial_underwriting
     {
         [Key]
-        public long financial_id { get; set; }
+        public int financial_id { get; set; }
 
         [Required]
-        public long underwriting_id { get; set; }
+        public int underwriting_id { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(15,2)")]

@@ -50,7 +50,7 @@ var filePath = builder.Configuration["FileStorage:RootPath"]
 builder.Services.AddScoped<IFileStorageService>(sp => new LocalFileStorageService(filePath));
 builder.Services.AddScoped<IClaimDocumentService, ClaimDocumentService>();
 builder.Services.AddScoped<IClaimWorkflowService, ClaimWorkflowService>();
-builder.Services.AddScoped<INotificationService, LogOnlyNotificationService>();
+builder.Services.AddScoped<IInvestigationService, InvestigationService>();
 builder.Services.AddScoped<IClaimService, ClaimService>();
 builder.Services.AddScoped<ISurveyService, SurveyService>();
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingData>());

@@ -8,10 +8,10 @@ namespace Underwriting.Application.Interfaces
 {
     public interface Isavefinancial
     {
-        Task addfinancial(long id, savefinancialdto dto);
+        Task addfinancial(int id, savefinancialdto dto);
 
-        Task<financial_underwriting?> fetchfinancial(long id);
+        Task<financial_underwriting?> fetchfinancial(int id);
 
-        Task updatefinancial(long id, savefinancialdto dto);
+        Task updatefinancial(int id, savefinancialdto dto);
     }
 }
