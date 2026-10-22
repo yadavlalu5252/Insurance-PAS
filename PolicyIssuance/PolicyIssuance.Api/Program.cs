@@ -1,17 +1,51 @@
+using Microsoft.EntityFrameworkCore;
+using Policy.Infrastructure.Clients;
+using PolicyIssuance.Api.Middleware;
+using PolicyIssuance.Application.Config;
+using PolicyIssuance.Application.Interface;
+using PolicyIssuance.Application.Interfaces;
+using PolicyIssuance.Infrastructure.Data;
+using PolicyIssuance.Infrastructure.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("dbconn")
+    ));
+
+builder.Services.AddAutoMapper(
+    cfg => { },
+    typeof(MapperConfig).Assembly
+);
+
+builder.Services.AddScoped<IPolicyService, PolicyService>();
+builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
+builder.Services.AddScoped<IPolicyEndorsementService, PolicyEndorsementService>();
+builder.Services.AddScoped<IPolicyClosureService, PolicyClosureService>();
+
+builder.Services.AddHttpClient<
+    IPremiumScheduleClient,
+    PremiumScheduleClient>(
+    client =>
+    {
+        client.BaseAddress =
+            new Uri("https://localhost:7129/");
+    });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
