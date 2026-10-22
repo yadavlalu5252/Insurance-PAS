@@ -22,22 +22,22 @@ namespace ClaimSettlement.Infrastructure.Repositories
             return data;
         }
 
-        public async Task Add(Settlement s)
-        {
-            var response = await http.GetAsync(
-                "http://localhost:5129/api/v1/claims/" + s.ClaimId + "/status");
+        //public async Task Add(Settlement s)
+        //{
+        //    var response = await http.GetAsync(
+        //        "http://localhost:5129/api/v1/claims/" + s.ClaimId + "/status");
 
-            if (!response.IsSuccessStatusCode)
-                throw new Exception("Unable to get claim status");
+        //    if (!response.IsSuccessStatusCode)
+        //        throw new Exception("Unable to get claim status");
 
-            var claim = await response.Content.ReadFromJsonAsync<ClaimStatusDTO>();
+        //    var claim = await response.Content.ReadFromJsonAsync<ClaimStatusDTO>();
 
-            if (claim == null || claim.claim_status != "Approved")
-                throw new Exception("Claim is not approved");
+        //    if (claim == null || claim.claim_status != "Approved")
+        //        throw new Exception("Claim is not approved");
 
-            db.ClaimSettlements.Add(s);
-            await db.SaveChangesAsync();
-        }
+        //    db.ClaimSettlements.Add(s);
+        //    await db.SaveChangesAsync();
+        //}
 
 
         public async Task Update(Settlement s)

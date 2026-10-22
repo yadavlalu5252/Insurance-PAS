@@ -7,7 +7,7 @@ namespace ClaimSettlement.Application.Interfaces
     {
         Task<Settlement?> GetByClaimId(long claimId);
 
-        Task Add(Settlement s);
+        //Task Add(Settlement s);
 
         Task Update(Settlement s);
     }

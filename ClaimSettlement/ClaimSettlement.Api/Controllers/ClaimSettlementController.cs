@@ -17,27 +17,27 @@ namespace ClaimSettlement.Api.Controllers
             this.service = service;
         }
 
-        [HttpPost("{id}/settlement")]
-        public async Task<IActionResult> ProcessSettlement(long id, SettlementDTO dto)
-        {
-            if (dto.ApprovedAmount <= 0)
-                return BadRequest("Approved amount must be greater than zero");
+        //[HttpPost("{id}/settlement")]
+        //public async Task<IActionResult> ProcessSettlement(long id, SettlementDTO dto)
+        //{
+        //    if (dto.ApprovedAmount <= 0)
+        //        return BadRequest("Approved amount must be greater than zero");
 
-            if (string.IsNullOrWhiteSpace(dto.PaymentMode))
-                return BadRequest("Payment mode is required");
+        //    if (string.IsNullOrWhiteSpace(dto.PaymentMode))
+        //        return BadRequest("Payment mode is required");
 
-            var settlement = new Settlement
-            {
-                ClaimId = id,
-                ApprovedAmount = dto.ApprovedAmount,
-                PaymentMode = dto.PaymentMode,
-                SettlementStatus = "Pending"
-            };
+        //    var settlement = new Settlement
+        //    {
+        //        ClaimId = id,
+        //        ApprovedAmount = dto.ApprovedAmount,
+        //        PaymentMode = dto.PaymentMode,
+        //        SettlementStatus = "Pending"
+        //    };
 
-            await service.Add(settlement);
+        //    await service.Add(settlement);
 
-            return Ok("Settlement saved successfully");
-        }
+        //    return Ok("Settlement saved successfully");
+        //}
 
         [HttpGet("{id}/settlement")]
         public async Task<IActionResult> GetSettlement(long id)
