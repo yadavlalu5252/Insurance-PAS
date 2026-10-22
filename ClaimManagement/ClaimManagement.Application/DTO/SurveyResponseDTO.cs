@@ -12,6 +12,5 @@ namespace ClaimManagement.Application.DTO
         public DateTime assigned_date { get; set; }
         public DateTime? inspection_date { get; set; }
         public string survey_status { get; set; } = string.Empty;
-        public bool report_uploaded { get; set; }
     }
 }

@@ -6,36 +6,97 @@ using CustomerRegistration.Application.Mapper;
 using CustomerRegistration.Infrastructure.Data;
 using CustomerRegistration.Infrastructure.Repository;
 using CustomerRegistration.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Add services
 builder.Services.AddControllers();
 
 
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<AppDbContext>(option => option.UseSqlServer(
-        builder.Configuration.GetConnectionString("dbconn")
-    ));
+// Database configuration
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("dbconn")));
 
+// Dependency injection
 builder.Services.AddScoped<IDummyService, DummyService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ICustomerAddressService, CustomerAddressService>();
 builder.Services.AddScoped<INomineeService, NomineeService>();
 builder.Services.AddScoped<ICustomerDocumentService, CustomerDocumentService>();
 
-builder.Services.AddAutoMapper(cfg => { },typeof(CustomerMappingProfile).Assembly);
+// AutoMapper
+builder.Services.AddAutoMapper(
+    cfg => { },
+    typeof(CustomerMappingProfile).Assembly);
+
+// JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("JWT signing key is missing.");
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]
+    ?? throw new InvalidOperationException("JWT issuer is missing.");
+
+var jwtAudience = builder.Configuration["Jwt:Audience"]
+    ?? throw new InvalidOperationException("JWT audience is missing.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// Swagger with JWT Bearer support
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT access token."
+    });
+
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
+});
+
 var app = builder.Build();
 
+// Exception middleware
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-
-// Configure the HTTP request pipeline
+// Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -44,6 +105,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Authentication must run before authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

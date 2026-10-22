@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PolicyIssuance.Application.DTOs;
 using PolicyIssuance.Application.Interface;
+using PolicyIssuance.Application.Interfaces;
 using PolicyIssuance.Domain.Entities;
 using PolicyIssuance.Domain.Enums;
 using PolicyIssuance.Infrastructure.Data;
@@ -11,10 +12,14 @@ namespace PolicyIssuance.Infrastructure.Services
     public class PolicyService : IPolicyService
     {
         private readonly AppDbContext db;
+        private readonly IPremiumScheduleClient premiumScheduleClient;
 
-        public PolicyService(AppDbContext db)
+        public PolicyService(
+            AppDbContext db,
+            IPremiumScheduleClient premiumScheduleClient)
         {
             this.db = db;
+            this.premiumScheduleClient = premiumScheduleClient;
         }
 
         public async Task<List<PolicyResponseDTO>> GetAllAsync()
@@ -63,7 +68,7 @@ namespace PolicyIssuance.Infrastructure.Services
                 status = PolicyStatus.Draft;
             }
 
-            var policy = new Policy
+            var policy = new PolicyIssuance.Domain.Entities.PolicyEntity
             {
                 policy_number = "POL-" +
                     Guid.NewGuid().ToString("N").ToUpperInvariant(),
@@ -146,7 +151,27 @@ namespace PolicyIssuance.Infrastructure.Services
                 return false;
             }
 
-            return false;
+            policy.policy_status = PolicyStatus.Active;
+
+            await db.SaveChangesAsync();
+
+            var request = new GeneratePremiumScheduleDto
+            {
+                policy_id = (int)policy.policy_id,
+                issue_date = policy.issue_date,
+                effective_date = policy.effective_date,
+                expiry_date = policy.expiry_date,
+                premium_frequency = "monthly",
+                total_premium = policy.premium_amount
+            };
+
+            bool scheduleCreated =
+                await premiumScheduleClient.GeneratePremiumSchedule(request);
+
+            if (!scheduleCreated)
+                return false;
+
+            return true;
         }
 
         public async Task<bool> SuspendAsync(
@@ -163,6 +188,7 @@ namespace PolicyIssuance.Infrastructure.Services
 
             policy.policy_status = PolicyStatus.Suspended;
             await db.SaveChangesAsync();
+
             return true;
         }
 
@@ -182,6 +208,7 @@ namespace PolicyIssuance.Infrastructure.Services
 
             policy.policy_status = PolicyStatus.Cancelled;
             await db.SaveChangesAsync();
+
             return true;
         }
 
@@ -200,10 +227,12 @@ namespace PolicyIssuance.Infrastructure.Services
 
             policy.policy_status = PolicyStatus.Expired;
             await db.SaveChangesAsync();
+
             return true;
         }
 
-        private static PolicyResponseDTO ToResponse(Policy policy)
+        private static PolicyResponseDTO ToResponse(
+            PolicyIssuance.Domain.Entities.PolicyEntity policy)
         {
             return new PolicyResponseDTO
             {
