@@ -73,6 +73,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddAutoMapper(cfg => { }, typeof(AuthMapping));
 
 var app = builder.Build();
