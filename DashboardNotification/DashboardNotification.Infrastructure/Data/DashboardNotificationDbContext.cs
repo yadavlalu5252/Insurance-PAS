@@ -6,10 +6,9 @@ namespace DashboardNotification.Infrastructure.Data
 {
     public class DashboardNotificationDbContext : DbContext
     {
-        public DashboardNotificationDbContext(
-            DbContextOptions<DashboardNotificationDbContext> options)
-            : base(options)
+        public DashboardNotificationDbContext(DbContextOptions<DashboardNotificationDbContext> options): base(options)
         {
+
         }
 
         public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
