@@ -1,13 +1,11 @@
-﻿using Authentication.Application.DTO;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿
+using Authentication.Application.DTO;
 
 namespace Authentication.Application.Interface
 {
     public interface IAuthService
     {
-        Task<LoginResponseDto?> Login(LoginRequestDto request);
+        Task<LoginResultDto?> Login(LoginRequestDto request);
 
         Task<bool> Register(RegisterUserDto request);
 
@@ -21,5 +19,13 @@ namespace Authentication.Application.Interface
 
         Task<bool> ResetPassword(ResetPasswordRequestDto request);
 
+        // Two-factor authentication
+        Task<TwoFactorSetupResponseDto> SetupTwoFactor(long user_id);
+
+        Task<bool> EnableTwoFactor(long user_id, TwoFactorSetupVerifyDto request);
+
+        Task<bool> DisableTwoFactor(long user_id, string current_password, string code);
+
+        Task<LoginResponseDto?> VerifyTwoFactorLogin(TwoFactorVerifyDto request);
     }
 }

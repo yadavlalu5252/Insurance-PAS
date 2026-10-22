@@ -133,5 +133,80 @@ namespace Authentication.Api.Controllers
 
             return Ok("Password reset successfully. Please log in with your new password.");
         }
+
+
+        [Authorize]
+        [HttpPost("2fa/setup")]
+        public async Task<IActionResult> SetupTwoFactor()
+        {
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!long.TryParse(userIdValue, out var userId))
+                return Unauthorized();
+
+            try
+            {
+                var result = await authService.SetupTwoFactor(userId);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("2fa/enable")]
+        public async Task<IActionResult> EnableTwoFactor(
+            [FromBody] TwoFactorSetupVerifyDto request)
+        {
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!long.TryParse(userIdValue, out var userId))
+                return Unauthorized();
+
+            var result = await authService.EnableTwoFactor(userId, request);
+
+            if (!result)
+                return BadRequest("Invalid authenticator code or setup.");
+
+            return Ok("Two-factor authentication enabled successfully.");
+        }
+
+        [Authorize]
+        [HttpPost("2fa/disable")]
+        public async Task<IActionResult> DisableTwoFactor(
+            [FromBody] DisableTwoFactorRequestDto request)
+        {
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!long.TryParse(userIdValue, out var userId))
+                return Unauthorized();
+
+            var result = await authService.DisableTwoFactor(
+                userId,
+                request.current_password,
+                request.code);
+
+            if (!result)
+                return BadRequest("Password or authenticator code is invalid.");
+
+            return Ok("Two-factor authentication disabled successfully.");
+        }
+
+        [AllowAnonymous]
+        [HttpPost("2fa/verify-login")]
+        public async Task<IActionResult> VerifyTwoFactorLogin(
+            [FromBody] TwoFactorVerifyDto request)
+        {
+            var result = await authService.VerifyTwoFactorLogin(request);
+
+            if (result == null)
+                return Unauthorized("Invalid, expired, or used 2FA challenge.");
+
+            return Ok(result);
+        }
+
+
     }
 }
