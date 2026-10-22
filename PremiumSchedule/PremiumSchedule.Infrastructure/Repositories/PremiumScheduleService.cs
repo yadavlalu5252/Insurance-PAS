@@ -348,5 +348,37 @@ namespace PremiumSchedule.Infrastructure.Repositories
             return mapper.Map<PremiumScheduleDto>(
                 schedule);
         }
+
+        public async Task<PremiumScheduleDto?> UpdateScheduleAfterPayment(
+    int schedule_id,
+    PaymentUpdateDto dto)
+        {
+            var schedule = await db.PremiumSchedule
+                .FirstOrDefaultAsync(x => x.schedule_id == schedule_id);
+
+            if (schedule == null)
+                return null;
+
+            // Prevent payment from being applied to an already paid installment
+            if (schedule.status == "Paid")
+            {
+                throw new InvalidOperationException(
+                    "This premium schedule is already fully paid.");
+            }
+
+            // Partial or full payment
+            if (dto.amount_paid >= schedule.premium_amount)
+            {
+                schedule.status = "Paid";
+            }
+            else if (dto.amount_paid > 0)
+            {
+                schedule.status = "Partial Paid";
+            }
+
+            await db.SaveChangesAsync();
+
+            return mapper.Map<PremiumScheduleDto>(schedule);
+        }
     }
 }

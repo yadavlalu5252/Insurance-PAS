@@ -1,71 +1,171 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Premium.Api.Wrappers;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Premium.Application.DTOs;
-using Premium.Application.Interfaces;
+using PremiumPayment.Application.DTO;
+using PremiumPayment.Application.Interface;
 
-namespace Premium.Api.Controllers
+namespace PremiumPayment.Api.Controllers
 {
+    [Route("api/[controller]")]
     [ApiController]
-    [Route("api/v1/payments")]
     public class PremiumPaymentController : ControllerBase
     {
-        private readonly IPremiumService _service;
+        private readonly IPremiumPaymentService paymentService;
 
         public PremiumPaymentController(
-            IPremiumService service)
+            IPremiumPaymentService paymentService)
         {
-            _service = service;
+            this.paymentService = paymentService;
         }
 
+        
+        // Create Premium Payment
         [HttpPost]
-        public async Task<IActionResult> PayPremium(
-            [FromBody] PremiumPaymentDto dto)
+        public async Task<IActionResult> CreatePayment(
+            [FromBody] CreatePaymentDto dto)
         {
-            var paymentId =
-                await _service.PayPremium(dto);
+            var result = await paymentService.CreatePaymentAsync(dto);
 
-            return Ok(
-                ApiResponse<long>.SuccessResponse(
-                    paymentId,
-                    "Premium payment initiated successfully."));
+            return Ok(result);
         }
 
-        [HttpGet("{paymentId:long}")]
-        public async Task<IActionResult> GetPayment(
-            long paymentId)
+        // Get Payment By ID
+        [HttpGet("{paymentId}")]
+        public async Task<IActionResult> GetPaymentById(
+            int paymentId)
         {
-            var payment =
-                await _service.GetPayment(paymentId);
+            var result =
+                await paymentService.GetPaymentByIdAsync(paymentId);
 
-            return Ok(
-                ApiResponse<object>.SuccessResponse(
-                    payment,
-                    "Payment details retrieved successfully."));
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    message = "Payment not found."
+                });
+            }
+
+            return Ok(result);
         }
 
-        [HttpGet("history/{policyId:long}")]
-        public async Task<IActionResult> GetPaymentHistory(
-            long policyId)
+        // Get All Payments
+        [HttpGet]
+        public async Task<IActionResult> GetPayments()
         {
-            var payments =
-                await _service.GetPaymentHistory(policyId);
+            var result = await paymentService.GetPaymentsAsync();
 
-            return Ok(
-                ApiResponse<object>.SuccessResponse(
-                    payments,
-                    "Payment history retrieved successfully."));
+            return Ok(result);
         }
 
-        [HttpPost("verify")]
+        
+        // Verify Payment
+        [HttpPost("{paymentId}/verify")]
         public async Task<IActionResult> VerifyPayment(
+            int paymentId,
             [FromBody] VerifyPaymentDto dto)
         {
-            await _service.VerifyPayment(dto);
+            var result =
+                await paymentService.VerifyPaymentAsync(
+                    paymentId,
+                    dto);
 
-            return Ok(
-                ApiResponse<object>.SuccessResponse(
-                    null!,
-                    "Payment verified successfully."));
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    message = "Payment not found."
+                });
+            }
+
+            return Ok(result);
         }
+
+        
+        // Retry Failed Payment
+        [HttpPost("{paymentId}/retry")]
+        public async Task<IActionResult> RetryPayment(
+            int paymentId)
+        {
+            var result =
+                await paymentService.RetryPaymentAsync(paymentId);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    message = "Payment not found."
+                });
+            }
+
+            return Ok(result);
+        }
+
+        // Update Payment Status
+        [HttpPut("{paymentId}/status")]
+        public async Task<IActionResult> UpdatePaymentStatus(
+            int paymentId,
+            [FromBody] PaymentStatusDto dto)
+        {
+            var result =
+                await paymentService.UpdatePaymentStatusAsync(
+                    paymentId,
+                    dto);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    message = "Payment not found."
+                });
+            }
+
+            return Ok(result);
+        }
+
+
+
+
+
+        [HttpGet("{paymentId}/receipt")]
+        public async Task<IActionResult> DownloadReceipt(int paymentId)
+        {
+            var result =
+                await paymentService.DownloadReceiptAsync(paymentId);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    message = "Receipt not found."
+                });
+            }
+
+            return File(
+                result.Value.FileBytes,
+                "application/pdf",
+                result.Value.FileName);
+        }
+
+
+        // POST /api/v1/payments/{paymentId}/receipt/regenerate
+        [HttpPost("{paymentId}/receipt/regenerate")]
+            public async Task<IActionResult> RegenerateReceipt(
+                int paymentId)
+            {
+                var result =
+                    await paymentService.RegenerateReceiptAsync(paymentId);
+
+                if (result == null)
+                {
+                    return NotFound(new
+                    {
+                        message = "Payment not found."
+                    });
+                }
+
+                return Ok(result);
+            }
+        
+
     }
 }

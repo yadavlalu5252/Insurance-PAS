@@ -22,48 +22,120 @@ namespace PremiumPayment.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Premium.Domain.Entities.PremiumPayment", b =>
+            modelBuilder.Entity("PremiumPayment.Domain.Entities.PaymentReceipt", b =>
                 {
-                    b.Property<long>("PaymentId")
+                    b.Property<int>("receipt_id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PaymentId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("receipt_id"));
 
-                    b.Property<decimal>("AmountPaid")
-                        .HasPrecision(15, 2)
-                        .HasColumnType("decimal(15,2)");
+                    b.Property<int>("payment_id")
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("PaymentDate")
+                    b.Property<DateTime>("receipt_date")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("PaymentMode")
+                    b.Property<string>("receipt_number")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("PaymentStatus")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                    b.Property<string>("receipt_path")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<long>("PolicyId")
-                        .HasColumnType("bigint");
+                    b.HasKey("receipt_id");
 
-                    b.Property<long>("ScheduleId")
-                        .HasColumnType("bigint");
+                    b.ToTable("PaymentReceipts");
+                });
 
-                    b.Property<string>("TransactionReference")
+            modelBuilder.Entity("PremiumPayment.Domain.Entities.PremiumPayments", b =>
+                {
+                    b.Property<int>("payment_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("payment_id"));
+
+                    b.Property<decimal>("amount_paid")
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<DateTime>("payment_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("payment_mode")
+                        .HasColumnType("int");
+
+                    b.Property<int>("payment_status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("policy_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("schedule_id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("transaction_reference")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("PaymentId");
+                    b.HasKey("payment_id");
 
-                    b.HasIndex("TransactionReference")
-                        .IsUnique()
-                        .HasFilter("[TransactionReference] IS NOT NULL");
+                    b.ToTable("PremiumPayments");
+                });
 
-                    b.ToTable("premium_payment", (string)null);
+            modelBuilder.Entity("PremiumPayment.Domain.Entities.PremiumRefund", b =>
+                {
+                    b.Property<long>("refund_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("refund_id"));
+
+                    b.Property<long>("approved_by")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("payment_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("refund_amount")
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<DateTime>("refund_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("refund_status")
+                        .HasColumnType("int");
+
+                    b.HasKey("refund_id");
+
+                    b.ToTable("PremiumRefunds");
+                });
+
+            modelBuilder.Entity("PremiumPayment.Domain.Entities.PremiumReminder", b =>
+                {
+                    b.Property<long>("reminder_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("reminder_id"));
+
+                    b.Property<int>("delivery_status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("reminder_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("reminder_type")
+                        .HasColumnType("int");
+
+                    b.Property<long>("schedule_id")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("reminder_id");
+
+                    b.ToTable("PremiumReminders");
                 });
 #pragma warning restore 612, 618
         }

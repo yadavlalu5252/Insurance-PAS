@@ -1,28 +1,36 @@
 using Microsoft.EntityFrameworkCore;
-using Premium.Application.Interfaces;
 using Premium.Application.Mapper;
-using Premium.Application.Services;
+using PremiumPayment.Application.Interface;
 using PremiumPayment.Infrastructure.Data;
+using PremiumPayment.Infrastructure.Repositories;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Configuration.GetConnectionString("dbconn")));
 
-builder.Services.AddScoped<
-    IPremiumService,
-    PremiumService>();
+
 
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
 });
 
+builder.Services.AddScoped<IPremiumPaymentService, PremiumPaymentService>();
+builder.Services.AddHttpClient<IPremiumScheduleClient, PremiumScheduleClient>(
+    client =>
+    {
+        client.BaseAddress = new Uri("https://localhost:7179/");
+    });
+
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Premium.Application.DTOs;
-using Premium.Domain.Entities;
+using PremiumPayment.Application.DTO;
+using PremiumPayment.Domain.Entities;
 
 namespace Premium.Application.Mapper
 {
@@ -8,9 +9,14 @@ namespace Premium.Application.Mapper
     {
         public MappingProfile()
         {
-            CreateMap<PremiumPaymentDto, PremiumPayment>();
+            // CreatePaymentDto -> PremiumPayments
+            CreateMap<CreatePaymentDto, PremiumPayments>();
 
-            CreateMap<PremiumPayment, PremiumPaymentDto>();
+            // PremiumPayments -> PaymentResponseDto
+            CreateMap<PremiumPayments, PaymentResponseDto>();
+
+            CreateMap<PaymentReceipt, ReceiptResponseDto>();
         }
     }
+    
 }

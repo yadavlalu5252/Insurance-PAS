@@ -1,12 +1,16 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using PremiumSchedule.Api.Middleware;
+using PremiumSchedule.Application.Interface;
 using PremiumSchedule.Application.Interfaces;
 using PremiumSchedule.Application.Mapper;
 using PremiumSchedule.Infrastructure.Data;
 using PremiumSchedule.Infrastructure.Repositories;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = LicenseType.Evaluation;
 
 // Add services to the container.
 
@@ -46,6 +50,12 @@ builder.Services.AddHttpClient<IPolicyIssuanceClient, PolicyIssuanceClient>(
         client.BaseAddress = new Uri(
             "https://localhost:7179/");
     });
+
+
+builder.Services.AddScoped<IPremiumPaymentService, PremiumPaymentService>();
+
+
+builder.Services.AddScoped<IRefundService, RefundService>();
 
 
 var app = builder.Build();

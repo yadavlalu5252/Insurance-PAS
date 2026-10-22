@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PremiumPaymentEntity = Premium.Domain.Entities.PremiumPayment;
+using PremiumPayment.Domain.Entities;
+using PremiumPaymentEntity = PremiumPayment.Domain.Entities.PremiumPayments;
 
 namespace PremiumPayment.Infrastructure.Data
 {
@@ -11,48 +12,56 @@ namespace PremiumPayment.Infrastructure.Data
         }
 
         public DbSet<PremiumPaymentEntity> PremiumPayments { get; set; }
+        public DbSet<PremiumReminder> PremiumReminders { get; set; }
+        public DbSet<PaymentReceipt> PaymentReceipts { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
+        public DbSet<PremiumRefund> PremiumRefunds { get; set; }
 
-            modelBuilder.Entity<PremiumPaymentEntity>(entity =>
-            {
-                entity.ToTable("premium_payment");
 
-                entity.HasKey(x => x.PaymentId);
 
-                entity.Property(x => x.PaymentId)
-                    .ValueGeneratedOnAdd();
 
-                entity.Property(x => x.ScheduleId)
-                    .IsRequired();
 
-                entity.Property(x => x.PolicyId)
-                    .IsRequired();
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    base.OnModelCreating(modelBuilder);
 
-                entity.Property(x => x.PaymentDate)
-                    .IsRequired();
+        //    modelBuilder.Entity<PremiumPaymentEntity>(entity =>
+        //    {
+        //        entity.ToTable("premium_payment");
 
-                entity.Property(x => x.AmountPaid)
-                    .HasPrecision(15, 2)
-                    .IsRequired();
+        //        entity.HasKey(x => x.payment_id);
 
-                entity.Property(x => x.PaymentMode)
-                    .HasMaxLength(50)
-                    .IsRequired();
+        //        entity.Property(x => x.payment_id)
+        //            .ValueGeneratedOnAdd();
 
-                entity.Property(x => x.TransactionReference)
-                    .HasMaxLength(100);
+        //        entity.Property(x => x.schedule_id)
+        //            .IsRequired();
 
-                entity.Property(x => x.PaymentStatus)
-                    .HasMaxLength(30)
-                    .IsRequired();
+        //        entity.Property(x => x.policy_id)
+        //            .IsRequired();
 
-                entity.HasIndex(x => x.TransactionReference)
-                    .IsUnique()
-                    .HasFilter("[TransactionReference] IS NOT NULL");
-            });
-        }
+        //        entity.Property(x => x.payment_date)
+        //            .IsRequired();
+
+        //        entity.Property(x => x.amount_paid)
+        //            .HasPrecision(15, 2)
+        //            .IsRequired();
+
+        //        entity.Property(x => x.payment_mode)
+        //            .HasMaxLength(50)
+        //            .IsRequired();
+
+        //        entity.Property(x => x.transaction_reference)
+        //            .HasMaxLength(100);
+
+        //        entity.Property(x => x.payment_status)
+        //            .HasMaxLength(30)
+        //            .IsRequired();
+
+        //        entity.HasIndex(x => x.transaction_reference)
+        //            .IsUnique()
+        //            .HasFilter("[TransactionReference] IS NOT NULL");
+        //    });
+        //}
     }
 }

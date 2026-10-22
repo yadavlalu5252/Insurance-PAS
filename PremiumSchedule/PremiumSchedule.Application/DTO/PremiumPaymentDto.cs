@@ -1,21 +1,15 @@
-﻿namespace Premium.Domain.Entities
+﻿namespace Premium.Application.DTOs
 {
-    public class PremiumPayment
+    public class PremiumPaymentDto
     {
-        public long PaymentId { get; set; }
-
         public long ScheduleId { get; set; }
 
         public long PolicyId { get; set; }
-
-        public DateTime PaymentDate { get; set; }
 
         public decimal AmountPaid { get; set; }
 
         public string PaymentMode { get; set; } = string.Empty;
 
         public string? TransactionReference { get; set; }
-
-        public string PaymentStatus { get; set; } = "Initiated";
     }
 }

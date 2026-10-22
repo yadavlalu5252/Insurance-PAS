@@ -95,5 +95,30 @@ namespace PremiumSchedule.Api.Controllers
                     "Overdue premium schedules updated successfully.",
                     null));
         }
+
+        [HttpPut("{schedule_id}/payment")]
+        public async Task<IActionResult> UpdateScheduleAfterPayment(
+    int schedule_id,
+    [FromBody] PaymentUpdateDto dto)
+        {
+            var result = await service.UpdateScheduleAfterPayment(
+                schedule_id,
+                dto);
+
+            if (result == null)
+            {
+                return NotFound(
+                    new ResponseWrapper<object>(
+                        false,
+                        "Premium schedule not found.",
+                        null));
+            }
+
+            return Ok(
+                new ResponseWrapper<PremiumScheduleDto>(
+                    true,
+                    "Premium schedule updated after successful payment.",
+                    result));
+        }
     }
 }

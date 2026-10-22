@@ -1,13 +1,13 @@
-﻿namespace Premium.Application.DTOs
+﻿using PremiumPayment.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
+
+namespace Premium.Application.DTOs
 {
     public class VerifyPaymentDto
     {
-        public long PaymentId { get; set; }
+        [Required]
+        public PaymentStatus payment_status { get; set; }
 
-        public string PaymentStatus { get; set; } = string.Empty;
-
-        public string? TransactionReference { get; set; }
-
-        public string VerificationSource { get; set; } = string.Empty;
+        public string? transaction_reference { get; set; }
     }
 }
