@@ -29,10 +29,9 @@ namespace ClaimManagement.Domain.Entities
 
         public string claim_status { get; set; } = "Registered";
 
-        [ForeignKey("claim_id")]
+        [Timestamp]
+        public byte[] row_version { get; set; } = Array.Empty<byte>();
         public List<ClaimDocument> claim_documents { get; set; } = new();
-
-        [ForeignKey("claim_id")]
         public List<ClaimHistory> claim_history { get; set; } = new();
     }
 }

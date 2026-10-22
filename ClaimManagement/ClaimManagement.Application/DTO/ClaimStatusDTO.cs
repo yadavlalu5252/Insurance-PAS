@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ClaimManagement.Application.DTO
 {
-    public class ClaimStatusResponseDto
+    public class ClaimStatusDTO
     {
         public long claim_id { get; set; }
         public string claim_number { get; set; } = string.Empty;

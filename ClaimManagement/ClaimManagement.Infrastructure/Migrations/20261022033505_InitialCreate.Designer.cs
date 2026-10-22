@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClaimManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(ClaimDbContext))]
-    [Migration("20261020154612_AddSurveyAssignment")]
-    partial class AddSurveyAssignment
+    [Migration("20261022033505_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,51 @@ namespace ClaimManagement.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.ClaimAssessment", b =>
+                {
+                    b.Property<long>("assessment_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("assessment_id"));
+
+                    b.Property<decimal>("assessed_amount")
+                        .HasPrecision(15, 2)
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<long>("assessed_by")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("assessed_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("claim_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("deductible")
+                        .HasPrecision(15, 2)
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<decimal>("depreciation")
+                        .HasPrecision(15, 2)
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<decimal>("net_payable")
+                        .HasPrecision(15, 2)
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<decimal>("non_payable")
+                        .HasPrecision(15, 2)
+                        .HasColumnType("decimal(15,2)");
+
+                    b.HasKey("assessment_id");
+
+                    b.HasIndex("claim_id")
+                        .IsUnique();
+
+                    b.ToTable("claim_assessment");
+                });
 
             modelBuilder.Entity("ClaimManagement.Domain.Entities.ClaimDocument", b =>
                 {
@@ -129,12 +174,111 @@ namespace ClaimManagement.Infrastructure.Migrations
                     b.Property<long>("policy_id")
                         .HasColumnType("bigint");
 
+                    b.Property<byte[]>("row_version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.HasKey("claim_id");
 
                     b.HasIndex("claim_number")
                         .IsUnique();
 
                     b.ToTable("claim_master");
+                });
+
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.InvestigationEvidence", b =>
+                {
+                    b.Property<long>("evidence_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("evidence_id"));
+
+                    b.Property<string>("description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("file_name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("file_path")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("investigation_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("uploaded_by")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("uploaded_date")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("evidence_id");
+
+                    b.HasIndex("investigation_id");
+
+                    b.ToTable("investigation_evidence");
+                });
+
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.InvestigationMaster", b =>
+                {
+                    b.Property<long>("investigation_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("investigation_id"));
+
+                    b.Property<DateTime>("assigned_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("claim_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("completed_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("findings")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("investigation_number")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("investigation_reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("investigation_status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("investigator_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("recommendation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("report_path")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("row_version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("investigation_id");
+
+                    b.HasIndex("claim_id");
+
+                    b.HasIndex("investigation_number")
+                        .IsUnique();
+
+                    b.ToTable("investigation");
                 });
 
             modelBuilder.Entity("ClaimManagement.Domain.Entities.SurveyAssignment", b =>
@@ -166,9 +310,19 @@ namespace ClaimManagement.Infrastructure.Migrations
 
                     b.HasKey("survey_id");
 
-                    b.HasIndex("claim_id");
+                    b.HasIndex("claim_id")
+                        .IsUnique();
 
                     b.ToTable("survey_assignment");
+                });
+
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.ClaimAssessment", b =>
+                {
+                    b.HasOne("ClaimManagement.Domain.Entities.ClaimMaster", null)
+                        .WithMany()
+                        .HasForeignKey("claim_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ClaimManagement.Domain.Entities.ClaimDocument", b =>
@@ -189,15 +343,31 @@ namespace ClaimManagement.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ClaimManagement.Domain.Entities.SurveyAssignment", b =>
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.InvestigationEvidence", b =>
                 {
-                    b.HasOne("ClaimManagement.Domain.Entities.ClaimMaster", "claim")
+                    b.HasOne("ClaimManagement.Domain.Entities.InvestigationMaster", null)
+                        .WithMany()
+                        .HasForeignKey("investigation_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.InvestigationMaster", b =>
+                {
+                    b.HasOne("ClaimManagement.Domain.Entities.ClaimMaster", null)
                         .WithMany()
                         .HasForeignKey("claim_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
 
-                    b.Navigation("claim");
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.SurveyAssignment", b =>
+                {
+                    b.HasOne("ClaimManagement.Domain.Entities.ClaimMaster", null)
+                        .WithMany()
+                        .HasForeignKey("claim_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ClaimManagement.Domain.Entities.ClaimMaster", b =>

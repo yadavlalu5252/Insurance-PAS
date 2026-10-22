@@ -23,7 +23,7 @@ namespace ClaimManagement.Domain.Entities
 
         public string survey_status { get; set; } = SurveyStatuses.Assigned;
 
-        [ForeignKey("claim_id")]
-        public ClaimMaster? claim { get; set; }
+        //[ForeignKey("claim_id")]
+        //public ClaimMaster? claim { get; set; }
     }
 }

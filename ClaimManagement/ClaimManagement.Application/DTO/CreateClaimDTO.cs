@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ClaimManagement.Application.DTO
 {
-    public class ClaimCreateDto
+    public class CreateClaimDTO
     {
         public long policy_id { get; set; }
 

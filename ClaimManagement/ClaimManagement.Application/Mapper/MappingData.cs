@@ -8,14 +8,16 @@ namespace ClaimManagement.Application.Mapper
     {
         public MappingData()
         {
-            CreateMap<ClaimMaster, ClaimResponseDto>();
-            CreateMap<ClaimMaster, ClaimStatusResponseDto>();
-            CreateMap<ClaimCreateDto, ClaimMaster>();
-            CreateMap<ClaimUpdateDto, ClaimMaster>();
-            CreateMap<ClaimDocument, DocumentResponseDTO>();
+            CreateMap<ClaimMaster, ClaimResponseDTO>();
+            CreateMap<ClaimMaster, ClaimStatusDTO>();
+            CreateMap<CreateClaimDTO, ClaimMaster>();
+            CreateMap<UpdateClaimDTO, ClaimMaster>();
             CreateMap<ClaimHistory, ClaimHistoryDTO>();
-            CreateMap<SurveyAssignment, SurveyResponseDTO>()
-            .ForMember(d => d.report_uploaded, o => o.MapFrom(s => s.report_path != null));
+            CreateMap<ClaimDocument, DocumentResponseDTO>();
+            CreateMap<SurveyAssignment, SurveyResponseDTO>();
+            CreateMap<ClaimAssessment, AssessmentResponseDTO>();
+            CreateMap<InvestigationMaster, InvestigationResponseDTO>();
+            CreateMap<InvestigationEvidence, EvidenceResponseDTO>();
         }
     }
 }
