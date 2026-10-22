@@ -14,13 +14,15 @@ namespace QuoteGeneration.Infrastructure.Services
         private readonly IMapper mapper;
         private readonly InsuranceProductClient productClient;
         private readonly IQuoteHistoryService quoteHistoryService;
+        private readonly UnderwritingClient underwritingClient;
 
-        public PremiumCalculationService(AppDbContext db,IMapper mapper,InsuranceProductClient productClient,IQuoteHistoryService quoteHistoryService)
+        public PremiumCalculationService(AppDbContext db,IMapper mapper,InsuranceProductClient productClient,IQuoteHistoryService quoteHistoryService,UnderwritingClient underwritingClient)
         {
             this.db = db;
             this.mapper = mapper;
             this.productClient = productClient;
             this.quoteHistoryService = quoteHistoryService;
+            this.underwritingClient = underwritingClient;
         }
 
         public async Task<PremiumCalculationDTO?> CalculatePremiumAsync(int quoteId)
@@ -63,9 +65,30 @@ namespace QuoteGeneration.Infrastructure.Services
                 return null;
             }
 
-            decimal riskPercentage = 10m;
+
+            var underwriting = await underwritingClient.GetRiskByQuoteIdAsync(quoteId);
+
+            if (underwriting == null)
+            {
+                return null;
+            }
+
+            decimal riskPercentage;
+
+            if (underwriting.risk_category == "Low Risk")
+                riskPercentage = 0m;
+            else if (underwriting.risk_category == "Medium Risk")
+                riskPercentage = 10m;
+            else if (underwriting.risk_category == "High Risk")
+                riskPercentage = 25m;
+            else if (underwriting.risk_category == "Very High Risk")
+                riskPercentage = 50m;
+            else
+                return null;
+
             decimal gstPercentage = 18m;
-           
+
+
 
             var selectedRiders = await db.QuoteRiders.Where(qr => qr.quote_id == quoteId).ToListAsync();
 
