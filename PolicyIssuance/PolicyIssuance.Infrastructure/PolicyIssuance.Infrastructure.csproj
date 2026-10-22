@@ -9,7 +9,6 @@
     </PackageReference>
     <PackageReference Include="QuestPDF" Version="2026.9.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="10.3.1" />
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,3 +23,4 @@
   </PropertyGroup>
 
 </Project>
+
