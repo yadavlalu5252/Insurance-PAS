@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ClaimManagement.Application.DTO
 {
-    public class ClaimUpdateDto
+    public class UpdateClaimDTO
     {
         public string description { get; set; } = string.Empty;
 
