@@ -34,6 +34,7 @@
     <Project Path="DashboardNotification/DashboardNotification.Application/DashboardNotification.Application.csproj" />
     <Project Path="DashboardNotification/DashboardNotification.Domain/DashboardNotification.Domain.csproj" />
     <Project Path="DashboardNotification/DashboardNotification.Infrastructure/DashboardNotification.Infrastructure.csproj" />
+    <Project Path="PlaceholderTest/PlaceholderTest.csproj" Id="0627776a-10ef-4bfc-b1a3-afb9a368d66e" />
   </Folder>
   <Folder Name="/InsuranceProductManagement/">
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Api/InsuranceProductManagement.Api.csproj" />
