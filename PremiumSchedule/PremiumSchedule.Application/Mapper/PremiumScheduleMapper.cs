@@ -12,6 +12,15 @@ namespace PremiumSchedule.Application.Mapper
         public PremiumScheduleMapper()
         {
             CreateMap<PremiumSchedules, PremiumScheduleDto>();
+            // CreatePaymentDto -> PremiumPayments
+            CreateMap<CreatePaymentDto, PremiumPayments>();
+
+            // PremiumPayments -> PaymentResponseDto
+            CreateMap<PremiumPayments, PaymentResponseDto>();
+
+            CreateMap<PaymentReceipt, ReceiptResponseDto>();
+
+            CreateMap<PremiumRefund, RefundResponseDto>();
         }
     }
 }
