@@ -53,6 +53,9 @@ builder.Services.AddScoped<IClaimWorkflowService, ClaimWorkflowService>();
 builder.Services.AddScoped<IInvestigationService, InvestigationService>();
 builder.Services.AddScoped<IClaimService, ClaimService>();
 builder.Services.AddScoped<ISurveyService, SurveyService>();
+builder.Services.AddDataProtection();
+builder.Services.AddScoped<ISecretProtector, DataProtectionSecretProtector>();
+builder.Services.AddScoped<ISettlementService, SettlementService>();
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingData>());
 
 // Swagger configuration
