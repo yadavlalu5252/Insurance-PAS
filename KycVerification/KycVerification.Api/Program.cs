@@ -2,10 +2,14 @@ using KycVerification.Application.Interface;
 using KycVerification.Application.Mapper;
 using KycVerification.Infrastructure.Data;
 using KycVerification.Infrastructure.Repositories;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+
 using System.Text;
+
 static void ConfigureJwtAuthentication(
     IServiceCollection services,
     IConfiguration configuration)
@@ -22,34 +26,33 @@ static void ConfigureJwtAuthentication(
     services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
-            options.TokenValidationParameters =
-                new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = issuer,
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = issuer,
 
-                    ValidateAudience = true,
-                    ValidAudience = audience,
+                ValidateAudience = true,
+                ValidAudience = audience,
 
-                    ValidateLifetime = true,
+                ValidateLifetime = true,
 
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(jwtKey)),
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtKey)),
 
-                    ClockSkew = TimeSpan.Zero
-                };
+                ClockSkew = TimeSpan.Zero
+            };
         });
 
     services.AddAuthorization();
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
 ConfigureJwtAuthentication(
     builder.Services,
     builder.Configuration);
 
-// Framework services
 builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
@@ -64,20 +67,40 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddOpenApi();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-// Database
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Enter your JWT token."
+        });
+
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference(
+                "Bearer",
+                document)] = []
+        });
+});
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("dbconn")));
 
-// AutoMapper
 builder.Services.AddAutoMapper(
     cfg => { },
     typeof(KycMappingProfile));
 
-// Services
 builder.Services.AddScoped<
     IDocumentTypeMasterServices,
     DocumentTypeMasterServices>();
@@ -107,15 +130,14 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-
     app.UseSwagger();
-
     app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
 app.UseCors("AngularClient");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
