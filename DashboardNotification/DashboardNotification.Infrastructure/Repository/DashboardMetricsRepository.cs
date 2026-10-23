@@ -18,13 +18,13 @@ namespace DashboardNotification.Infrastructure.Repository
         {
             DashboardMetrics data = new DashboardMetrics();
 
-            data.TotalUsers = db.Users.Count();
+            //data.TotalUsers = db.Users.Count();
 
-            data.ActiveUsers = db.Users.Count(x => x.status == "Active");
+            //data.ActiveUsers = db.Users.Count(x => x.status == "Active");
 
-            data.LockedUsers = db.Users.Count(x => x.status == "Locked");
+            //data.LockedUsers = db.Users.Count(x => x.status == "Locked");
 
-            data.TotalRoles = db.Roles.Count();
+            //data.TotalRoles = db.Roles.Count();
 
             return data;
         }
