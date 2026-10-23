@@ -7,7 +7,7 @@ using ClaimManagement.Application.Wrapper;
 using ClaimManagement.Infrastructure.Config;
 using ClaimManagement.Infrastructure.Data;
 using ClaimManagement.Infrastructure.Repositories;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+//using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -80,36 +80,36 @@ builder.Services.AddHttpClient<PremiumClient>(client =>
 var jwt = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwt["Key"] ?? throw new InvalidOperationException("Jwt:Key is missing. Set it with dotnet user-secrets.");
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = jwt["Issuer"],
-            ValidateAudience = true,
-            ValidAudience = jwt["Audience"],
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ValidateLifetime = true
-        };
+//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//    .AddJwtBearer(options =>
+//    {
+//        options.TokenValidationParameters = new TokenValidationParameters
+//        {
+//            ValidateIssuer = true,
+//            ValidIssuer = jwt["Issuer"],
+//            ValidateAudience = true,
+//            ValidAudience = jwt["Audience"],
+//            ValidateIssuerSigningKey = true,
+//            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+//            ValidateLifetime = true
+//        };
 
-        // answers in the same wrapper format as the rest of the API
-        options.Events = new JwtBearerEvents
-        {
-            OnChallenge = async context =>
-            {
-                context.HandleResponse();
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail("Login is required. Send a valid token."));
-            },
-            OnForbidden = async context =>
-            {
-                context.Response.StatusCode = 403;
-                await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail("You do not have permission for this action."));
-            }
-        };
-    });
+//        // answers in the same wrapper format as the rest of the API
+//        options.Events = new JwtBearerEvents
+//        {
+//            OnChallenge = async context =>
+//            {
+//                context.HandleResponse();
+//                context.Response.StatusCode = 401;
+//                await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail("Login is required. Send a valid token."));
+//            },
+//            OnForbidden = async context =>
+//            {
+//                context.Response.StatusCode = 403;
+//                await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail("You do not have permission for this action."));
+//            }
+//        };
+//    });
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();

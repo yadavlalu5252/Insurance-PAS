@@ -18,14 +18,24 @@ namespace QuoteGeneration.Api.Controllers
             this.service = service;
         }
 
+        
         [HttpPost("Calculate/{quoteId}")]
         public async Task<IActionResult> CalculatePremium(int quoteId)
         {
             var result = await service.CalculatePremiumAsync(quoteId);
 
-            return Ok(ApiResponse<PremiumCalculationDTO>.SuccessResponse(
-                result, "Premium calculated successfully."));
+            if (result == null)
+            {
+                return BadRequest(
+                    ApiResponse<PremiumCalculationDTO>.ErrorResponse(
+                        "Premium calculation failed. Check quote, product, and underwriting details."));
+            }
+
+            return Ok(
+                ApiResponse<PremiumCalculationDTO>.SuccessResponse(
+                    result, "Premium calculated successfully."));
         }
+
 
         [HttpGet("GetByQuoteId/{quoteId}")]
         public async Task<IActionResult> GetPremiumByQuoteId(int quoteId)
