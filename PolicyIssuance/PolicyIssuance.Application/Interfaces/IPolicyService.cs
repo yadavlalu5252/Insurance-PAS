@@ -29,5 +29,7 @@ namespace PolicyIssuance.Application.Interface
 
         Task<bool> UpdateRidersAsync(long policyId, List<PolicyRiderDTO> riders);
         Task<List<PolicyRiderDTO>> GetRidersAsync(long policyId);
+
+        Task<bool> RenewPolicyAsync(long id, DateTime newExpiryDate);
     }
 }

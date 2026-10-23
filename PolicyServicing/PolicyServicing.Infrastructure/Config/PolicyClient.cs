@@ -83,5 +83,14 @@ namespace PolicyServicing.Infrastructure.Config
             SetAuthHeader(token);
             return await client.GetFromJsonAsync<List<PolicyRiderDTO>>($"/api/v1/policies/{policyId}/riders");
         }
+
+
+        public async Task<bool> RenewPolicy(long policyId, DateTime newExpiryDate, string token)
+        {
+            SetAuthHeader(token);
+            // Hits her new specific endpoint!
+            var response = await client.PutAsJsonAsync($"/api/v1/policies/{policyId}/renew", new { NewExpiryDate = newExpiryDate });
+            return response.IsSuccessStatusCode;
+        }
     }
 }

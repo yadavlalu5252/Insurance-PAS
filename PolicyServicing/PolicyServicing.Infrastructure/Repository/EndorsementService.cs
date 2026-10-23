@@ -105,30 +105,54 @@ namespace PolicyServicing.Infrastructure.Repository
 
                         break;
                     case "Contact Update":
-                        var contactData = JsonSerializer.Deserialize<ContactUpdateDTO>(endorsement.updated_value);
+                        // 1. Extract the new email and mobile from the JSON
+                        var contactJson = JsonDocument.Parse(endorsement.updated_value).RootElement;
+                        string newEmail = contactJson.GetProperty("email").GetString();
+                        string newMobile = contactJson.GetProperty("mobile_number").GetString();
 
-                        // 1. Fetch the CURRENT old data (this is the full customer object)
+                        // 2. Fetch the old customer data (using her API)
                         var oldCustomer = await customerClient.GetCustomerById(customerId, token);
                         if (oldCustomer == null) throw new Exception("Customer not found in Customer Microservice.");
 
-                        // Save old data for Audit Trail
+                        // 3. Save for Audit Trail
                         endorsement.previous_value = JsonSerializer.Serialize(oldCustomer);
 
-                        // 2. Check for Duplicates
-                        var existingEmail = await customerClient.SearchCustomersByEmail(contactData.EmailAddress, token);
+                        // 4. Check for Duplicates
+                        var existingEmail = await customerClient.SearchCustomersByEmail(newEmail, token);
                         if (existingEmail.Any(c => c.customer_id != customerId))
                             throw new Exception("Email address is already in use by another customer.");
 
-                        var existingMobile = await customerClient.SearchCustomersByMobile(contactData.MobileNumber, token);
+                        var existingMobile = await customerClient.SearchCustomersByMobile(newMobile, token);
                         if (existingMobile.Any(c => c.customer_id != customerId))
                             throw new Exception("Mobile number is already in use by another customer.");
 
-                        // 3. Update the properties on the EXISTING object
-                        oldCustomer.mobile_number = contactData.MobileNumber;
-                        oldCustomer.email = contactData.EmailAddress;
+                        // 5. Build the EXACT UpdateCustomerDto payload she expects
+                        // 5. Build the EXACT UpdateCustomerDto payload she expects
+                        var updatePayload = new
+                        {
+                            first_name = oldCustomer.first_name,
+                            middle_name = oldCustomer.middle_name,
+                            last_name = oldCustomer.last_name,
+                            date_of_birth = oldCustomer.date_of_birth,
 
-                        // 4. Send the ENTIRE updated object to her API
-                        bool isContactUpdated = await customerClient.UpdateCustomer(customerId, oldCustomer, token);
+                            // 🚨 CONVERT NUMBERS TO STRINGS FOR HER REGEX VALIDATION
+                            gender = oldCustomer.gender == "0" ? "Male" :
+                                     oldCustomer.gender == "1" ? "Female" : "Other",
+
+                            marital_status = oldCustomer.marital_status == "0" ? "Single" :
+                                             oldCustomer.marital_status == "1" ? "Married" :
+                                             oldCustomer.marital_status == "2" ? "Divorced" : "Widowed",
+
+                            occupation = oldCustomer.occupation,
+                            annual_income = oldCustomer.annual_income,
+                            mobile_number = newMobile, // The new mobile
+                            email = newEmail,          // The new email
+
+                            customer_status = oldCustomer.customer_status == "0" ? "Active" : "Inactive"
+                        };
+
+                        // 6. Send the UpdateCustomerDto to her PUT endpoint
+                        bool isContactUpdated = await customerClient.UpdateCustomer(customerId, updatePayload, token);
 
                         if (!isContactUpdated)
                             throw new Exception("Customer Microservice rejected the contact update.");
@@ -161,7 +185,10 @@ namespace PolicyServicing.Infrastructure.Repository
                     case "Coverage Update":
                     case "Coverage Increase":
                     case "Coverage Reduction":
-                        var coverageData = JsonSerializer.Deserialize<SavedCoverageDTO>(endorsement.updated_value);
+                        var coverageData = JsonSerializer.Deserialize<SavedCoverageDTO>(
+                            endorsement.updated_value,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                        );
 
                         // 1. Fetch the old coverage for the audit trail
                         var currentCoverages = await policyClient.GetPolicyCoverages(policyId, token);
@@ -172,31 +199,43 @@ namespace PolicyServicing.Infrastructure.Repository
                         // 2. Save Audit Trail (Old Value)
                         endorsement.previous_value = JsonSerializer.Serialize(oldCoverage);
 
-                        // 🚨 3. CALCULATE PRO-RATA PREMIUM HERE (Before updating in memory) 🚨
+                        // 🚨 3. VALIDATE MIN/MAX LIMITS FROM PRODUCT MICROSERVICE 🚨
+                        var coverageRules = await productClient.GetCoverageRules(coverageData.coverage_id, token);
+
+                        if (coverageRules == null)
+                            throw new Exception("Coverage rules not found in Product Microservice.");
+
+                        if (coverageData.sum_insured < coverageRules.minimum_coverage ||
+                            coverageData.sum_insured > coverageRules.maximum_coverage)
+                        {
+                            throw new Exception($"Sum insured must be between {coverageRules.minimum_coverage} and {coverageRules.maximum_coverage} for this coverage.");
+                        }
+                        // -----------------------------------------------------------
+
+                        // 4. Calculate Pro-Rata Premium
                         var policyDetailsForPremium = await policyClient.GetPolicyById(policyId, token);
 
                         decimal oldSumInsured = oldCoverage.sum_insured;
                         decimal newSumInsured = coverageData.sum_insured;
                         decimal oldTotalPremium = policyDetailsForPremium.premium_amount;
 
-                        // New Premium = Old Premium * (New Coverage / Old Coverage)
                         decimal newCalculatedPremium = oldTotalPremium;
                         if (oldSumInsured > 0)
                         {
                             newCalculatedPremium = oldTotalPremium * (newSumInsured / oldSumInsured);
                         }
 
-                        // 4. Update the coverage in memory
+                        // 5. Update the coverage in memory
                         oldCoverage.sum_insured = coverageData.sum_insured;
 
-                        // 5. Send the updated coverage to her microservice
+                        // 6. Send the updated coverage to her microservice
                         bool isCoverageUpdated = await policyClient.UpdatePolicyCoverage(policyId, oldCoverage.coverage_id, oldCoverage, token);
                         if (!isCoverageUpdated) throw new Exception("Core Policy coverage update failed.");
 
-                        // 6. Save Audit Trail (New Value)
+                        // 7. Save Audit Trail (New Value)
                         endorsement.updated_value = JsonSerializer.Serialize(oldCoverage);
 
-                        // 7. Log the Endorsement in her database
+                        // 8. Log the Endorsement in her database
                         var endorsementPayload = new
                         {
                             policy_id = policyId,
@@ -210,7 +249,7 @@ namespace PolicyServicing.Infrastructure.Repository
                         };
                         await policyClient.CreatePolicyEndorsement(policyId, endorsementPayload, token);
 
-
+                        // 9. Recalculate Premium
                         var premiumPayload = new
                         {
                             policy_id = (int)policyId,
@@ -218,8 +257,6 @@ namespace PolicyServicing.Infrastructure.Repository
                             effective_date = policyDetailsForPremium.effective_date,
                             expiry_date = policyDetailsForPremium.expiry_date,
                             premium_frequency = "Monthly",
-
-
                             total_premium = newCalculatedPremium
                         };
 
@@ -230,13 +267,19 @@ namespace PolicyServicing.Infrastructure.Repository
                     case "Rider Addition":
                     case "Rider Removal":
                         // 1. Deserialize the requested intent (Action + RiderId)
-                        var riderRequest = JsonSerializer.Deserialize<RiderModifyDTO>(endorsement.updated_value);
+                        var riderRequest = JsonSerializer.Deserialize<RiderModifyDTO>(
+                                            endorsement.updated_value,
+                                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                                        );
                         if (riderRequest == null) throw new Exception("Invalid rider payload.");
 
                         // 2. Fetch Current Policy Details
                         var riderPolicyDetails = await policyClient.GetPolicyById(policyId, token);
                         if (riderPolicyDetails == null) throw new Exception("Policy not found.");
-                        if (riderPolicyDetails.policy_status != "Active") throw new Exception("Policy must be Active to modify riders.");
+                        if (riderPolicyDetails.policy_status != "Active" && riderPolicyDetails.policy_status != "3")
+                        {
+                            throw new Exception($"Policy must be Active to modify riders. Current status: {riderPolicyDetails.policy_status}");
+                        }
 
                         // 3. Validate Eligibility with Product Microservice
                         var eligibleRiders = await productClient.GetEligibleRiders(riderPolicyDetails.product_id, token);
@@ -263,6 +306,7 @@ namespace PolicyServicing.Infrastructure.Repository
                             updatedRidersList.Add(new PolicyRiderDTO
                             {
                                 rider_id = riderRequest.RiderId,
+                                policy_id = policyId,
                                 rider_name = requestedRiderInfo.rider_name,
                                 premium_amount = requestedRiderInfo.rider_premium
                             });
@@ -283,8 +327,7 @@ namespace PolicyServicing.Infrastructure.Repository
 
                         // 6. Execute Updates across Microservices
                         // Use the NEW method that hits her /riders endpoint!
-                        var riderPayload = new { riders = updatedRidersList };
-                        bool isRiderUpdated = await policyClient.UpdatePolicyRiders(policyId, riderPayload, token);
+                        bool isRiderUpdated = await policyClient.UpdatePolicyRiders(policyId, updatedRidersList, token);
                         if (!isRiderUpdated) throw new Exception("Core Policy rider update failed.");
 
                         // 7. Log the Endorsement (Fixed Payload!)

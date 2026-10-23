@@ -411,5 +411,23 @@ namespace PolicyIssuance.Infrastructure.Services
 
             return riders;
         }
+
+        public async Task<bool> RenewPolicyAsync(long id, DateTime newExpiryDate)
+        {
+            // 1. Find the policy
+            var policy = await db.Policies.FirstOrDefaultAsync(p => p.policy_id == id);
+            if (policy == null) return false;
+
+            // 2. Check if it's Active (using her Enum)
+            if (policy.policy_status != PolicyStatus.Active)
+                return false;
+
+            // 3. Update ONLY the expiry date
+            policy.expiry_date = newExpiryDate;
+
+            // 4. Save to database
+            await db.SaveChangesAsync();
+            return true;
+        }
     }
 }

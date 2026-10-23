@@ -56,7 +56,14 @@ ConfigureJwtAuthentication(
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+
+        // 🚨 ADD THIS LINE:
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -98,8 +105,8 @@ builder.Services.AddHttpClient<ProductClient>(client =>
 });
 
 
+builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
 
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 builder.Services.AddScoped<IPolicyService, PolicyService>();
 builder.Services.AddScoped<IProcessCancellation, ProcessCancellationService>();

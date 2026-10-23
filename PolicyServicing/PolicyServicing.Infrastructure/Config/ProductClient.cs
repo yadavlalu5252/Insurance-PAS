@@ -49,5 +49,14 @@ namespace PolicyServicing.Infrastructure.Config
             var response = await client.GetFromJsonAsync<ProductApiResponse<List<CoverageMasterDTO>>>($"/api/v1/insurance-products/{productId}/coverages");
             return response?.Data ?? new List<CoverageMasterDTO>();
         }
+
+        // Add this inside ProductClient.cs
+        public async Task<CoverageMasterDTO> GetCoverageRules(long coverageId, string token)
+        {
+            SetAuthHeader(token);
+            // Hits her GET /api/v1/coverages/{id} endpoint
+            var response = await client.GetFromJsonAsync<ProductApiResponse<CoverageMasterDTO>>($"/api/v1/coverages/{coverageId}");
+            return response?.Data;
+        }
     }
 }

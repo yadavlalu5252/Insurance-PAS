@@ -158,5 +158,17 @@ namespace PolicyIssuance.Api.Controllers
             return Ok(result);
         }
 
+
+        [HttpPut("{id:long}/renew")]
+        public async Task<IActionResult> Renew(long id, [FromBody] RenewPolicyDTO dto)
+        {
+            var result = await service.RenewPolicyAsync(id, dto.NewExpiryDate);
+
+            if (!result)
+                return BadRequest("Policy not found or is not in Active status.");
+
+            return Ok(new { message = "Policy renewed successfully." });
+        }
+
     }
 }

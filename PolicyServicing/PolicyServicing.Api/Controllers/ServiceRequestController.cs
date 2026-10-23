@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
-using System.Security.Claims; // 🚨 Add this
+using System.Security.Claims; 
 
 [Authorize]
 [ApiController]

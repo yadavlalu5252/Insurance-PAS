@@ -69,8 +69,10 @@ namespace PolicyServicing.Infrastructure.Config
         public async Task<List<CustomerDTO>> SearchCustomersByEmail(string email, string token)
         {
             SetAuthHeader(token);
+
+            var encodedEmail = Uri.EscapeDataString(email);
             // Matches her DTO property: email
-            var response = await client.GetFromJsonAsync<CustomerApiResponse<List<CustomerDTO>>>($"/api/customers/search?email={email}");
+            var response = await client.GetFromJsonAsync<CustomerApiResponse<List<CustomerDTO>>>($"/api/customers/search?email={encodedEmail}");
             return response?.Data ?? new List<CustomerDTO>();
         }
 

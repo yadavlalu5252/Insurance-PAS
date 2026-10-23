@@ -79,11 +79,11 @@ namespace PolicyServicing.Infrastructure.Repository
                 if (renewalPremiumAmount <= 0)
                     throw new Exception("Invalid premium amount calculated by the Premium Microservice.");
 
-                // 🚨 FIX 2: Update the FULL policy object, not just a partial payload!
                 policyDetails.expiry_date = request.NewExpiryDate;
 
-                bool isPolicyUpdated = await client.UpdatePolicy(policyId, policyDetails, token);
-                if (!isPolicyUpdated) throw new Exception("Core Policy Microservice rejected the update.");
+                bool isPolicyUpdated = await client.RenewPolicy(policyId, request.NewExpiryDate, token);
+                if (!isPolicyUpdated) throw new Exception("Core Policy Microservice rejected the renewal.");
+
 
                 serviceRequest.status = RequestStatus.Completed;
 
@@ -137,12 +137,22 @@ namespace PolicyServicing.Infrastructure.Repository
         }
 
         // 2. GET /api/v1/renewals/{id}
+        // 2. GET /api/v1/renewals/{id}
         public async Task<RenewalDetailsResponseDTO> GetRenewalDetailsAsync(long renewalId)
         {
             var renewal = await db.policy_renewal.FirstOrDefaultAsync(r => r.renewal_id == renewalId);
             if (renewal == null) return null;
 
-            return mapper.Map<RenewalDetailsResponseDTO>(renewal);
+            // 🚨 MANUAL MAPPING (No AutoMapper needed!)
+            return new RenewalDetailsResponseDTO
+            {
+                RenewalId = renewal.renewal_id,
+                PolicyId = renewal.policy_id,
+                RenewalDate = renewal.renewal_date,
+                NewExpiryDate = renewal.new_expiry_date,
+                PremiumAmount = renewal.premium_amount,
+                Status = renewal.Renewal_Status.ToString() // Converts the Enum to a string
+            };
         }
     }
 }
