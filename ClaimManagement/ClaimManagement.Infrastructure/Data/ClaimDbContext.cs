@@ -16,6 +16,7 @@ public class ClaimDbContext : DbContext
     public DbSet<ClaimAssessment> claim_assessment { get; set; }
     public DbSet<InvestigationMaster> investigation { get; set; }
     public DbSet<InvestigationEvidence> investigation_evidence { get; set; }
+    public DbSet<ClaimSettlement> claim_settlement { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,5 +43,10 @@ public class ClaimDbContext : DbContext
         modelBuilder.Entity<InvestigationMaster>().HasOne<ClaimMaster>().WithMany().HasForeignKey(i => i.claim_id);
         modelBuilder.Entity<InvestigationMaster>().HasIndex(i => i.investigation_number).IsUnique();
         modelBuilder.Entity<InvestigationEvidence>().HasOne<InvestigationMaster>().WithMany().HasForeignKey(e => e.investigation_id);
+
+        // settlement
+        modelBuilder.Entity<ClaimSettlement>().HasOne<ClaimMaster>().WithMany().HasForeignKey(s => s.claim_id);
+        modelBuilder.Entity<ClaimSettlement>().HasIndex(s => s.claim_id).IsUnique();   // one settlement per claim
+        modelBuilder.Entity<ClaimSettlement>().Property(s => s.approved_amount).HasPrecision(15, 2);
     }
 }
