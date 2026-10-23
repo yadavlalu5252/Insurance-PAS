@@ -8,10 +8,10 @@ namespace Underwriting.Application.Interfaces
 {
     public interface Isavemedical
     {
-        Task addmedical(long id, savemedicaldto dto);
+        Task addmedical(int id, savemedicaldto dto);
 
-        Task<medical_underwriting?> fetchmedical(long id);
+        Task<medical_underwriting?> fetchmedical(int id);
 
-        Task updatemedical(long id, savemedicaldto dto);
+        Task updatemedical(int id, savemedicaldto dto);
     }
 }

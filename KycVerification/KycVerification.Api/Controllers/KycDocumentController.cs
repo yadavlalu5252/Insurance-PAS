@@ -2,6 +2,7 @@
 using KycVerification.Application.DTO;
 using KycVerification.Application.Interface;
 using KycVerification.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,17 +10,21 @@ namespace KycVerifiaction.Api.Controllers
 {
     [Route("api/v1/kyc/documents")]
     [ApiController]
+    [Authorize]
     public class KycDocumentController : ControllerBase
     {
         private readonly IKycDocumentServices service;
 
-        public KycDocumentController(IKycDocumentServices service)
+        public KycDocumentController(
+            IKycDocumentServices service)
         {
             this.service = service;
         }
 
         // GET: api/v1/kyc/documents/5
+        // Customer/Agent/Admin
         [HttpGet("{documentId:int}")]
+        [Authorize(Roles = "Customer,Agent,Admin")]
         public async Task<IActionResult> GetById(int documentId)
         {
             var data = await service.GetByIdAsync(documentId);
@@ -42,7 +47,9 @@ namespace KycVerifiaction.Api.Controllers
         }
 
         // GET: api/v1/kyc/documents/kyc/5
+        // Customer/Agent/Admin
         [HttpGet("kyc/{kycId:int}")]
+        [Authorize(Roles = "Customer,Agent,Admin")]
         public async Task<IActionResult> GetByKycId(int kycId)
         {
             var data = await service.GetByKycIdAsync(kycId);
@@ -55,7 +62,9 @@ namespace KycVerifiaction.Api.Controllers
         }
 
         // POST: api/v1/kyc/documents
+        // Agent/Admin
         [HttpPost]
+        [Authorize(Roles = "Agent,Admin")]
         public async Task<IActionResult> Create(
             [FromBody] KycDocument document)
         {
@@ -82,8 +91,12 @@ namespace KycVerifiaction.Api.Controllers
         }
 
         // PUT: api/v1/kyc/documents/5
+        // Agent/Admin
         [HttpPut("{documentId:int}")]
-        public async Task<IActionResult> Update( int documentId,[FromBody] KycDocument document)
+        [Authorize(Roles = "Agent,Admin")]
+        public async Task<IActionResult> Update(
+            int documentId,
+            [FromBody] KycDocument document)
         {
             if (!ModelState.IsValid)
             {
@@ -126,10 +139,12 @@ namespace KycVerifiaction.Api.Controllers
             ));
         }
 
-
-
+        // POST: api/v1/kyc/documents/upload
+        // Customer/Agent
         [HttpPost("upload")]
-        public async Task<IActionResult> Upload( [FromForm] UploadKycDocumentDto dto)
+        [Authorize(Roles = "Customer,Agent")]
+        public async Task<IActionResult> Upload(
+            [FromForm] UploadKycDocumentDto dto)
         {
             try
             {
@@ -139,23 +154,30 @@ namespace KycVerifiaction.Api.Controllers
                     dto.DocumentNumber,
                     dto.File);
 
-                return StatusCode(201,
+                return StatusCode(
+                    StatusCodes.Status201Created,
                     new ApiResponse<KycDocument>(
                         true,
                         "Document uploaded successfully.",
-                        saved));
+                        saved
+                    ));
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(new ApiResponse<object>(
-                    false, ex.Message, null, ex.Message));
+                    false,
+                    ex.Message,
+                    null,
+                    ex.Message));
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new ApiResponse<object>(
-                    false, ex.Message, null, ex.Message));
+                    false,
+                    ex.Message,
+                    null,
+                    ex.Message));
             }
         }
-
     }
 }

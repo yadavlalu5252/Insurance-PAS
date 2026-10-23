@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace Authentication.Domain.Entities
 {
@@ -25,5 +23,14 @@ namespace Authentication.Domain.Entities
         public long branch_id { get; set; }
 
         public string status { get; set; } = "Active";
+
+        // Two-factor authentication
+        public bool two_factor_enabled { get; set; } = false;
+
+        // Store only the protected (encrypted) TOTP secret here.
+        public string? two_factor_secret { get; set; }
+
+        // Last accepted TOTP time-step, used to prevent code replay.
+        public long? two_factor_last_used_step { get; set; }
     }
 }

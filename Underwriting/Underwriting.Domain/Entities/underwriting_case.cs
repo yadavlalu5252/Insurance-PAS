@@ -10,16 +10,16 @@ namespace Underwriting.Domain.Entities
     {
 
         [Key]
-        public long underwriting_id { get; set; }
+        public int underwriting_id { get; set; }
 
         [Required]
-        public long quote_id { get; set; }
+        public int quote_id { get; set; }
 
         [Required]
-        public long customer_id { get; set; }
+        public int customer_id { get; set; }
 
         [Required]
-        public long product_id { get; set; }
+        public int product_id { get; set; }
 
         [Required]
         public DateTime underwriting_date { get; set; }

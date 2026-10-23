@@ -7,14 +7,11 @@ namespace ClaimManagement.Application.Interface
 {
     public interface IClaimDocumentService
     {
-        // result is "Success", "NotFound" or "NotAllowed"
-        Task<(string result, DocumentResponseDTO? data)> AddDocumentAsync(
-            long claimId, string documentName, string extension, Stream content, long performedBy);
+        Task<DocumentResponseDTO> AddDocumentAsync(long claimId, string? documentName,
+            string? fileName, long fileLength, Stream? content, long performedBy);
 
-        // returns null if the claim does not exist
-        Task<List<DocumentResponseDTO>?> FetchDocumentsAsync(long claimId);
+        Task<List<DocumentResponseDTO>> FetchDocumentsAsync(long claimId);
 
-        // result is "Success", "ClaimNotFound" or "DocumentNotFound"
-        Task<string> VerifyDocumentAsync(long claimId, VerifyDocumentDTO dto, long performedBy);
+        Task VerifyDocumentAsync(long claimId, VerifyDocumentDTO dto, long performedBy);
     }
 }

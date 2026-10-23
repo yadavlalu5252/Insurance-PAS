@@ -50,12 +50,7 @@ namespace QuoteGeneration.Infrastructure.Data
                 .HasForeignKey(r => r.quote_id)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<QuoteRider>()
-                .HasOne<RiderMaster>()
-                .WithMany()
-                .HasForeignKey(r => r.rider_id)
-                .OnDelete(DeleteBehavior.Restrict);
-
+           
             builder.Entity<QuoteHistory>()
                 .HasOne<Quote>()
                 .WithMany()

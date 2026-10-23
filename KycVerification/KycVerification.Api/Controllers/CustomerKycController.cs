@@ -1,13 +1,15 @@
-﻿
-using KycVerification.Api.Wrappers;
+﻿using KycVerification.Api.Wrappers;
 using KycVerification.Application.Interface;
 using KycVerification.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KycVerifiaction.Api.Controllers
 {
-    [Route("api/v1/kyc")]
+    [Route("api/v1/customer-kyc")]
     [ApiController]
+    [Authorize]
     public class CustomerKycController : ControllerBase
     {
         private readonly ICustomerKycServices service;
@@ -17,8 +19,10 @@ namespace KycVerifiaction.Api.Controllers
             this.service = service;
         }
 
-        // GET: api/v1/kyc
+        // GET: api/v1/customer-kyc
+        // Agent/Admin
         [HttpGet]
+        [Authorize(Roles = "Agent,Admin")]
         public async Task<IActionResult> GetAll()
         {
             var data = await service.GetAllAsync();
@@ -30,8 +34,10 @@ namespace KycVerifiaction.Api.Controllers
             ));
         }
 
-        // GET: api/v1/kyc/5
+        // GET: api/v1/customer-kyc/5
+        // Customer/Agent/Admin
         [HttpGet("{kycId:int}")]
+        [Authorize(Roles = "Customer,Agent,Admin")]
         public async Task<IActionResult> GetById(int kycId)
         {
             var data = await service.GetByIdAsync(kycId);
@@ -53,8 +59,10 @@ namespace KycVerifiaction.Api.Controllers
             ));
         }
 
-        // GET: api/v1/kyc/customer/5
+        // GET: api/v1/customer-kyc/customer/1
+        // Customer/Agent/Admin
         [HttpGet("customer/{customerId:int}")]
+        [Authorize(Roles = "Customer,Agent,Admin")]
         public async Task<IActionResult> GetByCustomerId(int customerId)
         {
             var data = await service.GetByCustomerIdAsync(customerId);
@@ -76,8 +84,10 @@ namespace KycVerifiaction.Api.Controllers
             ));
         }
 
-        // POST: api/v1/kyc
+        // POST: api/v1/customer-kyc
+        // Agent/Admin
         [HttpPost]
+        [Authorize(Roles = "Agent,Admin")]
         public async Task<IActionResult> Create(
             [FromBody] CustomerKyc kyc)
         {
@@ -91,7 +101,6 @@ namespace KycVerifiaction.Api.Controllers
                 ));
             }
 
-            // Set server-controlled fields
             kyc.kyc_id = 0;
             kyc.kyc_number = $"KYC-{Guid.NewGuid():N}";
             kyc.kyc_date = DateTime.UtcNow;
@@ -111,8 +120,10 @@ namespace KycVerifiaction.Api.Controllers
             );
         }
 
-        // PUT: api/v1/kyc/5
+        // PUT: api/v1/customer-kyc/5
+        // Agent/Admin
         [HttpPut("{kycId:int}")]
+        [Authorize(Roles = "Agent,Admin")]
         public async Task<IActionResult> Update(
             int kycId,
             [FromBody] CustomerKyc kyc)
@@ -139,7 +150,6 @@ namespace KycVerifiaction.Api.Controllers
                 ));
             }
 
-            // Update only the editable field
             existing.remarks = kyc.remarks;
 
             await service.UpdateAsync(existing);

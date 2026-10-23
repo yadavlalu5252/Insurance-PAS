@@ -1,17 +1,37 @@
+
+using DashboardNotification.Api.Middleware;
+using DashboardNotification.Application.Interface;
+using DashboardNotification.Infrastructure.Data;
+using DashboardNotification.Infrastructure.Repository;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Add services
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Database connection
+builder.Services.AddDbContext<DashboardNotificationDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("dbconn")));
+
+// Repository registration
+builder.Services.AddScoped<INotificationTemplate, NotificationTemplateService>();
+
+//builder.Services.AddScoped<IDashboardMetrics, DashboardMetricsRepository>();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Global exception middleware
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
+// Swagger configuration
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

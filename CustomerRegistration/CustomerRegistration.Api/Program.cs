@@ -1,4 +1,3 @@
-
 using CustomerRegistration.Api.Middleware;
 using CustomerRegistration.Application.Interface;
 using CustomerRegistration.Application.Interfaces;
@@ -16,7 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddControllers();
-
 
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
@@ -65,10 +63,15 @@ builder.Services
 
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtKey))
+                Encoding.UTF8.GetBytes(jwtKey)),
+
+            // Recognize the JWT role claim
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+            NameClaimType = System.Security.Claims.ClaimTypes.Name
         };
     });
 
+// Authorization policies
 builder.Services.AddAuthorization();
 
 // Swagger with JWT Bearer support
