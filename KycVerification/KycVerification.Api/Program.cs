@@ -2,9 +2,52 @@ using KycVerification.Application.Interface;
 using KycVerification.Application.Mapper;
 using KycVerification.Infrastructure.Data;
 using KycVerification.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+static void ConfigureJwtAuthentication(
+    IServiceCollection services,
+    IConfiguration configuration)
+{
+    var jwtKey = configuration["Jwt:Key"]
+        ?? throw new InvalidOperationException("JWT key is missing.");
+
+    var issuer = configuration["Jwt:Issuer"]
+        ?? throw new InvalidOperationException("JWT issuer is missing.");
+
+    var audience = configuration["Jwt:Audience"]
+        ?? throw new InvalidOperationException("JWT audience is missing.");
+
+    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters =
+                new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = issuer,
+
+                    ValidateAudience = true,
+                    ValidAudience = audience,
+
+                    ValidateLifetime = true,
+
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtKey)),
+
+                    ClockSkew = TimeSpan.Zero
+                };
+        });
+
+    services.AddAuthorization();
+}
 
 var builder = WebApplication.CreateBuilder(args);
+ConfigureJwtAuthentication(
+    builder.Services,
+    builder.Configuration);
 
 // Framework services
 builder.Services.AddControllers();
@@ -73,7 +116,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("AngularClient");
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
