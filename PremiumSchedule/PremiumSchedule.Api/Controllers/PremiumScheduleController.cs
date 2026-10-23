@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PremiumSchedule.Application.Common;
 using PremiumSchedule.Application.DTO;
@@ -9,6 +10,7 @@ namespace PremiumSchedule.Api.Controllers
 {
     [Route("api/v1/premium-schedules")]
     [ApiController]
+    [Authorize]
     public class PremiumScheduleController : ControllerBase
     {
         private readonly IPremiumSchedule service;
