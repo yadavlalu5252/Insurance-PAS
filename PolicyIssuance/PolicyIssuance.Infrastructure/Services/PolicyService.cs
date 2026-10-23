@@ -4,6 +4,7 @@ using PolicyIssuance.Application.DTOs;
 using PolicyIssuance.Application.Interface;
 using PolicyIssuance.Domain.Entities;
 using PolicyIssuance.Domain.Enums;
+using PolicyIssuance.Infrastructure.Clients;
 using PolicyIssuance.Infrastructure.Data;
 
 namespace PolicyIssuance.Infrastructure.Services
@@ -11,10 +12,29 @@ namespace PolicyIssuance.Infrastructure.Services
     public class PolicyService : IPolicyService
     {
         private readonly AppDbContext db;
+        private readonly CustomerClient customerClient;
+        private readonly KycClient kycClient;
+        private readonly QuoteClient quoteClient;
+        private readonly UnderwritingClient underwritingClient;
+        private readonly ProductClient productClient;
+        private readonly PremiumPaymentClient premiumPaymentClient;
 
-        public PolicyService(AppDbContext db)
+        public PolicyService(
+            AppDbContext db,
+            CustomerClient customerClient,
+            KycClient kycClient,
+            QuoteClient quoteClient,
+            UnderwritingClient underwritingClient,
+            ProductClient productClient,
+            PremiumPaymentClient premiumPaymentClient)
         {
             this.db = db;
+            this.customerClient = customerClient;
+            this.kycClient = kycClient;
+            this.quoteClient = quoteClient;
+            this.underwritingClient = underwritingClient;
+            this.productClient = productClient;
+            this.premiumPaymentClient = premiumPaymentClient;
         }
 
         public async Task<List<PolicyResponseDTO>> GetAllAsync()
@@ -51,19 +71,64 @@ namespace PolicyIssuance.Infrastructure.Services
                 return null;
             }
 
+            var customer = await customerClient.FindCustomerById(
+                dto.customer_id);
+
+            if (customer == null)
+                return null;
+
+            var kyc = await kycClient.FindKycByCustomerId(
+                dto.customer_id);
+
+            if (kyc == null ||
+                !string.Equals(
+                    kyc.verification_status,
+                    "Verified",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            var quote = await quoteClient.FindQuoteById(dto.quote_id);
+
+            if (quote == null ||
+                quote.customer_id != dto.customer_id ||
+                quote.product_id != dto.product_id)
+            {
+                return null;
+            }
+
+            var underwriting =
+                await underwritingClient.FindUnderwritingById(
+                    dto.underwriting_id);
+
+            if (underwriting == null ||
+                underwriting.quote_id != dto.quote_id ||
+                underwriting.customer_id != dto.customer_id ||
+                underwriting.product_id != dto.product_id)
+            {
+                return null;
+            }
+
+            var product = await productClient.FindProductById(
+                dto.product_id);
+
+            if (product == null ||
+                !string.Equals(
+                    product.status,
+                    "Active",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
             bool quoteExists = await db.Policies
                 .AnyAsync(p => p.quote_id == dto.quote_id);
 
             if (quoteExists)
                 return null;
 
-            if (!Enum.TryParse<PolicyStatus>(
-                    dto.policy_status, true, out var status))
-            {
-                status = PolicyStatus.Draft;
-            }
-
-            var policy = new Policy
+            var policy = new PolicyEntity
             {
                 policy_number = "POL-" +
                     Guid.NewGuid().ToString("N").ToUpperInvariant(),
@@ -78,7 +143,7 @@ namespace PolicyIssuance.Infrastructure.Services
                 effective_date = dto.effective_date,
                 expiry_date = dto.expiry_date,
                 premium_amount = dto.premium_amount,
-                policy_status = status
+                policy_status = PolicyStatus.PendingPayment
             };
 
             db.Policies.Add(policy);
@@ -146,7 +211,18 @@ namespace PolicyIssuance.Infrastructure.Services
                 return false;
             }
 
-            return false;
+            bool paymentHistoryAvailable =
+                await premiumPaymentClient.CheckPaymentHistory(
+                    policy.policy_id);
+
+            if (!paymentHistoryAvailable)
+                return false;
+
+            policy.policy_status = PolicyStatus.Active;
+
+            await db.SaveChangesAsync();
+
+            return true;
         }
 
         public async Task<bool> SuspendAsync(
@@ -162,7 +238,9 @@ namespace PolicyIssuance.Infrastructure.Services
             }
 
             policy.policy_status = PolicyStatus.Suspended;
+
             await db.SaveChangesAsync();
+
             return true;
         }
 
@@ -181,7 +259,9 @@ namespace PolicyIssuance.Infrastructure.Services
             }
 
             policy.policy_status = PolicyStatus.Cancelled;
+
             await db.SaveChangesAsync();
+
             return true;
         }
 
@@ -199,11 +279,14 @@ namespace PolicyIssuance.Infrastructure.Services
             }
 
             policy.policy_status = PolicyStatus.Expired;
+
             await db.SaveChangesAsync();
+
             return true;
         }
 
-        private static PolicyResponseDTO ToResponse(Policy policy)
+        private static PolicyResponseDTO ToResponse(
+            PolicyEntity policy)
         {
             return new PolicyResponseDTO
             {

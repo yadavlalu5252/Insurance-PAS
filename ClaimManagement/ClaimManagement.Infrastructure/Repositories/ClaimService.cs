@@ -1,194 +1,205 @@
 ﻿using AutoMapper;
-using Microsoft.Data.SqlClient;
 using ClaimManagement.Application.DTO;
+using ClaimManagement.Application.Exceptions;
 using ClaimManagement.Application.Interface;
 using ClaimManagement.Domain.Entities;
-using ClaimManagement.Domain.Rules;
-using ClaimManagement.Infrastructure.Config;
 using ClaimManagement.Infrastructure.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace ClaimManagement.Infrastructure.Repositories
+namespace ClaimManagement.Infrastructure.Repositories;
+
+public class ClaimService : IClaimService
 {
-    public class ClaimService : IClaimService
+    ClaimDbContext db;
+    IMapper mapper;
+
+    // recommended list based on the BRD product types (not an official BRD dropdown)
+    static readonly string[] AllowedClaimTypes =
     {
-        ClaimDbContext db;
-        IMapper mapper;
-        INotificationService notification;
-        PolicyClient policyClient;
-        PremiumClient premiumClient;
-        ILogger<ClaimService> logger;
+        "Health", "Motor", "Life", "Travel", "Home", "Property", "Personal Accident"
+    };
 
-        public ClaimService(ClaimDbContext db, IMapper mapper, INotificationService notification,
-            PolicyClient policyClient, PremiumClient premiumClient, ILogger<ClaimService> logger)
-        {
-            this.db = db;
-            this.mapper = mapper;
-            this.notification = notification;
-            this.policyClient = policyClient;
-            this.premiumClient = premiumClient;
-            this.logger = logger;
-        }
+    public ClaimService(ClaimDbContext db, IMapper mapper)
+    {
+        this.db = db;
+        this.mapper = mapper;
+    }
 
-        public async Task<(string Result, ClaimResponseDto? Claim, string? Reason)> AddClaimAsync(ClaimCreateDto dto, long performedBy)
+    public async Task<ClaimResponseDTO> AddClaimAsync(CreateClaimDTO dto, long performedBy)
+    {
+        if (dto.policy_id <= 0)
+            throw new BadRequestException("Policy id is required");
+        if (dto.customer_id <= 0)
+            throw new BadRequestException("Customer id is required");
+        if (!AllowedClaimTypes.Contains(dto.claim_type))
+            throw new BadRequestException("Claim type is invalid. Allowed: " + string.Join(", ", AllowedClaimTypes));
+        if (dto.incident_date == default)
+            throw new BadRequestException("Incident date is required");
+        if (dto.incident_date.Date > DateTime.Now.Date)
+            throw new BadRequestException("Incident date cannot be in the future");
+        if (string.IsNullOrWhiteSpace(dto.description))
+            throw new BadRequestException("Description is required");
+        if (dto.estimated_loss <= 0)
+            throw new BadRequestException("Estimated loss must be greater than 0");
+
+        // TODO: policy and premium eligibility check goes here.
+        // It is NOT done yet, so claims are saved WITHOUT policy validation.
+
+        // up to 3 tries, in case two claims get the same number at the same moment
+        for (int attempt = 1; attempt <= 3; attempt++)
         {
-            string? reason;
+            var claim = mapper.Map<ClaimMaster>(dto);
+            claim.claim_number = await GenerateClaimNumberAsync();
+            claim.claim_date = DateTime.Now;
+            claim.claim_status = ClaimStatuses.Registered;
+            claim.claim_history.Add(CreateHistory("Claim Registered", performedBy));
+
+            db.claim_master.Add(claim);
 
             try
             {
-                reason = await CheckEligibilityAsync(dto);
+                await db.SaveChangesAsync();
+                return mapper.Map<ClaimResponseDTO>(claim);
             }
-            catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is System.Text.Json.JsonException)
+            catch (DbUpdateException ex) when (IsDuplicateKey(ex) && attempt < 3)
             {
-                logger.LogError(ex, "Policy or premium service call failed for policy {PolicyId}", dto.policy_id);
-                return ("ServiceUnavailable", null, "Policy or premium service is not available right now");
+                db.ChangeTracker.Clear();   // forget the failed claim and retry with a new number
             }
-
-            if (reason != null)
-                return ("NotEligible", null, reason);
-
-            for (int attempt = 1; attempt <= 3; attempt++)
-            {
-                var claim = mapper.Map<ClaimMaster>(dto);
-                claim.claim_number = await GenerateClaimNumberAsync();
-                claim.claim_date = DateTime.Now;
-                claim.claim_status = ClaimStatuses.Registered;
-                claim.claim_history.Add(CreateHistory("Claim Registered", performedBy));
-
-                db.claim_master.Add(claim);
-
-                try
-                {
-                    await db.SaveChangesAsync();
-
-                    await notification.NotifyAsync(claim.customer_id, NotificationEvents.ClaimRegistered,
-                        "Your claim " + claim.claim_number + " has been registered.");
-
-                    return ("Success", mapper.Map<ClaimResponseDto>(claim), null);
-                }
-                catch (DbUpdateException ex) when (IsDuplicateKey(ex) && attempt < 3)
-                {
-                    db.ChangeTracker.Clear();
-                }
-            }
-
-            throw new InvalidOperationException("Could not generate a unique claim number");
         }
 
-        public async Task<List<ClaimResponseDto>> FetchClaimsAsync()
+        throw new InvalidOperationException("Could not generate a unique claim number");
+    }
+
+    public async Task<PagedResultDTO<ClaimResponseDTO>> FetchClaimsAsync(ClaimFilterDTO filter)
+    {
+        if (filter.page_number < 1)
+            throw new BadRequestException("Page number must be 1 or more");
+        if (filter.page_size < 1 || filter.page_size > 100)
+            throw new BadRequestException("Page size must be between 1 and 100");
+
+        var query = db.claim_master.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filter.search))
+            query = query.Where(c => c.claim_number.Contains(filter.search));
+        if (!string.IsNullOrWhiteSpace(filter.claim_status))
+            query = query.Where(c => c.claim_status == filter.claim_status);
+        if (!string.IsNullOrWhiteSpace(filter.claim_type))
+            query = query.Where(c => c.claim_type == filter.claim_type);
+        if (filter.customer_id.HasValue)
+            query = query.Where(c => c.customer_id == filter.customer_id.Value);
+        if (filter.policy_id.HasValue)
+            query = query.Where(c => c.policy_id == filter.policy_id.Value);
+        if (filter.from_date.HasValue)
         {
-            var data = await db.claim_master
-                .OrderByDescending(c => c.claim_id)
-                .ToListAsync();
-            return mapper.Map<List<ClaimResponseDto>>(data);
+            var from = filter.from_date.Value.Date;
+            query = query.Where(c => c.claim_date >= from);
         }
-
-        public async Task<ClaimResponseDto?> FetchClaimByIdAsync(long id)
+        if (filter.to_date.HasValue)
         {
-            var claim = await db.claim_master.FirstOrDefaultAsync(c => c.claim_id == id);
-            return claim == null ? null : mapper.Map<ClaimResponseDto>(claim);
+            var to = filter.to_date.Value.Date.AddDays(1);
+            query = query.Where(c => c.claim_date < to);
         }
 
-        public async Task<ClaimStatusResponseDto?> FetchClaimStatusAsync(long id)
+        int total = await query.CountAsync();
+
+        var data = await query
+            .OrderByDescending(c => c.claim_id)
+            .Skip((filter.page_number - 1) * filter.page_size)
+            .Take(filter.page_size)
+            .ToListAsync();
+
+        return new PagedResultDTO<ClaimResponseDTO>
         {
-            var claim = await db.claim_master.FirstOrDefaultAsync(c => c.claim_id == id);
-            return claim == null ? null : mapper.Map<ClaimStatusResponseDto>(claim);
-        }
+            items = mapper.Map<List<ClaimResponseDTO>>(data),
+            page_number = filter.page_number,
+            page_size = filter.page_size,
+            total_records = total,
+            total_pages = (int)Math.Ceiling(total / (double)filter.page_size)
+        };
+    }
 
-        public async Task<string> UpdateClaimAsync(long id, ClaimUpdateDto dto, long performedBy)
+    public async Task<ClaimResponseDTO> FetchClaimByIdAsync(long id)
+    {
+        var claim = await GetClaimOrThrowAsync(id);
+        return mapper.Map<ClaimResponseDTO>(claim);
+    }
+
+    public async Task<ClaimStatusDTO> FetchClaimStatusAsync(long id)
+    {
+        var claim = await GetClaimOrThrowAsync(id);
+        return mapper.Map<ClaimStatusDTO>(claim);
+    }
+
+    public async Task<List<ClaimHistoryDTO>> FetchClaimHistoryAsync(long id)
+    {
+        await GetClaimOrThrowAsync(id);
+
+        var data = await db.claim_history
+            .Where(h => h.claim_id == id)
+            .OrderByDescending(h => h.action_date)
+            .ThenByDescending(h => h.history_id)
+            .ToListAsync();
+
+        return mapper.Map<List<ClaimHistoryDTO>>(data);
+    }
+
+    public async Task UpdateClaimAsync(long id, UpdateClaimDTO dto, long performedBy)
+    {
+        if (string.IsNullOrWhiteSpace(dto.description))
+            throw new BadRequestException("Description is required");
+        if (dto.estimated_loss <= 0)
+            throw new BadRequestException("Estimated loss must be greater than 0");
+
+        var claim = await GetClaimOrThrowAsync(id);
+
+        // Recommendation (not in BRD): edit only before processing starts
+        if (claim.claim_status != ClaimStatuses.Registered &&
+            claim.claim_status != ClaimStatuses.PendingVerification)
+            throw new ConflictException("Claim cannot be updated in its current status");
+
+        mapper.Map(dto, claim);
+
+        db.claim_history.Add(CreateHistory("Claim Updated", performedBy, claim.claim_id));
+        await db.SaveChangesAsync();
+    }
+
+    // ---------- helper methods ----------
+
+    private async Task<ClaimMaster> GetClaimOrThrowAsync(long id)
+    {
+        var claim = await db.claim_master.FirstOrDefaultAsync(c => c.claim_id == id);
+        if (claim == null)
+            throw new NotFoundException("Claim not found");
+        return claim;
+    }
+
+    private async Task<string> GenerateClaimNumberAsync()
+    {
+        string number;
+        do
         {
-            var claim = await db.claim_master.FirstOrDefaultAsync(c => c.claim_id == id);
-            if (claim == null) return "NotFound";
-
-            // Recommendation (not in BRD): edit only before processing starts
-            if (claim.claim_status != ClaimStatuses.Registered &&
-                claim.claim_status != ClaimStatuses.PendingVerification)
-                return "NotAllowed";
-
-            mapper.Map(dto, claim);
-
-            db.claim_history.Add(CreateHistory("Claim Updated", performedBy, claim.claim_id));
-            await db.SaveChangesAsync();
-            return "Success";
+            number = "CLM-" + DateTime.Now.ToString("yyyyMMdd") + "-" + Random.Shared.Next(1000, 10000);
         }
+        while (await db.claim_master.AnyAsync(c => c.claim_number == number));
 
-        public async Task<List<ClaimHistoryDTO>?> FetchClaimHistoryAsync(long id)
+        return number;
+    }
+
+    // 2601 and 2627 are SQL Server's "duplicate key" error numbers
+    private static bool IsDuplicateKey(DbUpdateException ex)
+    {
+        return ex.InnerException is SqlException sql && (sql.Number == 2601 || sql.Number == 2627);
+    }
+
+    private static ClaimHistory CreateHistory(string action, long performedBy, long claimId = 0)
+    {
+        return new ClaimHistory
         {
-            bool exists = await db.claim_master.AnyAsync(c => c.claim_id == id);
-            if (!exists) return null;
-
-            var data = await db.claim_history
-                .Where(h => h.claim_id == id)
-                .OrderByDescending(h => h.action_date)
-                .ThenByDescending(h => h.history_id)
-                .ToListAsync();
-
-            return mapper.Map<List<ClaimHistoryDTO>>(data);
-        }
-
-        //helper methods
-
-        private async Task<string> GenerateClaimNumberAsync()
-        {
-            string number;
-            do
-            {
-                number = "CLM-" + DateTime.Now.ToString("yyyyMMdd") + "-" + Random.Shared.Next(1000, 10000);
-            }
-            while (await db.claim_master.AnyAsync(c => c.claim_number == number));
-
-            return number;
-        }
-
-        private static ClaimHistory CreateHistory(string action, long performedBy, long claimId = 0)
-        {
-            return new ClaimHistory
-            {
-                claim_id = claimId,
-                action = action,
-                performed_by = performedBy,
-                action_date = DateTime.Now
-            };
-        }
-
-        // returns null if eligible, otherwise the reason
-        private async Task<string?> CheckEligibilityAsync(ClaimCreateDto dto)
-        {
-            // policy checks (Anuja)
-            var policy = await policyClient.FindPolicyById(dto.policy_id);
-            if (policy == null)
-                return "Policy not found";
-
-            if (policy.customer_id != dto.customer_id)
-                return "Policy does not belong to this customer";
-
-            if (policy.policy_status == "Expired")
-                return "Policy has expired";
-
-            if (policy.policy_status != "Active")
-                return "Policy is not active";
-
-            var incident = dto.incident_date.Date;
-            if (incident < policy.effective_date.Date || incident > policy.expiry_date.Date)
-                return "Incident date is outside the policy period";
-
-            // premium check (Khushi)
-            var schedule = await premiumClient.FindScheduleByPolicy(dto.policy_id);
-            if (schedule == null || schedule.Count == 0)
-                return "No premium schedule found for this policy";
-
-            if (schedule.Any(s => s.status != "Paid" && s.status != "Cancelled" && s.due_date.Date < incident))
-                return "Premium is not paid";
-                return null;    
-        }
-
-        private static bool IsDuplicateKey(DbUpdateException ex)
-        {
-            return ex.InnerException is SqlException sql && (sql.Number == 2601 || sql.Number == 2627);
-        }
+            claim_id = claimId,
+            action = action,
+            performed_by = performedBy,
+            action_date = DateTime.Now
+        };
     }
 }

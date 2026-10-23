@@ -7,7 +7,7 @@ using PremiumSchedule.Domain.Entities;
 
 namespace PremiumSchedule.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/premium-schedules ")]
     [ApiController]
     public class PremiumScheduleController : ControllerBase
     {
@@ -32,7 +32,7 @@ namespace PremiumSchedule.Api.Controllers
         }
 
 
-        [HttpGet("policy/{policy_id}")]
+        [HttpGet("{policy_id}")]
         public async Task<IActionResult> GetPremiumScheduleByPolicyId(
             int policy_id)
         {

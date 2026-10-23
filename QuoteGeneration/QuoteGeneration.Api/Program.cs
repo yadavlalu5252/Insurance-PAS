@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using QuoteGeneration.Application.QuoteGeneration.Mapper;
 using Microsoft.IdentityModel.Tokens;
 using QuoteGeneration.Api.Middleware;
 using QuoteGeneration.Application.Interfaces;
@@ -7,6 +8,8 @@ using QuoteGeneration.Application.QuoteGeneration.Mapper;
 using QuoteGeneration.Infrastructure.Config;
 using QuoteGeneration.Infrastructure.Data;
 using QuoteGeneration.Infrastructure.Services;
+using QuoteGeneration.Infrastructure.Config;
+using QuoteGeneration.Api.Middleware;
 using System.Text;
 static void ConfigureJwtAuthentication(
     IServiceCollection services,
@@ -55,9 +58,11 @@ builder.Services.AddControllers();
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("dbconn")));
+
 builder.Services.AddAutoMapper(
     cfg => { },
     typeof(QuoteMappingProfile).Assembly
@@ -69,6 +74,7 @@ builder.Services.AddScoped<IRiskAssessmentService, RiskAssessmentService>();
 builder.Services.AddScoped<IQuoteRiderService, QuoteRiderService>();
 builder.Services.AddScoped<IDiscountService, DiscountService>();
 builder.Services.AddScoped<IQuoteHistoryService, QuoteHistoryService>();
+
 builder.Services.AddHttpClient<InsuranceProductClient>(client =>
 {
     client.BaseAddress = new Uri(
@@ -86,7 +92,6 @@ builder.Services.AddHttpClient<UnderwritingClient>(client =>
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
-
 
 // Enable Swagger in Development
 if (app.Environment.IsDevelopment())

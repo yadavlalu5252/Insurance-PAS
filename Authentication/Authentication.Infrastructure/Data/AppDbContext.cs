@@ -1,8 +1,6 @@
-﻿using Authentication.Domain.Entities;
+﻿
+using Authentication.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Authentication.Infrastructure.Data
 {
@@ -22,6 +20,21 @@ namespace Authentication.Infrastructure.Data
         public DbSet<RolePermission> role_permission { get; set; }
 
         public DbSet<RefreshToken> refresh_tokens { get; set; }
+
         public DbSet<PasswordResetToken> password_reset_tokens { get; set; }
+
+        public DbSet<TwoFactorLoginChallenge> two_factor_login_challenges { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<TwoFactorLoginChallenge>()
+                .HasIndex(c => c.challenge_token_hash)
+                .IsUnique();
+
+            modelBuilder.Entity<TwoFactorLoginChallenge>()
+                .HasIndex(c => c.user_id);
+        }
     }
 }
