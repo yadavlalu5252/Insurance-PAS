@@ -185,6 +185,62 @@ namespace ClaimManagement.Infrastructure.Migrations
                     b.ToTable("claim_master");
                 });
 
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.ClaimSettlement", b =>
+                {
+                    b.Property<long>("settlement_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("settlement_id"));
+
+                    b.Property<string>("account_holder_name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("account_number")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("approved_amount")
+                        .HasPrecision(15, 2)
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<bool>("bank_verified")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("claim_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ifsc_code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("payment_mode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("processed_by")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("settlement_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("settlement_status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("transaction_reference")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("settlement_id");
+
+                    b.HasIndex("claim_id")
+                        .IsUnique();
+
+                    b.ToTable("claim_settlement");
+                });
+
             modelBuilder.Entity("ClaimManagement.Domain.Entities.InvestigationEvidence", b =>
                 {
                     b.Property<long>("evidence_id")
@@ -335,6 +391,15 @@ namespace ClaimManagement.Infrastructure.Migrations
                 {
                     b.HasOne("ClaimManagement.Domain.Entities.ClaimMaster", null)
                         .WithMany("claim_history")
+                        .HasForeignKey("claim_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ClaimManagement.Domain.Entities.ClaimSettlement", b =>
+                {
+                    b.HasOne("ClaimManagement.Domain.Entities.ClaimMaster", null)
+                        .WithMany()
                         .HasForeignKey("claim_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

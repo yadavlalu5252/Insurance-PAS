@@ -1,13 +1,57 @@
-using QuoteGeneration.Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using QuoteGeneration.Application.QuoteGeneration.Mapper;
+using Microsoft.IdentityModel.Tokens;
+using QuoteGeneration.Api.Middleware;
 using QuoteGeneration.Application.Interfaces;
+using QuoteGeneration.Application.QuoteGeneration.Mapper;
+using QuoteGeneration.Infrastructure.Config;
+using QuoteGeneration.Infrastructure.Data;
 using QuoteGeneration.Infrastructure.Services;
 using QuoteGeneration.Infrastructure.Config;
 using QuoteGeneration.Api.Middleware;
+using System.Text;
+static void ConfigureJwtAuthentication(
+    IServiceCollection services,
+    IConfiguration configuration)
+{
+    var jwtKey = configuration["Jwt:Key"]
+        ?? throw new InvalidOperationException("JWT key is missing.");
 
+    var issuer = configuration["Jwt:Issuer"]
+        ?? throw new InvalidOperationException("JWT issuer is missing.");
+
+    var audience = configuration["Jwt:Audience"]
+        ?? throw new InvalidOperationException("JWT audience is missing.");
+
+    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters =
+                new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = issuer,
+
+                    ValidateAudience = true,
+                    ValidAudience = audience,
+
+                    ValidateLifetime = true,
+
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtKey)),
+
+                    ClockSkew = TimeSpan.Zero
+                };
+        });
+
+    services.AddAuthorization();
+}
 var builder = WebApplication.CreateBuilder(args);
-
+ConfigureJwtAuthentication(
+    builder.Services,
+    builder.Configuration);
 // Register controllers
 builder.Services.AddControllers();
 
@@ -36,12 +80,15 @@ builder.Services.AddHttpClient<InsuranceProductClient>(client =>
     client.BaseAddress = new Uri(
         builder.Configuration["ServiceUrls:ProductManagement"]!);
 });
+
+
 builder.Services.AddHttpClient<UnderwritingClient>(client =>
 {
     client.BaseAddress = new Uri(
-        builder.Configuration["underwritingAddress"]
+        builder.Configuration["ServiceUrls:underwritingAddress"]
         ?? throw new InvalidOperationException("Underwriting URL is missing."));
 });
+
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -55,6 +102,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
