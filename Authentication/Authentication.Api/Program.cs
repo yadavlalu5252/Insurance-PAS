@@ -1,8 +1,10 @@
 
 using Authentication.Application.Interface;
+using Authentication.Application.Interfaces;
 using Authentication.Application.Mapper;
 using Authentication.Infrastructure.Data;
 using Authentication.Infrastructure.Repository;
+using Authentication.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -74,6 +76,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddAutoMapper(cfg => { }, typeof(AuthMapping));
 
 var app = builder.Build();
