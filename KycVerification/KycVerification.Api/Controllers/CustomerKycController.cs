@@ -1,12 +1,11 @@
-﻿
-using KycVerification.Api.Wrappers;
+﻿using KycVerification.Api.Wrappers;
 using KycVerification.Application.Interface;
 using KycVerification.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KycVerifiaction.Api.Controllers
 {
-    [Route("api/v1/kyc")]
+    [Route("api/v1/customer-kyc")]
     [ApiController]
     public class CustomerKycController : ControllerBase
     {
@@ -17,7 +16,7 @@ namespace KycVerifiaction.Api.Controllers
             this.service = service;
         }
 
-        // GET: api/v1/kyc
+        // GET: api/v1/customer-kyc
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -30,7 +29,7 @@ namespace KycVerifiaction.Api.Controllers
             ));
         }
 
-        // GET: api/v1/kyc/5
+        // GET: api/v1/customer-kyc/5
         [HttpGet("{kycId:int}")]
         public async Task<IActionResult> GetById(int kycId)
         {
@@ -53,7 +52,7 @@ namespace KycVerifiaction.Api.Controllers
             ));
         }
 
-        // GET: api/v1/kyc/customer/5
+        // GET: api/v1/customer-kyc/customer/5
         [HttpGet("customer/{customerId:int}")]
         public async Task<IActionResult> GetByCustomerId(int customerId)
         {
@@ -76,7 +75,7 @@ namespace KycVerifiaction.Api.Controllers
             ));
         }
 
-        // POST: api/v1/kyc
+        // POST: api/v1/customer-kyc
         [HttpPost]
         public async Task<IActionResult> Create(
             [FromBody] CustomerKyc kyc)
@@ -91,7 +90,6 @@ namespace KycVerifiaction.Api.Controllers
                 ));
             }
 
-            // Set server-controlled fields
             kyc.kyc_id = 0;
             kyc.kyc_number = $"KYC-{Guid.NewGuid():N}";
             kyc.kyc_date = DateTime.UtcNow;
@@ -111,7 +109,7 @@ namespace KycVerifiaction.Api.Controllers
             );
         }
 
-        // PUT: api/v1/kyc/5
+        // PUT: api/v1/customer-kyc/5
         [HttpPut("{kycId:int}")]
         public async Task<IActionResult> Update(
             int kycId,
@@ -139,7 +137,6 @@ namespace KycVerifiaction.Api.Controllers
                 ));
             }
 
-            // Update only the editable field
             existing.remarks = kyc.remarks;
 
             await service.UpdateAsync(existing);

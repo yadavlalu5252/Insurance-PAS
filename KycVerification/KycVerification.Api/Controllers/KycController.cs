@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
-namespace KycVerifiaction.Api.Controllers
+namespace KycVerification.Api.Controllers
 {
     [ApiController]
     [Route("api/v1/kyc")]
