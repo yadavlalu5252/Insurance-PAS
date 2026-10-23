@@ -2,20 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PolicyIssuance.Application.DTOs
+namespace PolicyServicing.Application.DTO
 {
-    public class GeneratePremiumScheduleDto
+    public class GeneratePremiumScheduleDTO
     {
         public int policy_id { get; set; }
-
         public DateTime issue_date { get; set; }
-
         public DateTime effective_date { get; set; }
-
         public DateTime expiry_date { get; set; }
-
-        public string premium_frequency { get; set; }
-
+        public string premium_frequency { get; set; } = "Monthly"; 
         public decimal total_premium { get; set; }
     }
 }

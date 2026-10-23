@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace PolicyServicing.Infrastructure.Repository
 {
@@ -18,31 +19,37 @@ namespace PolicyServicing.Infrastructure.Repository
         private readonly PolicyClient client;
         private readonly ClaimsClient claimsClient;
         private readonly PremiumClient premiumClient;
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IMapper _mapper;
 
-        public ProcessCancellationService(AppDbContext db, PolicyClient client, ClaimsClient claimsClient, PremiumClient premiumClient, IMapper mapper)
+        public ProcessCancellationService(AppDbContext db, PolicyClient client, ClaimsClient claimsClient, PremiumClient premiumClient, IMapper mapper,
+            IHttpContextAccessor httpContextAccessor)
         {
             this.db = db;
             this.client = client;
             this.claimsClient = claimsClient;
             this.premiumClient = premiumClient;
+            this.httpContextAccessor = httpContextAccessor;
+
             _mapper = mapper;
         }
 
         // 1. POST /api/v1/policies/{id}/cancel
         public async Task<string> ProcessCancellationAsync(long customerId, long policyId, CancellationRequestDTO request)
         {
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+
             if (string.IsNullOrWhiteSpace(request.CancellationReason))
                 throw new Exception("Cancellation reason is mandatory.");
 
-            var policyDetails = await client.GetPolicyById(policyId);
+            var policyDetails = await client.GetPolicyById(policyId,token);
             if (policyDetails == null) throw new Exception("Policy not found.");
 
             if (policyDetails.policy_status != "Active")
                 throw new Exception("Only Active policies can be cancelled.");
 
             // FR-SRV-008 Rule: Claims in progress prevent cancellation
-            var allClaims = await claimsClient.GetAllClaims();
+            var allClaims = await claimsClient.GetAllClaims(token);
             var activeClaims = allClaims.Where(c =>
                 c.policy_id == policyId &&
                 c.claim_status != "Settled" &&
@@ -63,26 +70,27 @@ namespace PolicyServicing.Infrastructure.Repository
             db.service_request.Add(serviceRequest);
             await db.SaveChangesAsync();
 
-            try
-            {
+            try {
+
+                //    decimal refundAmount = CalculateRefund(policyDetails);
+
+                //var payments = await premiumClient.GetPaymentHistory(policyId,token);
+                //var successfulPayment = payments.FirstOrDefault(p => p.payment_status == "Success");
+
+                //if (successfulPayment == null)
+                //    throw new Exception("No successful payment found to refund for this policy.");
+
+                //var refundPayload = new
+                //{
+                //    payment_id = successfulPayment.payment_id,
+                //    refund_amount = refundAmount
+                //};
+
+                //bool isRefundCreated = await premiumClient.CreateRefund(refundPayload,token);
+                //if (!isRefundCreated) throw new Exception("Premium Microservice failed to create the refund.");
                 decimal refundAmount = CalculateRefund(policyDetails);
 
-                var payments = await premiumClient.GetPaymentHistory(policyId);
-                var successfulPayment = payments.FirstOrDefault(p => p.payment_status == "Success");
-
-                if (successfulPayment == null)
-                    throw new Exception("No successful payment found to refund for this policy.");
-
-                var refundPayload = new
-                {
-                    payment_id = successfulPayment.payment_id,
-                    refund_amount = refundAmount
-                };
-
-                bool isRefundCreated = await premiumClient.CreateRefund(refundPayload);
-                if (!isRefundCreated) throw new Exception("Premium Microservice failed to create the refund.");
-
-                bool isPolicyCancelled = await client.CancelPolicy(policyId);
+                bool isPolicyCancelled = await client.CancelPolicy(policyId,token);
                 if (!isPolicyCancelled) throw new Exception("Core Policy Microservice rejected the cancellation.");
 
                 serviceRequest.status = RequestStatus.Completed;
@@ -149,7 +157,7 @@ namespace PolicyServicing.Infrastructure.Repository
             return _mapper.Map<CancellationDetailsDTO>(cancellation);
         }
 
-        private decimal CalculateRefund(PolicyDetailsDTO dto)
+        private decimal CalculateRefund(PolicyDTO dto)
         {
             // Placeholder for company refund policy
             return 150.00m;

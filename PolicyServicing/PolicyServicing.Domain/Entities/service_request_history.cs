@@ -12,9 +12,10 @@ namespace PolicyServicing.Domain.Entities
         public long history_id { get; set; }
 
 
-        [ForeignKey("request_id")]
         public long request_id { get; set; }
 
+
+        [ForeignKey("request_id")]
         public service_request Service_Request { get; set; }
 
         public string action { get; set; } = string.Empty;

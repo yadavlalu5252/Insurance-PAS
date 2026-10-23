@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using System;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace PolicyServicing.API.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/v1")]
     public class CancellationController : ControllerBase

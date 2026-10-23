@@ -76,7 +76,6 @@ namespace PolicyServicing.Infrastructure.Repository
             {
                 request.status = parsedStatus;
 
-                // Log the status change in history
                 db.service_request_history.Add(new service_request_history
                 {
                     request_id = request.request_id,

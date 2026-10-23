@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using System;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace PolicyServicing.API.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/v1")]
     public class PolicyRenewalController : ControllerBase
@@ -17,9 +19,6 @@ namespace PolicyServicing.API.Controllers
             _renewalService = renewalService;
         }
 
-        // ==========================================
-        // POST /api/v1/policies/{id}/renew
-        // ==========================================
         [HttpPost("policies/{id}/renew")]
         public async Task<IActionResult> RenewPolicy(long id, [FromQuery] long customerId, [FromBody] RenewalRequestDTO request)
         {
@@ -46,9 +45,7 @@ namespace PolicyServicing.API.Controllers
             }
         }
 
-        // ==========================================
-        // GET /api/v1/renewals/{id}
-        // ==========================================
+
         [HttpGet("renewals/{id}")]
         public async Task<IActionResult> GetRenewalDetails(long id)
         {

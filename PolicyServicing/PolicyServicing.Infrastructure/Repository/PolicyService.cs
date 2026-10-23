@@ -44,18 +44,6 @@ namespace PolicyServicing.Infrastructure.Repository
                 throw new Exception("Address proof document is mandatory");
             }
 
-            // Read old address for the audit trail
-            //var allAddresses = await customerClient.GetCustomerAddresses(request.CustomerId);
-            //var oldAddress = allAddresses.FirstOrDefault(a => a.address_type == addressChange.AddressType);
-
-            //if (oldAddress == null)
-            //{
-            //    throw new Exception("Existing address not found");
-            //}
-
-            //string previousValueJson = JsonSerializer.Serialize(oldAddress);
-
-            string previousValueJson = "{\"address_id\": 1, \"address_type\": \"Communication\", \"address_line1\": \"abc\", \"address_line2\": \"xyz\", \"city\": \"Thane\", \"district\": \"Thane\", \"state\": \"MH\", \"country\": \"India\", \"pincode\": \"400606\"}";
 
             var newAddressData = new CustomerAddressDTO
             {
@@ -80,7 +68,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 customer_id = request.CustomerId,
                 request_type = "Address Change",
                 request_date = DateTime.UtcNow,
-                status = RequestStatus.UnderReview // Changed to UnderReview
+                status = RequestStatus.UnderReview 
             };
 
             db.service_request.Add(serviceRequest);
@@ -91,7 +79,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 request_id = serviceRequest.request_id,
                 endorsement_number = $"END-{DateTime.UtcNow.Ticks}",
                 endorsement_type = "Address Change",
-                previous_value = previousValueJson,
+                previous_value = "{}",
                 updated_value = updatedValueJson,
                 approval_status = Approval_status.Pending 
             });

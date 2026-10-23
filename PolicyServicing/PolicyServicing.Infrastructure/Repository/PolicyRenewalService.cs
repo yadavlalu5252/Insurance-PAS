@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace PolicyServicing.Infrastructure.Repository
 {
@@ -18,25 +19,28 @@ namespace PolicyServicing.Infrastructure.Repository
         private readonly PolicyClient client;
         private readonly PremiumClient premiumClient;
 
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IMapper mapper;
 
-        public PolicyRenewalService(AppDbContext db, PolicyClient client, PremiumClient premiumClient, IMapper mapper)
+        public PolicyRenewalService(AppDbContext db, PolicyClient client, PremiumClient premiumClient, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             this.db = db;
             this.client = client;
             this.premiumClient = premiumClient;
             this.mapper = mapper;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         // 1. POST /api/v1/policies/{id}/renew
         public async Task<string> ProcessPolicyRenewalAsync(long customerId, long policyId, RenewalRequestDTO request)
         {
-            var policyDetails = await client.GetPolicyById(policyId);
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+            var policyDetails = await client.GetPolicyById(policyId, token);
             if (policyDetails == null) throw new Exception("Policy not found.");
             if (policyDetails.policy_status == "Cancelled" || policyDetails.policy_status == "Closed")
                 throw new Exception("Cancelled or Closed policies cannot be renewed.");
 
-            var schedules = await premiumClient.GetPremiumSchedule(policyId);
+            var schedules = await premiumClient.GetPremiumSchedule(policyId, token);
             var unpaidInstallments = schedules.Where(s => s.status != "Paid" && s.status != "Cancelled");
             if (unpaidInstallments.Any())
                 throw new Exception("Cannot renew policy. There are pending premium payments.");
@@ -55,17 +59,30 @@ namespace PolicyServicing.Infrastructure.Repository
 
             try
             {
-                bool isGenerated = await premiumClient.GeneratePremiumSchedule(policyId);
+                // 🚨 FIX 1: Build the exact payload her Premium API expects!
+                var premiumPayload = new
+                {
+                    policy_id = (int)policyId,
+                    issue_date = policyDetails.issue_date,
+                    effective_date = policyDetails.expiry_date, // Renewal starts when old one ends
+                    expiry_date = request.NewExpiryDate,
+                    premium_frequency = "Monthly",
+                    total_premium = policyDetails.premium_amount // 🚨 Pass the OLD premium here
+                };
+
+                bool isGenerated = await premiumClient.GeneratePremiumSchedule(premiumPayload, token);
                 if (!isGenerated) throw new Exception("Failed to generate renewal premium schedule.");
 
-                var newSchedules = await premiumClient.GetPremiumSchedule(policyId);
+                var newSchedules = await premiumClient.GetPremiumSchedule(policyId, token);
                 decimal renewalPremiumAmount = newSchedules.Sum(s => s.premium_amount);
 
                 if (renewalPremiumAmount <= 0)
                     throw new Exception("Invalid premium amount calculated by the Premium Microservice.");
 
-                var policyUpdatePayload = new { expiry_date = request.NewExpiryDate };
-                bool isPolicyUpdated = await client.UpdatePolicy(policyId, policyUpdatePayload);
+                // 🚨 FIX 2: Update the FULL policy object, not just a partial payload!
+                policyDetails.expiry_date = request.NewExpiryDate;
+
+                bool isPolicyUpdated = await client.UpdatePolicy(policyId, policyDetails, token);
                 if (!isPolicyUpdated) throw new Exception("Core Policy Microservice rejected the update.");
 
                 serviceRequest.status = RequestStatus.Completed;

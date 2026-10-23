@@ -1,10 +1,58 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using PolicyServicing.Application.Interface;
 using PolicyServicing.Infrastructure.Config;
 using PolicyServicing.Infrastructure.Data;
 using PolicyServicing.Infrastructure.Repository;
+using PolicyServicing.Infrastructure.Repository.PolicyServicing.Infrastructure.Repository;
+using System.Text;
+
+
+static void ConfigureJwtAuthentication(
+    IServiceCollection services,
+    IConfiguration configuration)
+{
+    var jwtKey = configuration["Jwt:Key"]
+        ?? throw new InvalidOperationException("JWT key is missing.");
+
+    var issuer = configuration["Jwt:Issuer"]
+        ?? throw new InvalidOperationException("JWT issuer is missing.");
+
+    var audience = configuration["Jwt:Audience"]
+        ?? throw new InvalidOperationException("JWT audience is missing.");
+
+    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters =
+                new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = issuer,
+
+                    ValidateAudience = true,
+                    ValidAudience = audience,
+
+                    ValidateLifetime = true,
+
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtKey)),
+
+                    ClockSkew = TimeSpan.Zero
+                };
+        });
+
+    services.AddAuthorization();
+}
 
 var builder = WebApplication.CreateBuilder(args);
+
+ConfigureJwtAuthentication(
+    builder.Services,
+    builder.Configuration);
 
 // Add services to the container.
 
@@ -14,6 +62,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("dbconn")));
 
+builder.Services.AddHttpContextAccessor();
 
 var policyUrl = builder.Configuration["ServiceUrls:PolicyService"];
 
@@ -71,8 +120,25 @@ builder.Services.AddScoped<OtpService>();
 
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT access token."
+    });
+
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
+});
 
 
 
@@ -89,7 +155,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapControllers();
 

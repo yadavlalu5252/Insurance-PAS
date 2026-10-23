@@ -7,7 +7,7 @@ using PremiumSchedule.Domain.Entities;
 
 namespace PremiumSchedule.Api.Controllers
 {
-    [Route("api/v1/premium-schedules ")]
+    [Route("api/v1/premium-schedules")]
     [ApiController]
     public class PremiumScheduleController : ControllerBase
     {

@@ -144,6 +144,43 @@ namespace Authentication.Infrastructure.Migrations
                     b.ToTable("role_permission");
                 });
 
+            modelBuilder.Entity("Authentication.Domain.Entities.TwoFactorLoginChallenge", b =>
+                {
+                    b.Property<long>("challenge_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("challenge_id"));
+
+                    b.Property<string>("challenge_token_hash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("expires_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("failed_attempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("used_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("user_id")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("challenge_id");
+
+                    b.HasIndex("challenge_token_hash")
+                        .IsUnique();
+
+                    b.HasIndex("user_id");
+
+                    b.ToTable("two_factor_login_challenges");
+                });
+
             modelBuilder.Entity("Authentication.Domain.Entities.User", b =>
                 {
                     b.Property<long>("user_id")
@@ -173,6 +210,15 @@ namespace Authentication.Infrastructure.Migrations
 
                     b.Property<string>("status")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("two_factor_enabled")
+                        .HasColumnType("bit");
+
+                    b.Property<long?>("two_factor_last_used_step")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("two_factor_secret")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("username")

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using PolicyServicing.Domain.Entities;
@@ -19,12 +20,23 @@ namespace PolicyServicing.Infrastructure.Repository
         private readonly PremiumClient premiumClient;
         private readonly CustomerClient customerClient;
 
-        public EndorsementService(AppDbContext db, PolicyClient policyClient, PremiumClient premiumClient, CustomerClient customerClient)
+        private readonly ClaimsClient claimsClient;
+
+        private readonly ProductClient productClient;
+
+        private readonly IHttpContextAccessor httpContextAccessor;
+
+        public EndorsementService(AppDbContext db, PolicyClient policyClient, PremiumClient premiumClient, CustomerClient customerClient,
+            IHttpContextAccessor httpContextAccessor,ClaimsClient claimsClient, ProductClient productClient)
         {
             this.db = db;
             this.policyClient = policyClient;
             this.premiumClient = premiumClient;
             this.customerClient = customerClient;
+            this.claimsClient = claimsClient;
+            this.productClient = productClient;
+            this.httpContextAccessor = httpContextAccessor;
+
         }
 
         
@@ -51,6 +63,7 @@ namespace PolicyServicing.Infrastructure.Repository
        
         public async Task<bool> ApproveEndorsementAsync(long endorsementId, long adminId)
         {
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
             var endorsement = await db.policy_endorsements
                 .Include(e => e.service_Request)
                 .FirstOrDefaultAsync(e => e.endorsement_id == endorsementId);
@@ -69,60 +82,238 @@ namespace PolicyServicing.Infrastructure.Repository
                 {
                     case "Address Change":
                         var newAddress = JsonSerializer.Deserialize<CustomerAddressDTO>(endorsement.updated_value);
-                        var allAddresses = await customerClient.GetCustomerAddresses(customerId);
-                        var oldAddress = allAddresses.FirstOrDefault(a => a.address_type == newAddress.address_type);
-                        if (oldAddress != null)
-                        {
-                            bool isAddressUpdated = await customerClient.UpdateAddress(oldAddress.address_id, newAddress);
-                            if (!isAddressUpdated) throw new Exception("Customer Microservice rejected the address update.");
-                        }
-                        break;
 
+                      
+                        var allAddresses = await customerClient.GetCustomerAddresses(customerId, token);
+                        var oldAddress = allAddresses.FirstOrDefault(a => a.address_type == newAddress.address_type);
+
+
+                        if (oldAddress == null)
+                        {
+                            throw new Exception("Existing address not found in Customer Microservice.");
+                        }
+
+                        
+                        endorsement.previous_value = JsonSerializer.Serialize(oldAddress);
+
+                      
+                        bool isAddressUpdated = await customerClient.UpdateAddress(oldAddress.address_id, newAddress, token);
+                        if (!isAddressUpdated)
+                        {
+                            throw new Exception("Customer Microservice rejected the address update.");
+                        }
+
+                        break;
                     case "Contact Update":
                         var contactData = JsonSerializer.Deserialize<ContactUpdateDTO>(endorsement.updated_value);
-                        var newCustomerData = new { mobile_number = contactData.MobileNumber, email = contactData.EmailAddress };
-                        bool isContactUpdated = await customerClient.UpdateCustomer(customerId, newCustomerData);
-                        if (!isContactUpdated) throw new Exception("Customer Microservice rejected the contact update.");
+
+                        // 1. Fetch the CURRENT old data (this is the full customer object)
+                        var oldCustomer = await customerClient.GetCustomerById(customerId, token);
+                        if (oldCustomer == null) throw new Exception("Customer not found in Customer Microservice.");
+
+                        // Save old data for Audit Trail
+                        endorsement.previous_value = JsonSerializer.Serialize(oldCustomer);
+
+                        // 2. Check for Duplicates
+                        var existingEmail = await customerClient.SearchCustomersByEmail(contactData.EmailAddress, token);
+                        if (existingEmail.Any(c => c.customer_id != customerId))
+                            throw new Exception("Email address is already in use by another customer.");
+
+                        var existingMobile = await customerClient.SearchCustomersByMobile(contactData.MobileNumber, token);
+                        if (existingMobile.Any(c => c.customer_id != customerId))
+                            throw new Exception("Mobile number is already in use by another customer.");
+
+                        // 3. Update the properties on the EXISTING object
+                        oldCustomer.mobile_number = contactData.MobileNumber;
+                        oldCustomer.email = contactData.EmailAddress;
+
+                        // 4. Send the ENTIRE updated object to her API
+                        bool isContactUpdated = await customerClient.UpdateCustomer(customerId, oldCustomer, token);
+
+                        if (!isContactUpdated)
+                            throw new Exception("Customer Microservice rejected the contact update.");
                         break;
 
                     case "Nominee Change":
                         var updatedNominees = JsonSerializer.Deserialize<List<NomineeDTO>>(endorsement.updated_value);
                         if (updatedNominees != null)
                         {
-                            var oldNominees = await customerClient.GetNominees(customerId);
-                            foreach (var oldNom in oldNominees) await customerClient.DeleteNominee(oldNom.nominee_id);
-                            foreach (var newNom in updatedNominees) await customerClient.AddNominee(customerId, newNom);
+                            // 1. Fetch the CURRENT old data using the Admin's token
+                            var oldNominees = await customerClient.GetNominees(customerId,token);
+
+                            // 2. Save the old data to the endorsement table for the Audit Trail
+                            endorsement.previous_value = JsonSerializer.Serialize(oldNominees);
+
+                            // 3. Delete the old nominees
+                            foreach (var oldNom in oldNominees)
+                            {
+                                await customerClient.DeleteNominee(oldNom.nominee_id,token);
+                            }
+
+                            // 4. Add the new nominees
+                            foreach (var newNom in updatedNominees)
+                            {
+                                bool isAdded = await customerClient.AddNominee(customerId, newNom, token);
+                                if (!isAdded) throw new Exception("Customer API rejected the nominee add request.");
+                            }
                         }
                         break;
-
+                    case "Coverage Update":
                     case "Coverage Increase":
                     case "Coverage Reduction":
                         var coverageData = JsonSerializer.Deserialize<SavedCoverageDTO>(endorsement.updated_value);
-                        var policyPayload = new { coverage_id = coverageData.coverage_id, sum_insured = coverageData.sum_insured };
 
-                        bool isPolicyUpdated = await policyClient.UpdatePolicy(policyId, policyPayload);
-                        if (!isPolicyUpdated) throw new Exception("Core Policy update failed.");
+                        // 1. Fetch the old coverage for the audit trail
+                        var currentCoverages = await policyClient.GetPolicyCoverages(policyId, token);
+                        var oldCoverage = currentCoverages.FirstOrDefault(c => c.coverage_id == coverageData.coverage_id);
 
-                        await policyClient.CreatePolicyEndorsement(policyId, new { endorsement_type = endorsement.endorsement_type, new_value = endorsement.updated_value });
+                        if (oldCoverage == null) throw new Exception("Coverage not found on policy.");
 
-                        bool isPremiumUpdated = await premiumClient.GeneratePremiumSchedule(policyId);
+                        // 2. Save Audit Trail (Old Value)
+                        endorsement.previous_value = JsonSerializer.Serialize(oldCoverage);
+
+                        // 🚨 3. CALCULATE PRO-RATA PREMIUM HERE (Before updating in memory) 🚨
+                        var policyDetailsForPremium = await policyClient.GetPolicyById(policyId, token);
+
+                        decimal oldSumInsured = oldCoverage.sum_insured;
+                        decimal newSumInsured = coverageData.sum_insured;
+                        decimal oldTotalPremium = policyDetailsForPremium.premium_amount;
+
+                        // New Premium = Old Premium * (New Coverage / Old Coverage)
+                        decimal newCalculatedPremium = oldTotalPremium;
+                        if (oldSumInsured > 0)
+                        {
+                            newCalculatedPremium = oldTotalPremium * (newSumInsured / oldSumInsured);
+                        }
+
+                        // 4. Update the coverage in memory
+                        oldCoverage.sum_insured = coverageData.sum_insured;
+
+                        // 5. Send the updated coverage to her microservice
+                        bool isCoverageUpdated = await policyClient.UpdatePolicyCoverage(policyId, oldCoverage.coverage_id, oldCoverage, token);
+                        if (!isCoverageUpdated) throw new Exception("Core Policy coverage update failed.");
+
+                        // 6. Save Audit Trail (New Value)
+                        endorsement.updated_value = JsonSerializer.Serialize(oldCoverage);
+
+                        // 7. Log the Endorsement in her database
+                        var endorsementPayload = new
+                        {
+                            policy_id = policyId,
+                            endorsement_type = "Coverage Update",
+                            old_values = endorsement.previous_value,
+                            new_values = endorsement.updated_value,
+                            status = "Approved",
+                            approved_by = adminId.ToString(),
+                            created_date = DateTime.UtcNow,
+                            approved_date = DateTime.UtcNow
+                        };
+                        await policyClient.CreatePolicyEndorsement(policyId, endorsementPayload, token);
+
+
+                        var premiumPayload = new
+                        {
+                            policy_id = (int)policyId,
+                            issue_date = policyDetailsForPremium.issue_date,
+                            effective_date = policyDetailsForPremium.effective_date,
+                            expiry_date = policyDetailsForPremium.expiry_date,
+                            premium_frequency = "Monthly",
+
+
+                            total_premium = newCalculatedPremium
+                        };
+
+                        bool isPremiumUpdated = await premiumClient.GeneratePremiumSchedule(premiumPayload, token);
                         if (!isPremiumUpdated) throw new Exception("Failed to recalculate premium.");
                         break;
 
                     case "Rider Addition":
                     case "Rider Removal":
-                        var updatedRidersList = JsonSerializer.Deserialize<List<PolicyRiderDTO>>(endorsement.updated_value);
+                        // 1. Deserialize the requested intent (Action + RiderId)
+                        var riderRequest = JsonSerializer.Deserialize<RiderModifyDTO>(endorsement.updated_value);
+                        if (riderRequest == null) throw new Exception("Invalid rider payload.");
+
+                        // 2. Fetch Current Policy Details
+                        var riderPolicyDetails = await policyClient.GetPolicyById(policyId, token);
+                        if (riderPolicyDetails == null) throw new Exception("Policy not found.");
+                        if (riderPolicyDetails.policy_status != "Active") throw new Exception("Policy must be Active to modify riders.");
+
+                        // 3. Validate Eligibility with Product Microservice
+                        var eligibleRiders = await productClient.GetEligibleRiders(riderPolicyDetails.product_id, token);
+                        var requestedRiderInfo = eligibleRiders.FirstOrDefault(r => r.rider_id == riderRequest.RiderId);
+                        if (requestedRiderInfo == null) throw new Exception("This rider is not eligible for your policy's product.");
+
+                        // =========================================================
+                        // 4. 🚨 FETCH THE CURRENT RIDERS FROM HER NEW ENDPOINT 🚨
+                        // =========================================================
+                        var currentRiders = await policyClient.GetPolicyRiders(policyId, token);
+                        var oldRidersList = currentRiders ?? new List<PolicyRiderDTO>();
+                        var updatedRidersList = new List<PolicyRiderDTO>(oldRidersList);
+
+                        // Assuming ProductRiderDTO has 'rider_premium' and 'rider_name'. Change these if your DTO uses different names.
+                        decimal riderCost = requestedRiderInfo.rider_premium;
+                        decimal newRiderCalculatedPremium = riderPolicyDetails.premium_amount;
+
+                        if (riderRequest.Action == "Add")
+                        {
+                            if (updatedRidersList.Any(r => r.rider_id == riderRequest.RiderId))
+                                throw new Exception("Policy already has this rider.");
+
+                            // Map the full data so her database doesn't get nulls!
+                            updatedRidersList.Add(new PolicyRiderDTO
+                            {
+                                rider_id = riderRequest.RiderId,
+                                rider_name = requestedRiderInfo.rider_name,
+                                premium_amount = requestedRiderInfo.rider_premium
+                            });
+                            newRiderCalculatedPremium += riderCost;
+                        }
+                        else if (riderRequest.Action == "Remove")
+                        {
+                            var riderToRemove = updatedRidersList.FirstOrDefault(r => r.rider_id == riderRequest.RiderId);
+                            if (riderToRemove == null) throw new Exception("Rider not found on this policy.");
+
+                            updatedRidersList.Remove(riderToRemove);
+                            newRiderCalculatedPremium -= riderCost;
+                        }
+
+                        // 5. Save Audit Trail (Local DB)
+                        endorsement.previous_value = JsonSerializer.Serialize(oldRidersList);
+                        endorsement.updated_value = JsonSerializer.Serialize(updatedRidersList);
+
+                        // 6. Execute Updates across Microservices
+                        // Use the NEW method that hits her /riders endpoint!
                         var riderPayload = new { riders = updatedRidersList };
+                        bool isRiderUpdated = await policyClient.UpdatePolicyRiders(policyId, riderPayload, token);
+                        if (!isRiderUpdated) throw new Exception("Core Policy rider update failed.");
 
-                        bool isRiderUpdated = await policyClient.UpdatePolicy(policyId, riderPayload);
-                        if (!isRiderUpdated) throw new Exception("Core Policy update failed.");
+                        // 7. Log the Endorsement (Fixed Payload!)
+                        await policyClient.CreatePolicyEndorsement(policyId, new
+                        {
+                            policy_id = policyId,
+                            endorsement_type = endorsement.endorsement_type,
+                            old_values = endorsement.previous_value,
+                            new_values = endorsement.updated_value,
+                            status = "Approved",
+                            approved_by = adminId.ToString(),
+                            created_date = DateTime.UtcNow,
+                            approved_date = DateTime.UtcNow
+                        }, token);
 
-                        await policyClient.CreatePolicyEndorsement(policyId, new { endorsement_type = endorsement.endorsement_type, new_value = endorsement.updated_value });
+                        // 8. Recalculate Premium (Fixed Route & Payload!)
+                        var riderPremiumPayload = new
+                        {
+                            policy_id = (int)policyId,
+                            issue_date = riderPolicyDetails.issue_date,
+                            effective_date = riderPolicyDetails.effective_date,
+                            expiry_date = riderPolicyDetails.expiry_date,
+                            premium_frequency = "Monthly",
+                            total_premium = newRiderCalculatedPremium
+                        };
 
-                        bool isRiderPremiumUpdated = await premiumClient.GeneratePremiumSchedule(policyId);
+                        bool isRiderPremiumUpdated = await premiumClient.GeneratePremiumSchedule(riderPremiumPayload, token);
                         if (!isRiderPremiumUpdated) throw new Exception("Failed to recalculate premium.");
                         break;
-
                     default:
                         throw new Exception($"No approval logic implemented for type: {endorsement.endorsement_type}");
                 }

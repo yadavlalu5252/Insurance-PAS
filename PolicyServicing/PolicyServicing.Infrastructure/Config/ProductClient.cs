@@ -1,11 +1,20 @@
 ﻿using PolicyServicing.Application.DTO;
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace PolicyServicing.Infrastructure.Config
 {
+    // 🚨 Add this to catch his SuccessResponse wrapper
+    public class ProductApiResponse<T>
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public T Data { get; set; }
+    }
+
     public class ProductClient
     {
         HttpClient client;
@@ -15,16 +24,30 @@ namespace PolicyServicing.Infrastructure.Config
             this.client = client;
         }
 
-        public async Task<List<ProductRiderDTO>> GetEligibleRiders(long productId)
+        private void SetAuthHeader(string token)
         {
-            return await client.GetFromJsonAsync<List<ProductRiderDTO>>($"/api/v1/products/{productId}/riders");
+            if (!string.IsNullOrEmpty(token))
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Replace("Bearer ", ""));
+            }
         }
 
-        // In ProductClient.cs
-        public async Task<List<CoverageMasterDTO>> GetProductCoverages(long productId)
+        public async Task<List<ProductRiderDTO>> GetEligibleRiders(long productId, string token)
         {
-            // This calls the GET /api/v1/products/{id}/coverages endpoint
-            return await client.GetFromJsonAsync<List<CoverageMasterDTO>>($"/api/v1/products/{productId}/coverages");
+            SetAuthHeader(token);
+
+            // 🚨 Notice the route change to /insurance-products/ and the wrapper
+            var response = await client.GetFromJsonAsync<ProductApiResponse<List<ProductRiderDTO>>>($"/api/v1/insurance-products/{productId}/riders");
+            return response?.Data ?? new List<ProductRiderDTO>();
+        }
+
+        public async Task<List<CoverageMasterDTO>> GetProductCoverages(long productId, string token)
+        {
+            SetAuthHeader(token);
+
+            // 🚨 Notice the route change to /insurance-products/ and the wrapper
+            var response = await client.GetFromJsonAsync<ProductApiResponse<List<CoverageMasterDTO>>>($"/api/v1/insurance-products/{productId}/coverages");
+            return response?.Data ?? new List<CoverageMasterDTO>();
         }
     }
 }
