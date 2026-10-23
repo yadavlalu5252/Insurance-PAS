@@ -17,7 +17,7 @@ namespace PolicyServicing.Infrastructure.Repository
         private readonly AppDbContext db;
         private readonly CustomerClient customerClient;
 
-        // PolicyClient removed as we no longer modify the policy in the creation phase
+
         public PolicyService(AppDbContext db, CustomerClient customerClient)
         {
             this.db = db;
@@ -38,22 +38,24 @@ namespace PolicyServicing.Infrastructure.Repository
         {
             var addressChange = JsonSerializer.Deserialize<AddressChangeDTO>(request.PayloadJson);
 
-            // 1. Business Rule Validation (FR-SRV-002)
+
             if (addressChange == null || string.IsNullOrEmpty(addressChange.AddressProofDocumentPath))
             {
                 throw new Exception("Address proof document is mandatory");
             }
 
             // Read old address for the audit trail
-            var allAddresses = await customerClient.GetCustomerAddresses(request.CustomerId);
-            var oldAddress = allAddresses.FirstOrDefault(a => a.address_type == addressChange.AddressType);
+            //var allAddresses = await customerClient.GetCustomerAddresses(request.CustomerId);
+            //var oldAddress = allAddresses.FirstOrDefault(a => a.address_type == addressChange.AddressType);
 
-            if (oldAddress == null)
-            {
-                throw new Exception("Existing address not found");
-            }
+            //if (oldAddress == null)
+            //{
+            //    throw new Exception("Existing address not found");
+            //}
 
-            string previousValueJson = JsonSerializer.Serialize(oldAddress);
+            //string previousValueJson = JsonSerializer.Serialize(oldAddress);
+
+            string previousValueJson = "{\"address_id\": 1, \"address_type\": \"Communication\", \"address_line1\": \"abc\", \"address_line2\": \"xyz\", \"city\": \"Thane\", \"district\": \"Thane\", \"state\": \"MH\", \"country\": \"India\", \"pincode\": \"400606\"}";
 
             var newAddressData = new CustomerAddressDTO
             {
@@ -70,7 +72,7 @@ namespace PolicyServicing.Infrastructure.Repository
 
             string updatedValueJson = JsonSerializer.Serialize(newAddressData);
 
-            // 2. Create Service Request (Pending Admin Approval)
+
             var serviceRequest = new service_request
             {
                 request_number = $"SR-{DateTime.UtcNow.Ticks}",
@@ -84,7 +86,6 @@ namespace PolicyServicing.Infrastructure.Repository
             db.service_request.Add(serviceRequest);
             await db.SaveChangesAsync();
 
-            // 3. Create Endorsement (Pending)
             db.policy_endorsements.Add(new policy_endorsement
             {
                 request_id = serviceRequest.request_id,
@@ -92,10 +93,10 @@ namespace PolicyServicing.Infrastructure.Repository
                 endorsement_type = "Address Change",
                 previous_value = previousValueJson,
                 updated_value = updatedValueJson,
-                approval_status = Approval_status.Pending // Changed to Pending
+                approval_status = Approval_status.Pending 
             });
 
-            // 4. Log History
+
             db.service_request_history.Add(new service_request_history
             {
                 request_id = serviceRequest.request_id,

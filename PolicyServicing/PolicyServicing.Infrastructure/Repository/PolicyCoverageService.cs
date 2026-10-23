@@ -33,7 +33,8 @@ namespace PolicyServicing.Infrastructure.Repository
             var policyDetails = await client.GetPolicyById(request.PolicyId);
             if (policyDetails == null) throw new Exception("Policy not found.");
 
-            var oldCoverage = policyDetails.coverages.FirstOrDefault(c => c.coverage_id == coverageData.CoverageId);
+            var coverages = await client.GetPolicyCoverages(request.PolicyId);
+            var oldCoverage = coverages.FirstOrDefault(c => c.coverage_id == coverageData.CoverageId);
             if (oldCoverage == null) throw new Exception("Coverage not found on this policy.");
 
            

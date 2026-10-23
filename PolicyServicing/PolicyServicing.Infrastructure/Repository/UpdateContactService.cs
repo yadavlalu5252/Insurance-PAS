@@ -5,6 +5,7 @@ using PolicyServicing.Infrastructure.Config;
 using PolicyServicing.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -17,22 +18,21 @@ namespace PolicyServicing.Infrastructure.Repository
         private readonly AppDbContext db;
         private readonly CustomerClient customerClient;
 
-        // Removed PolicyClient as we don't call it here anymore
-        public UpdateContactService(AppDbContext db, CustomerClient customerClient)
+        private readonly OtpService otp;
+        public UpdateContactService(AppDbContext db, CustomerClient customerClient,OtpService otp)
         {
             this.db = db;
             this.customerClient = customerClient;
+            this.otp = otp;
         }
 
         public async Task<string> ProcessContactUpdateAsync(EndorsementRequestDTO request)
         {
             var contactData = JsonSerializer.Deserialize<ContactUpdateDTO>(request.PayloadJson);
 
-            // 1. Business Rule Validation (FR-SRV-003)
-            if (string.IsNullOrEmpty(contactData.OtpCode) || contactData.OtpCode != "123456")
-            {
-                throw new Exception("Invalid or missing OTP code.");
-            }
+            if (!await otp.VerifyAsync(contactData.EmailAddress, contactData.OtpCode))
+                throw new Exception("Invalid or expired OTP for the new email.");
+
 
             // Read from Customer Client for Duplicate Check
             var existingEmail = await customerClient.SearchCustomers(contactData.EmailAddress);
@@ -43,7 +43,7 @@ namespace PolicyServicing.Infrastructure.Repository
             if (existingMobile.Any(c => c.customer_id != request.CustomerId))
                 throw new Exception("Mobile number is already in use by another customer.");
 
-            // Read from Customer Client to save the previous value
+
             var oldCustomer = await customerClient.GetCustomerById(request.CustomerId);
             string previousValueJson = JsonSerializer.Serialize(oldCustomer);
 
@@ -54,7 +54,7 @@ namespace PolicyServicing.Infrastructure.Repository
             };
             string updatedValueJson = JsonSerializer.Serialize(newCustomerData);
 
-            // 2. Create Service Request (Pending Admin Approval)
+
             var serviceRequest = new service_request
             {
                 request_number = $"SR-{DateTime.UtcNow.Ticks}",
@@ -67,7 +67,7 @@ namespace PolicyServicing.Infrastructure.Repository
             db.service_request.Add(serviceRequest);
             await db.SaveChangesAsync();
 
-            // 3. Create Endorsement (Pending)
+ 
             db.policy_endorsements.Add(new policy_endorsement
             {
                 request_id = serviceRequest.request_id,
@@ -78,7 +78,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 approval_status = Approval_status.Pending // Set to Pending
             });
 
-            // 4. Log History
+
             db.service_request_history.Add(new service_request_history
             {
                 request_id = serviceRequest.request_id,

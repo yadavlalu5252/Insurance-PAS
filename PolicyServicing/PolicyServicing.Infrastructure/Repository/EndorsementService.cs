@@ -27,7 +27,7 @@ namespace PolicyServicing.Infrastructure.Repository
             this.customerClient = customerClient;
         }
 
-        // 1. POST /api/v1/endorsements
+        
         public async Task<policy_endorsement> CreateEndorsementAsync(CreateEndorsementDTO dto)
         {
             var request = await db.service_request.FindAsync(dto.RequestId);
@@ -40,7 +40,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 endorsement_type = dto.EndorsementType,
                 previous_value = dto.PreviousValue,
                 updated_value = dto.UpdatedValue,
-                approval_status = Approval_status.Pending // Waits for Admin
+                approval_status = Approval_status.Pending 
             };
 
             db.policy_endorsements.Add(endorsement);
@@ -48,7 +48,7 @@ namespace PolicyServicing.Infrastructure.Repository
             return endorsement;
         }
 
-        // 2. PUT /api/v1/endorsements/{id}/approve
+       
         public async Task<bool> ApproveEndorsementAsync(long endorsementId, long adminId)
         {
             var endorsement = await db.policy_endorsements
@@ -64,9 +64,7 @@ namespace PolicyServicing.Infrastructure.Repository
 
             try
             {
-                // =========================================================
-                // EXECUTE FUNCTIONAL REQUIREMENTS (CALL MICROSERVICES)
-                // =========================================================
+               
                 switch (endorsement.endorsement_type)
                 {
                     case "Address Change":
@@ -129,9 +127,7 @@ namespace PolicyServicing.Infrastructure.Repository
                         throw new Exception($"No approval logic implemented for type: {endorsement.endorsement_type}");
                 }
 
-                // ========================================================
-                // UPDATE STATUSES & LOG HISTORY
-                // ========================================================
+              
                 endorsement.approval_status = Approval_status.Approved;
                 endorsement.service_Request.status = RequestStatus.Completed;
 
@@ -149,7 +145,7 @@ namespace PolicyServicing.Infrastructure.Repository
             }
             catch (Exception ex)
             {
-                // If microservices fail, reject the endorsement and log the failure
+                
                 endorsement.approval_status = Approval_status.Rejected;
                 endorsement.service_Request.status = RequestStatus.Rejected;
 
@@ -167,7 +163,6 @@ namespace PolicyServicing.Infrastructure.Repository
             }
         }
 
-        // 3. PUT /api/v1/endorsements/{id}/reject
         public async Task<bool> RejectEndorsementAsync(long endorsementId, long adminId, string reason)
         {
             var endorsement = await db.policy_endorsements
@@ -192,8 +187,8 @@ namespace PolicyServicing.Infrastructure.Repository
             return true;
         }
 
-        // 4. GET /api/v1/endorsements/{id}
-        public async Task<policy_endorsement> GetEndorsementByIdAsync(long endorsementId)
+
+        public async Task<policy_endorsement?> GetEndorsementByIdAsync(long endorsementId)
         {
             return await db.policy_endorsements
                 .Include(e => e.service_Request)

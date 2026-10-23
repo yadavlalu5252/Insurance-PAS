@@ -63,6 +63,8 @@ builder.Services.AddScoped<IProcessNominee,ProcessNomineeService>();
 builder.Services.AddScoped<IUpdateContact, UpdateContactService>();
 
 
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<OtpService>();
 
 
 
@@ -70,6 +72,9 @@ builder.Services.AddScoped<IUpdateContact, UpdateContactService>();
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+
 
 var app = builder.Build();
 

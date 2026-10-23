@@ -42,5 +42,13 @@ namespace PolicyServicing.Infrastructure.Config
         }
 
 
+        // Add this to PolicyClient.cs
+        public async Task<List<PolicyCoverageDTO>> GetPolicyCoverages(long policyId)
+        {
+            // This calls a new endpoint we will ask your friend to add
+            return await client.GetFromJsonAsync<List<PolicyCoverageDTO>>($"/api/v1/policies/{policyId}/coverages");
+        }
+
+
     }
 }
