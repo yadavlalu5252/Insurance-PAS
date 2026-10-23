@@ -1,18 +1,20 @@
 ﻿using KycVerification.Api.Wrappers;
 using KycVerification.Application.Interface;
 using KycVerification.Domain.Entities;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KycVerifiaction.Api.Controllers
 {
     [Route("api/v1/kyc/logs")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class KycVerificationLogController : ControllerBase
     {
         private readonly IKycVerificationLogServices service;
 
-        public KycVerificationLogController(IKycVerificationLogServices service)
+        public KycVerificationLogController(
+            IKycVerificationLogServices service)
         {
             this.service = service;
         }
