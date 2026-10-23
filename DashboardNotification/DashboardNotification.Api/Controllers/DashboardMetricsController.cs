@@ -10,21 +10,21 @@ namespace DashboardNotification.Api.Controllers
     [ApiController]
     public class DashboardMetricsController : ControllerBase
     {
-        private readonly IDashboardMetrics service;
+       // private readonly IDashboardMetrics service;
 
-        public DashboardMetricsController(IDashboardMetrics service)
-        {
-            this.service = service;
-        }
+        //public DashboardMetricsController(IDashboardMetrics service)
+        //{
+        //    this.service = service;
+        //}
 
-        [HttpGet]
-        public IActionResult GetDashboardMetrics()
-        {
-            var data = service.GetDashboardMetrics();
+        //[HttpGet]
+        //public IActionResult GetDashboardMetrics()
+        //{
+        //    var data = service.GetDashboardMetrics();
 
-            var response = ApiResponse<DashboardMetrics>.SuccessResponse(data);
+        //    var response = ApiResponse<DashboardMetrics>.SuccessResponse(data);
 
-            return Ok(response);
-        }
-    }
+        //    return Ok(response);
+        //}
+   }
 }

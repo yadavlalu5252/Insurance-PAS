@@ -1,27 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KycVerification.Domain.Entities
 {
+    [Table("ckyc_details")]
     public class CkycDetails
     {
         [Key]
-        public int ckyc_id { get; set; }
+        [Column("ckyc_id")]
+        public int CkycId { get; set; }
 
         [Required]
-        public int customer_id { get; set; }
+        [Column("customer_id")]
+        public int CustomerId { get; set; }
 
         [MaxLength(30)]
-        public string? ckyc_number { get; set; }
+        [Column("ckyc_number")]
+        public string? CkycNumber { get; set; }
 
-        public DateTime? verification_date { get; set; }
+        [Column("verification_date")]
+        public DateTime? VerificationDate { get; set; }
 
         [Required]
         [MaxLength(20)]
-        public string ckyc_status { get; set; } = "Pending";
+        [Column("ckyc_status")]
+        public string CkycStatus { get; set; } = "Pending";
     }
 }

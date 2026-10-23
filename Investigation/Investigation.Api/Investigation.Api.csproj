@@ -25,4 +25,9 @@
 		<ProjectReference Include="..\Investigation.Infrastructure\Investigation.Infrastructure.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Middleware\" />
+	  <Folder Include="Wrappers\" />
+	</ItemGroup>
+
 </Project>

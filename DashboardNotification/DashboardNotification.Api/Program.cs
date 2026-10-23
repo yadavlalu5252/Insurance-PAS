@@ -21,7 +21,7 @@ builder.Services.AddDbContext<DashboardNotificationDbContext>(options =>
 // Repository registration
 builder.Services.AddScoped<INotificationTemplate, NotificationTemplateService>();
 
-builder.Services.AddScoped<IDashboardMetrics, DashboardMetricsRepository>();
+//builder.Services.AddScoped<IDashboardMetrics, DashboardMetricsRepository>();
 var app = builder.Build();
 
 // Global exception middleware

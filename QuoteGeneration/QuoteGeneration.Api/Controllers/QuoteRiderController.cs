@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using QuoteGeneration.Api.Wrappers;
-
 using QuoteGeneration.Application.DTO;
 using QuoteGeneration.Application.Interfaces;
 
@@ -9,6 +9,7 @@ namespace QuoteGeneration.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class QuoteRiderController : ControllerBase
     {
         private readonly IQuoteRiderService service;
@@ -19,42 +20,40 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpPost("Add")]
+        [Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> AddRider(QuoteRiderDTO dto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ApiResponse<QuoteRiderDTO>.ErrorResponse(
-                    "Invalid rider details."));
+                return BadRequest(ApiResponse<QuoteRiderDTO>.ErrorResponse("Invalid rider details."));
             }
 
             var result = await service.AddRiderAsync(dto);
 
-            return Ok(ApiResponse<QuoteRiderDTO>.SuccessResponse(
-                result, "Rider added successfully."));
+            return Ok(ApiResponse<QuoteRiderDTO>.SuccessResponse(result, "Rider added successfully."));
         }
 
         [HttpGet("GetByQuoteId/{quoteId}")]
+        [Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetRidersByQuoteId(int quoteId)
         {
             var result = await service.GetRidersByQuoteIdAsync(quoteId);
 
-            return Ok(ApiResponse<List<QuoteRiderDTO>>.SuccessResponse(
-                result, "Quote riders retrieved successfully."));
+            return Ok(ApiResponse<List<QuoteRiderDTO>>.SuccessResponse(result, "Quote riders retrieved successfully."));
         }
 
         [HttpDelete("Remove/{id}")]
+        [Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> RemoveRider(int id)
         {
             var removed = await service.RemoveRiderAsync(id);
 
             if (!removed)
             {
-                return NotFound(ApiResponse<bool>.ErrorResponse(
-                    "Rider selection not found."));
+                return NotFound(ApiResponse<bool>.ErrorResponse("Rider selection not found."));
             }
 
-            return Ok(ApiResponse<bool>.SuccessResponse(
-                true, "Rider removed successfully."));
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Rider removed successfully."));
         }
     }
 }
