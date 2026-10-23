@@ -1,41 +1,78 @@
+using KycVerification.Application.Interface;
 using KycVerification.Application.Mapper;
 using KycVerification.Infrastructure.Data;
+using KycVerification.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Framework services
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularClient", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
-        builder.Configuration.GetConnectionString("dbconn")
-    ));
+// Database
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("dbconn")));
 
-builder.Services.AddAutoMapper(cfg => { }, typeof(KycMappingProfile));
+// AutoMapper
+builder.Services.AddAutoMapper(
+    cfg => { },
+    typeof(KycMappingProfile));
 
-//builder.Services.AddHttpClient<CustomerClient>(client =>
-//{
-//    client.BaseAddress = new Uri(
-//        builder.Configuration["Services:CustomerApi"] ?? "http://localhost:5091");
+// Services
+builder.Services.AddScoped<
+    IDocumentTypeMasterServices,
+    DocumentTypeMasterServices>();
 
-//});
+builder.Services.AddScoped<
+    ICustomerKycServices,
+    CustomerKycServices>();
+
+builder.Services.AddScoped<
+    IKycService,
+    KycService>();
+
+builder.Services.AddScoped<
+    ICkycDetailsServices,
+    CkycDetailsServices>();
+
+builder.Services.AddScoped<
+    IKycDocumentServices,
+    KycDocumentServices>();
+
+builder.Services.AddScoped<
+    IKycVerificationLogServices,
+    KycVerificationLogServices>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
     app.UseSwagger();
+
     app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AngularClient");
 
 app.UseAuthorization();
 
