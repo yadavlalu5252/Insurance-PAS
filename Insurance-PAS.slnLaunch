@@ -1,0 +1,20 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Authentication\\Authentication.Api\\Authentication.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Authentication\\Authentication.Application\\Authentication.Application.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "PolicyIssuance\\PolicyIssuance.Api\\PolicyIssuance.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      }
+    ]
+  }
+]
