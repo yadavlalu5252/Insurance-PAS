@@ -429,5 +429,29 @@ namespace PolicyIssuance.Infrastructure.Services
             await db.SaveChangesAsync();
             return true;
         }
+
+        public async Task<List<PolicyDTO>> GetPoliciesByCustomerIdAsync(long customerId)
+        {
+            // 1. Fetch all policies from the database that belong to this customer
+            var policies = await db.Policies
+                .Where(p => p.customer_id == customerId)
+                .ToListAsync();
+
+            // 2. Map them to DTOs (using manual mapping to be safe)
+            var result = policies.Select(p => new PolicyDTO
+            {
+                policy_id = p.policy_id,
+                policy_number = p.policy_number,
+                customer_id = p.customer_id,
+                product_id = p.product_id,
+                issue_date = p.issue_date,
+                effective_date = p.effective_date,
+                expiry_date = p.expiry_date,
+                premium_amount = p.premium_amount,
+                policy_status = p.policy_status.ToString() // If her status is an Enum, convert to string
+            }).ToList();
+
+            return result;
+        }
     }
 }

@@ -57,4 +57,16 @@ public class ServiceRequestController : ControllerBase
         var success = await service.UpdateRequestAsync(id, newStatus, adminId);
         return success ? Ok("Updated") : BadRequest();
     }
+
+    [HttpGet("my-policies")]
+    public async Task<IActionResult> GetMyPolicies()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!long.TryParse(userIdClaim, out long customerId))
+            return Unauthorized("Customer ID missing.");
+
+        var token = Request.Headers["Authorization"].ToString();
+        var policies = await service.GetCustomerPoliciesAsync(customerId, token);
+        return Ok(policies);
+    }
 }

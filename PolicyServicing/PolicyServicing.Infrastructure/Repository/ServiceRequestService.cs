@@ -1,11 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure.Core;
+using Microsoft.EntityFrameworkCore;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using PolicyServicing.Domain.Entities;
+using PolicyServicing.Infrastructure.Config;
 using PolicyServicing.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace PolicyServicing.Infrastructure.Repository
@@ -21,13 +24,18 @@ namespace PolicyServicing.Infrastructure.Repository
         private readonly IProcessRiderModify riderService;
         private readonly IUpdateContact contactService;
 
+        private readonly PolicyClient policyClient;
+
+
+
+
         public ServiceRequestService(
             AppDbContext db,
             IPolicyService addressChangeService,
             IProcessNominee nomineeService,
             IProcessCoverage coverageService,
             IProcessRiderModify riderService,
-            IUpdateContact contactService)
+            IUpdateContact contactService,PolicyClient policyClient)
         {
             this.db = db;
             this.addressChangeService = addressChangeService;
@@ -35,6 +43,7 @@ namespace PolicyServicing.Infrastructure.Repository
             this.coverageService = coverageService;
             this.riderService = riderService;
             this.contactService = contactService;
+            this.policyClient = policyClient;
         }
 
 
@@ -90,6 +99,12 @@ namespace PolicyServicing.Infrastructure.Repository
             }
 
             return false; 
+        }
+
+        public async Task<List<PolicyDTO>> GetCustomerPoliciesAsync(long customerId, string token)
+        {
+            // The service layer handles the cross-service communication
+            return await policyClient.GetPoliciesByCustomerId(customerId, token);
         }
     }
 }
