@@ -29,9 +29,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+
         // CREATE PAYMENT
-        // =========================================================
+        
 
         public async Task<PaymentResponseDto> CreatePaymentAsync(
             CreatePaymentDto dto)
@@ -48,19 +48,19 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     "Payment has already been completed for this schedule.");
             }
 
-            // Create payment
+            
             var payment = mapper.Map<PremiumPayments>(dto);
 
             payment.payment_date = DateTime.UtcNow;
             payment.payment_status = PaymentStatus.Initiated;
 
-            // Online payments require gateway confirmation
+         
             if (IsOnlinePayment(dto.payment_mode))
             {
                 payment.payment_status = PaymentStatus.Pending;
             }
 
-            // Offline payments require finance verification
+          
             if (IsOfflinePayment(dto.payment_mode))
             {
                 payment.payment_status = PaymentStatus.Pending;
@@ -74,9 +74,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+      
         // GET PAYMENT BY ID
-        // =========================================================
+ 
 
         public async Task<PaymentResponseDto?> GetPaymentByIdAsync(
             int paymentId)
@@ -92,9 +92,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+        
         // GET ALL PAYMENTS
-        // =========================================================
+        
 
         public async Task<IEnumerable<PaymentResponseDto>>
             GetPaymentsAsync()
@@ -108,9 +108,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+        
         // VERIFY PAYMENT
-        // =========================================================
+       
 
         public async Task<PaymentResponseDto?> VerifyPaymentAsync(
             int paymentId,
@@ -146,9 +146,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
 
             await db.SaveChangesAsync();
 
-            // Update Premium Schedule directly
-            // because Premium Schedule and Premium Payment
-            // are part of the same microservice.
+       
             if (payment.payment_status == PaymentStatus.Success)
             {
                 await UpdatePremiumScheduleAfterPaymentAsync(
@@ -161,10 +159,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+        
         // RETRY FAILED PAYMENT
-        // =========================================================
-
+        
         public async Task<PaymentResponseDto?> RetryPaymentAsync(
             int paymentId)
         {
@@ -191,9 +188,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+ 
         // UPDATE PAYMENT STATUS
-        // =========================================================
+       
 
         public async Task<PaymentResponseDto?>
             UpdatePaymentStatusAsync(
@@ -219,8 +216,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
 
             await db.SaveChangesAsync();
 
-            // Update Premium Schedule directly
-            // because both modules use the same microservice/database.
+       
             if (payment.payment_status ==
                 PaymentStatus.Success)
             {
@@ -234,9 +230,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+       
         // UPDATE PREMIUM SCHEDULE AFTER SUCCESSFUL PAYMENT
-        // =========================================================
+        
 
         private async Task UpdatePremiumScheduleAfterPaymentAsync(
             int scheduleId,
@@ -252,16 +248,14 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     "Premium schedule not found.");
             }
 
-            // Calculate total successful payments
-            // for this schedule.
+            
             decimal totalPaid = await db.PremiumPayments
                 .Where(x =>
                     x.schedule_id == scheduleId &&
                     x.payment_status == PaymentStatus.Success)
                 .SumAsync(x => x.amount_paid);
 
-            // Include the current payment if it has not
-            // yet been reflected by the query.
+           
             if (totalPaid < amountPaid)
             {
                 totalPaid += amountPaid;
@@ -284,9 +278,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+        
         // PAYMENT HISTORY BY POLICY
-        // =========================================================
+        
 
         public async Task<IEnumerable<PaymentResponseDto>>
             GetPaymentHistoryByPolicyAsync(
@@ -302,14 +296,14 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+        
         // GET / CREATE RECEIPT
-        // =========================================================
+       
 
         public async Task<ReceiptResponseDto?> GetReceiptAsync(
     int paymentId)
         {
-            // Find payment
+           
             var payment = await db.PremiumPayments
                 .FirstOrDefaultAsync(x =>
                     x.payment_id == paymentId);
@@ -317,7 +311,6 @@ namespace PremiumSchedule.Infrastructure.Repositories
             if (payment == null)
                 return null;
 
-            // Receipt only for successful payment
             if (payment.payment_status !=
                 PaymentStatus.Success)
             {
@@ -325,12 +318,12 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     "Receipt can only be generated for successful payments.");
             }
 
-            // Find existing receipt
+           
             var receipt = await db.PaymentReceipts
                 .FirstOrDefaultAsync(x =>
                     x.payment_id == paymentId);
 
-            // Create receipt if it doesn't exist
+        
             if (receipt == null)
             {
                 receipt = new PaymentReceipt
@@ -342,24 +335,24 @@ namespace PremiumSchedule.Infrastructure.Repositories
 
                 db.PaymentReceipts.Add(receipt);
 
-                // Save first to get receipt_id
+                
                 await db.SaveChangesAsync();
 
-                // Generate unique receipt number
+             
                 receipt.receipt_number =
                     $"REC-{DateTime.UtcNow.Year}-{receipt.receipt_id:D6}";
 
-                // Save receipt number before generating PDF
+                
                 await db.SaveChangesAsync();
             }
 
-            // Generate PDF using the receipt number
+           
             string filePath =
                 GenerateReceiptPdf(
                     payment,
                     receipt);
 
-            // Save PDF path
+            
             receipt.receipt_path = filePath;
 
             await db.SaveChangesAsync();
@@ -369,15 +362,13 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
-        // REGENERATE RECEIPT
-        // =========================================================
+     
 
         public async Task<ReceiptResponseDto?>
             RegenerateReceiptAsync(
                 int paymentId)
         {
-            // Find payment
+         
             var payment = await db.PremiumPayments
                 .FirstOrDefaultAsync(x =>
                     x.payment_id == paymentId);
@@ -385,7 +376,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
             if (payment == null)
                 return null;
 
-            // Only successful payments can have receipts
+  
             if (payment.payment_status !=
                 PaymentStatus.Success)
             {
@@ -393,12 +384,12 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     "Receipt can only be regenerated for successful payments.");
             }
 
-            // Find existing receipt
+ 
             var receipt = await db.PaymentReceipts
                 .FirstOrDefaultAsync(x =>
                     x.payment_id == paymentId);
 
-            // Create receipt if it doesn't exist
+        
             if (receipt == null)
             {
                 receipt = new PaymentReceipt
@@ -418,18 +409,18 @@ namespace PremiumSchedule.Infrastructure.Repositories
             }
             else
             {
-                // Keep same receipt number
+              
                 receipt.receipt_date =
                     DateTime.UtcNow;
             }
 
-            // Generate new PDF
+            
             string filePath =
                 GenerateReceiptPdf(
                     payment,
                     receipt);
 
-            // Update PDF path
+           
             receipt.receipt_path =
                 filePath;
 
@@ -440,9 +431,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+       
         // DOWNLOAD RECEIPT
-        // =========================================================
+      
 
         public async Task<(byte[] FileBytes, string FileName)?>
             DownloadReceiptAsync(
@@ -484,15 +475,15 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+        
         // GENERATE RECEIPT PDF
-        // =========================================================
+        
 
         private string GenerateReceiptPdf(
             PremiumPayments payment,
             PaymentReceipt receipt)
         {
-            // Receipts folder
+           
             string receiptsFolder =
                 Path.Combine(
                     environment.ContentRootPath,
@@ -505,7 +496,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     receiptsFolder);
             }
 
-            // PDF file name
+        
             string fileName =
                 $"{receipt.receipt_number}.pdf";
 
@@ -514,7 +505,6 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     receiptsFolder,
                     fileName);
 
-            // Generate PDF
             Document.Create(container =>
             {
                 container.Page(page =>
@@ -523,7 +513,6 @@ namespace PremiumSchedule.Infrastructure.Repositories
 
                     page.Margin(40);
 
-                    // Header
                     page.Header()
                         .Text(
                             "PREMIUM PAYMENT RECEIPT")
@@ -531,7 +520,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
                         .FontSize(20)
                         .AlignCenter();
 
-                    // Content
+                    
                     page.Content()
                         .PaddingTop(30)
                         .Column(column =>
@@ -610,7 +599,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
                                 .FontSize(11);
                         });
 
-                    // Footer
+                   
                     page.Footer()
                         .AlignCenter()
                         .Text(
@@ -624,9 +613,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+        
         // ONLINE PAYMENT MODES
-        // =========================================================
+        
 
         private static bool IsOnlinePayment(
             PaymentMode mode)
@@ -639,9 +628,9 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
+        
         // OFFLINE PAYMENT MODES
-        // =========================================================
+
 
         private static bool IsOfflinePayment(
             PaymentMode mode)
