@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
+using PolicyServicing.Infrastructure.Config;
 using System.Security.Claims; 
 
 [Authorize]
@@ -10,10 +11,12 @@ using System.Security.Claims;
 public class ServiceRequestController : ControllerBase
 {
     private readonly IServiceRequestService service;
+    private readonly PolicyClient policyClient;
 
-    public ServiceRequestController(IServiceRequestService service)
+    public ServiceRequestController(IServiceRequestService service, PolicyClient policyClient)
     {
         this.service = service;
+        this.policyClient = policyClient;
     }
 
     [HttpPost]
@@ -79,5 +82,18 @@ public class ServiceRequestController : ControllerBase
 
         var policies = await service.GetCustomerPoliciesAsync(customerId);
         return Ok(policies);
+    }
+
+
+    [HttpGet("policies/{policyId}/coverages")]
+    public async Task<IActionResult> GetCoveragesForPolicy(long policyId)
+    {
+        // Forward the token from the current request to her API
+        var token = Request.Headers["Authorization"].ToString();
+
+        // Use your perfect PolicyClient to fetch the data
+        var coverages = await policyClient.GetPolicyCoverages(policyId, token);
+
+        return Ok(coverages);
     }
 }
