@@ -78,5 +78,12 @@ namespace PolicyServicing.API.Controllers
             var result = await _endorsementService.GetEndorsementByIdAsync(id);
             return result != null ? Ok(result) : NotFound(new { Message = "Endorsement not found." });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = await _endorsementService.GetAllPendingEndorsementsAsync();
+            return Ok(result);
+        }
     }
 }

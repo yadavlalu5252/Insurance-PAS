@@ -415,5 +415,14 @@ namespace PolicyServicing.Infrastructure.Repository
                 .Include(e => e.service_Request)
                 .FirstOrDefaultAsync(e => e.endorsement_id == endorsementId);
         }
+
+        public async Task<List<policy_endorsement>> GetAllPendingEndorsementsAsync()
+        {
+            return await db.policy_endorsements
+                .Include(e => e.service_Request) 
+                .Where(e => e.approval_status == Approval_status.Pending)
+                .OrderByDescending(e => e.endorsement_id)
+                .ToListAsync();
+        }
     }
 }
