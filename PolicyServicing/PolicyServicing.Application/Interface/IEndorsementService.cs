@@ -10,5 +10,7 @@ namespace PolicyServicing.Application.Interface
         Task<bool> ApproveEndorsementAsync(long endorsementId, long adminId);
         Task<bool> RejectEndorsementAsync(long endorsementId, long adminId, string reason);
         Task<policy_endorsement?> GetEndorsementByIdAsync(long endorsementId);
+
+        Task<List<policy_endorsement>> GetAllPendingEndorsementsAsync();
     }
 }
