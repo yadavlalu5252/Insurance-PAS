@@ -91,5 +91,12 @@ namespace PolicyServicing.Infrastructure.Config
             var response = await client.PutAsJsonAsync($"/api/v1/policies/{policyId}/renew", new { NewExpiryDate = newExpiryDate });
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<List<PolicyDTO>> GetPoliciesByCustomerId(long customerId, string token)
+        {
+            SetAuthHeader(token);
+            // Hits her new endpoint: /api/v1/policies/customer/{customerId}
+            return await client.GetFromJsonAsync<List<PolicyDTO>>($"/api/v1/policies/customer/{customerId}");
+        }
     }
 }

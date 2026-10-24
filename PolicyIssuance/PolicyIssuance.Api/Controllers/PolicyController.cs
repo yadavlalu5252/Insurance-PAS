@@ -170,5 +170,13 @@ namespace PolicyIssuance.Api.Controllers
             return Ok(new { message = "Policy renewed successfully." });
         }
 
+        [HttpGet("customer/{customerId:long}")]
+        public async Task<IActionResult> GetByCustomerId(long customerId)
+        {
+
+            var result = await service.GetPoliciesByCustomerIdAsync(customerId);
+            return Ok(result);
+        }
+
     }
 }
