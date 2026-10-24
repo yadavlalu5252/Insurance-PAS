@@ -1,15 +1,16 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using QuoteGeneration.Application.QuoteGeneration.Mapper;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using QuoteGeneration.Api.Middleware;
 using QuoteGeneration.Api.Middleware;
 using QuoteGeneration.Application.Interfaces;
 using QuoteGeneration.Application.QuoteGeneration.Mapper;
+using QuoteGeneration.Application.QuoteGeneration.Mapper;
+using QuoteGeneration.Infrastructure.Config;
 using QuoteGeneration.Infrastructure.Config;
 using QuoteGeneration.Infrastructure.Data;
 using QuoteGeneration.Infrastructure.Services;
-using QuoteGeneration.Infrastructure.Config;
-using QuoteGeneration.Api.Middleware;
 using System.Text;
 static void ConfigureJwtAuthentication(
     IServiceCollection services,
@@ -54,6 +55,29 @@ ConfigureJwtAuthentication(
     builder.Configuration);
 // Register controllers
 builder.Services.AddControllers();
+// Authorization policies
+builder.Services.AddAuthorization();
+
+// Swagger with JWT Bearer support
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT access token."
+    });
+
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
+});
+
 
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
