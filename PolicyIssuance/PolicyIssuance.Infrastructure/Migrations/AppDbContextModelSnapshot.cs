@@ -283,11 +283,11 @@ namespace PolicyIssuance.Infrastructure.Migrations
 
             modelBuilder.Entity("PolicyIssuance.Domain.Entities.PolicyRider", b =>
                 {
-                    b.Property<long>("rider_id")
+                    b.Property<long>("policy_rider_id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("rider_id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("policy_rider_id"));
 
                     b.Property<long>("policy_id")
                         .HasColumnType("bigint");
@@ -296,11 +296,14 @@ namespace PolicyIssuance.Infrastructure.Migrations
                         .HasPrecision(15, 2)
                         .HasColumnType("decimal(15,2)");
 
+                    b.Property<long>("rider_id")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("rider_name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("rider_id");
+                    b.HasKey("policy_rider_id");
 
                     b.ToTable("PolicyRiders");
                 });
