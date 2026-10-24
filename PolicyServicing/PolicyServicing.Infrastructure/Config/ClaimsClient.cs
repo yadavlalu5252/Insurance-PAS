@@ -47,21 +47,22 @@ namespace PolicyServicing.Infrastructure.Config
         {
             SetAuthHeader(token);
 
-            // Fetch a large page size to ensure we get all claims
-            var url = "/api/v1/claims?page_number=1&page_size=1000";
+            // 🚨 Change page_size to 10 just to test if 1000 is too high
+            var url = "/api/v1/claims?page_number=1&page_size=10";
 
-            try
-            {
-                // Unwrap her nested structure: ApiResponse -> PagedResult -> items
-                var response = await client.GetFromJsonAsync<ClaimsApiResponse<ClaimsPagedResult<ClaimDTO>>>(url);
+            // 1. Send the request manually to read the error body
+            var response = await client.GetAsync(url);
 
-                return response?.data?.items ?? new List<ClaimDTO>();
-            }
-            catch (Exception ex)
+            // 2. If it fails, read her error message and throw it!
+            if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Error fetching claims: {ex.Message}");
-                throw;
+                var errorBody = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Claims API Error: {response.StatusCode} - {errorBody}");
             }
+
+            // 3. If successful, parse the JSON normally
+            var responseData = await response.Content.ReadFromJsonAsync<ClaimsApiResponse<ClaimsPagedResult<ClaimDTO>>>();
+            return responseData?.data?.items ?? new List<ClaimDTO>();
         }
     }
 }
