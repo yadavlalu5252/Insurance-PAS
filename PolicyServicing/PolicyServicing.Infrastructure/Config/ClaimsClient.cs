@@ -46,14 +46,13 @@ namespace PolicyServicing.Infrastructure.Config
         {
             SetAuthHeader(token);
 
-            // 🚨 IMPORTANT: Her controller has pagination. 
-            // We request a large page size so we get ALL claims and don't accidentally miss an active one.
+
             var url = "/api/v1/claims?page_number=1&page_size=1000";
 
-            // 3. Unwrap her response: ApiResponse -> PagedResult -> items
+
             var response = await client.GetFromJsonAsync<ClaimsApiResponse<ClaimsPagedResult<ClaimDTO>>>(url);
 
-            // Extract the actual list of claims
+   
             return response?.Data?.items ?? new List<ClaimDTO>();
         }
     }

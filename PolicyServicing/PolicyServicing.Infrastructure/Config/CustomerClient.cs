@@ -79,7 +79,6 @@ namespace PolicyServicing.Infrastructure.Config
         public async Task<List<CustomerDTO>> SearchCustomersByMobile(string mobile, string token)
         {
             SetAuthHeader(token);
-            // Matches her DTO property: mobile_number
             var response = await client.GetFromJsonAsync<CustomerApiResponse<List<CustomerDTO>>>($"/api/customers/search?mobile_number={mobile}");
             return response?.Data ?? new List<CustomerDTO>();
         }

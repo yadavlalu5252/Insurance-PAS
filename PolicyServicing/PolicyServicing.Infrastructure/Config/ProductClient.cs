@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PolicyServicing.Infrastructure.Config
 {
-    // 🚨 Add this to catch his SuccessResponse wrapper
+
     public class ProductApiResponse<T>
     {
         public bool Success { get; set; }
@@ -36,7 +36,7 @@ namespace PolicyServicing.Infrastructure.Config
         {
             SetAuthHeader(token);
 
-            // 🚨 Notice the route change to /insurance-products/ and the wrapper
+       
             var response = await client.GetFromJsonAsync<ProductApiResponse<List<ProductRiderDTO>>>($"/api/v1/insurance-products/{productId}/riders");
             return response?.Data ?? new List<ProductRiderDTO>();
         }
@@ -45,7 +45,7 @@ namespace PolicyServicing.Infrastructure.Config
         {
             SetAuthHeader(token);
 
-            // 🚨 Notice the route change to /insurance-products/ and the wrapper
+
             var response = await client.GetFromJsonAsync<ProductApiResponse<List<CoverageMasterDTO>>>($"/api/v1/insurance-products/{productId}/coverages");
             return response?.Data ?? new List<CoverageMasterDTO>();
         }
@@ -54,7 +54,7 @@ namespace PolicyServicing.Infrastructure.Config
         public async Task<CoverageMasterDTO> GetCoverageRules(long coverageId, string token)
         {
             SetAuthHeader(token);
-            // Hits her GET /api/v1/coverages/{id} endpoint
+
             var response = await client.GetFromJsonAsync<ProductApiResponse<CoverageMasterDTO>>($"/api/v1/coverages/{coverageId}");
             return response?.Data;
         }

@@ -35,7 +35,7 @@ namespace PolicyServicing.Infrastructure.Config
         public async Task<PolicyDTO> GetPolicyById(long policyId, string token)
         {
             SetAuthHeader(token);
-            // 🚨 Changed PolicyDetailsDTO to PolicyDTO
+         
             return await client.GetFromJsonAsync<PolicyDTO>($"/api/v1/policies/{policyId}");
         }
 
@@ -56,7 +56,7 @@ namespace PolicyServicing.Infrastructure.Config
         public async Task<List<PolicyCoverageDTO>> GetPolicyCoverages(long policyId, string token)
         {
             SetAuthHeader(token);
-            // Note: This endpoint must exist in your friend's Policy Microservice
+
             return await client.GetFromJsonAsync<List<PolicyCoverageDTO>>($"/api/v1/policies/{policyId}/coverages");
         }
 
@@ -73,7 +73,7 @@ namespace PolicyServicing.Infrastructure.Config
         public async Task<bool> UpdatePolicyRiders(long policyId, object riderPayload, string token)
         {
             SetAuthHeader(token);
-            // Hits her new endpoint: [HttpPut("{id:long}/riders")]
+           
             var response = await client.PutAsJsonAsync($"/api/v1/policies/{policyId}/riders", riderPayload);
             return response.IsSuccessStatusCode;
         }
@@ -88,7 +88,6 @@ namespace PolicyServicing.Infrastructure.Config
         public async Task<bool> RenewPolicy(long policyId, DateTime newExpiryDate, string token)
         {
             SetAuthHeader(token);
-            // Hits her new specific endpoint!
             var response = await client.PutAsJsonAsync($"/api/v1/policies/{policyId}/renew", new { NewExpiryDate = newExpiryDate });
             return response.IsSuccessStatusCode;
         }
