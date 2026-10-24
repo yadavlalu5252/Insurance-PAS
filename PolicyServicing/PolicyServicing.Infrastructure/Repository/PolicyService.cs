@@ -91,7 +91,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 action = "Address Change Requested (Pending Admin)",
                 action_by = request.CustomerId,
                 action_date = DateTime.UtcNow,
-                remarks = $"Proof Document : {addressChange.AddressProofDocumentPath}"
+                remarks = $"Added successfully"
             });
 
             await db.SaveChangesAsync();
