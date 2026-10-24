@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PolicyServicing.Infrastructure.Config
 {
-    // Add this to catch her ResponseWrapper
+
     public class PremiumApiResponse<T>
     {
         public bool Success { get; set; }
@@ -35,7 +35,7 @@ namespace PolicyServicing.Infrastructure.Config
         public async Task<List<PremiumScheduleDTO>> GetPremiumSchedule(long policyId, string token)
         {
             SetAuthHeader(token);
-            // Unwrap the ResponseWrapper!
+  
             var response = await client.GetFromJsonAsync<PremiumApiResponse<List<PremiumScheduleDTO>>>($"/api/v1/premium-schedules/{policyId}");
             return response?.Data ?? new List<PremiumScheduleDTO>();
         }
@@ -51,7 +51,7 @@ namespace PolicyServicing.Infrastructure.Config
         {
             SetAuthHeader(token);
 
-            // 🚨 Matches her route EXACTLY: [HttpPost("internal/generate")]
+
             var response = await client.PostAsJsonAsync("/api/v1/premium-schedules/internal/generate", payload);
             return response.IsSuccessStatusCode;
         }
@@ -66,7 +66,7 @@ namespace PolicyServicing.Infrastructure.Config
         public async Task<List<PaymentHistoryDTO>> GetPaymentHistory(long policyId, string token)
         {
             SetAuthHeader(token);
-            // Assuming she also wraps this in a ResponseWrapper, you might need to unwrap it here too
+
             return await client.GetFromJsonAsync<List<PaymentHistoryDTO>>($"/api/v1/payments/history/{policyId}");
         }
     }
