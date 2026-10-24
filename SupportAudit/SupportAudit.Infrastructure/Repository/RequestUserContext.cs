@@ -1,30 +1,33 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace SupportAudit.Api.Infrastructure;
 
-public sealed class RequestUserContext
+public class RequestUserContext
 {
-    private readonly IHttpContextAccessor _accessor;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public RequestUserContext(IHttpContextAccessor accessor)
+    public RequestUserContext(IHttpContextAccessor httpContextAccessor)
     {
-        _accessor = accessor;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public string UserId =>
-        _accessor.HttpContext?
-            .Request.Headers["X-User-Id"]
-            .FirstOrDefault()
-        ?? string.Empty;
+    private ClaimsPrincipal? User =>
+        _httpContextAccessor.HttpContext?.User;
 
-    public string Role =>
-        _accessor.HttpContext?
-            .Request.Headers["X-User-Role"]
-            .FirstOrDefault()
-        ?? string.Empty;
+    public string? UserId =>
+        User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        ?? User?.FindFirst("sub")?.Value
+        ?? User?.FindFirst("userId")?.Value
+        ?? User?.FindFirst("UserId")?.Value;
+
+    public string? Role =>
+        User?.FindFirst(ClaimTypes.Role)?.Value
+        ?? User?.FindFirst("role")?.Value
+        ?? User?.FindFirst("roles")?.Value;
 
     public string? IpAddress =>
-        _accessor.HttpContext?
-            .Connection.RemoteIpAddress?
-            .ToString();
+        _httpContextAccessor.HttpContext?
+            .Connection.RemoteIpAddress?.ToString();
 }
