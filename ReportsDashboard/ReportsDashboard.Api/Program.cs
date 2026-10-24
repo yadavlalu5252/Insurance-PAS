@@ -19,7 +19,7 @@ builder.Services.AddEndpointsApiExplorer();
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Configuration.GetConnectionString("dbconn")));
 
 // Report services
 builder.Services.AddScoped<ICustomerReport, customerreportservice>();
