@@ -35,7 +35,6 @@ public class ServiceRequestController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        // 1. Get User Role and ID from JWT
         var userRole = User.FindFirstValue(ClaimTypes.Role);
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -78,7 +77,7 @@ public class ServiceRequestController : ControllerBase
             return Unauthorized("Customer ID missing.");
 
 
-        var policies = await service.GetCustomerPoliciesAsync(customerId, token);
+        var policies = await service.GetCustomerPoliciesAsync(customerId);
         return Ok(policies);
     }
 }
