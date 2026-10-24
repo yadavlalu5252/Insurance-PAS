@@ -50,14 +50,20 @@ namespace PolicyServicing.Infrastructure.Repository
             if (policyDetails.policy_status != "Active" && policyDetails.policy_status != "3")
                 throw new Exception("Only Active policies can be cancelled.");
 
+            // 1. Fetch all claims
             var allClaims = await claimsClient.GetAllClaims(token);
+
+            // 2. Filter for Active claims
             var activeClaims = allClaims.Where(c =>
                 c.policy_id == policyId &&
                 c.claim_status != "Settled" &&
                 c.claim_status != "Rejected").ToList();
 
+            // 3. Block cancellation if active claims exist
             if (activeClaims.Any())
+            {
                 throw new Exception($"Cannot cancel policy. There are {activeClaims.Count} claim(s) currently in progress.");
+            }
 
             var serviceRequest = new service_request
             {
