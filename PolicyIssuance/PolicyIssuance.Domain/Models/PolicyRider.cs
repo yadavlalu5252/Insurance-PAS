@@ -7,6 +7,7 @@ namespace PolicyIssuance.Domain.Entities
     public class PolicyRider
     {
         [Key]
+        public long policy_rider_id { get; set; }
         public long rider_id { get; set; }
 
         public long policy_id { get; set; }
