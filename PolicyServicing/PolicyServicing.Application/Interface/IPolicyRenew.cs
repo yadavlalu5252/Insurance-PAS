@@ -6,6 +6,6 @@ namespace PolicyServicing.Application.Interface
     public interface IPolicyRenew
     {
         Task<string> ProcessPolicyRenewalAsync(long customerId, long policyId, RenewalRequestDTO request);
-        Task<RenewalDetailsResponseDTO> GetRenewalDetailsAsync(long renewalId);
+        Task<RenewalDetailsResponseDTO> GetRenewalDetailsAsync(long renewalId, long customerId);
     }
 }
