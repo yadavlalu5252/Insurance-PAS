@@ -136,14 +136,21 @@ namespace PolicyServicing.Infrastructure.Repository
             }
         }
 
-        // 2. GET /api/v1/renewals/{id}
-        // 2. GET /api/v1/renewals/{id}
-        public async Task<RenewalDetailsResponseDTO> GetRenewalDetailsAsync(long renewalId)
+        public async Task<RenewalDetailsResponseDTO> GetRenewalDetailsAsync(long renewalId, long customerId)
         {
             var renewal = await db.policy_renewal.FirstOrDefaultAsync(r => r.renewal_id == renewalId);
             if (renewal == null) return null;
 
-            // 🚨 MANUAL MAPPING (No AutoMapper needed!)
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+            var policy = await client.GetPolicyById(renewal.policy_id, token);
+
+
+            if (policy == null || policy.customer_id != customerId)
+            {
+                return null;
+            }
+
+            // 🚨 MANUAL MAPPING
             return new RenewalDetailsResponseDTO
             {
                 RenewalId = renewal.renewal_id,
@@ -151,7 +158,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 RenewalDate = renewal.renewal_date,
                 NewExpiryDate = renewal.new_expiry_date,
                 PremiumAmount = renewal.premium_amount,
-                Status = renewal.Renewal_Status.ToString() // Converts the Enum to a string
+                Status = renewal.Renewal_Status.ToString()
             };
         }
     }

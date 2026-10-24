@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace PolicyServicing.API.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ApiController]
     [Route("api/v1")]
     public class PolicyRenewalController : ControllerBase
@@ -20,17 +21,15 @@ namespace PolicyServicing.API.Controllers
         }
 
         [HttpPost("policies/{id}/renew")]
-        public async Task<IActionResult> RenewPolicy(long id, [FromQuery] long customerId, [FromBody] RenewalRequestDTO request)
+        public async Task<IActionResult> RenewPolicy(long id,  [FromBody] RenewalRequestDTO request)
         {
-            if (request == null)
-                return BadRequest("Invalid renewal payload.");
-
-            if (customerId <= 0)
-                return BadRequest("Valid Customer ID is required.");
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!long.TryParse(userIdClaim, out long customerId))
+                return Unauthorized("Customer ID missing from token.");
 
             try
             {
-                // Call the service to execute the renewal
+                
                 var result = await _renewalService.ProcessPolicyRenewalAsync(customerId, id, request);
 
                 return Ok(new
@@ -40,7 +39,7 @@ namespace PolicyServicing.API.Controllers
             }
             catch (Exception ex)
             {
-                // Catches business rules like "Policy not found", "Pending premiums", etc.
+              
                 return BadRequest(new { Error = ex.Message });
             }
         }
@@ -49,10 +48,14 @@ namespace PolicyServicing.API.Controllers
         [HttpGet("renewals/{id}")]
         public async Task<IActionResult> GetRenewalDetails(long id)
         {
-            var result = await _renewalService.GetRenewalDetailsAsync(id);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!long.TryParse(userIdClaim, out long customerId))
+                return Unauthorized("Customer ID missing.");
+
+            var result = await _renewalService.GetRenewalDetailsAsync(id, customerId);
 
             if (result == null)
-                return NotFound(new { Message = "Renewal record not found." });
+                return NotFound(new { Message = "Renewal record not found or unauthorized." });
 
             return Ok(result);
         }
