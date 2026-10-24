@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
@@ -26,6 +27,8 @@ namespace PolicyServicing.Infrastructure.Repository
 
         private readonly PolicyClient policyClient;
 
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
 
 
 
@@ -35,7 +38,7 @@ namespace PolicyServicing.Infrastructure.Repository
             IProcessNominee nomineeService,
             IProcessCoverage coverageService,
             IProcessRiderModify riderService,
-            IUpdateContact contactService,PolicyClient policyClient)
+            IUpdateContact contactService,PolicyClient policyClient,IHttpContextAccessor httpContextAccessor)
         {
             this.db = db;
             this.addressChangeService = addressChangeService;
@@ -44,6 +47,7 @@ namespace PolicyServicing.Infrastructure.Repository
             this.riderService = riderService;
             this.contactService = contactService;
             this.policyClient = policyClient;
+            this._httpContextAccessor = httpContextAccessor;
         }
 
 
@@ -103,6 +107,7 @@ namespace PolicyServicing.Infrastructure.Repository
 
         public async Task<List<PolicyDTO>> GetCustomerPoliciesAsync(long customerId, string token)
         {
+            var token = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
             // The service layer handles the cross-service communication
             return await policyClient.GetPoliciesByCustomerId(customerId, token);
         }
