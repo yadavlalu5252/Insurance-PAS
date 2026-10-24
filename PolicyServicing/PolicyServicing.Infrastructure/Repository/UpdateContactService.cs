@@ -1,12 +1,8 @@
 ﻿using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using PolicyServicing.Domain.Entities;
-using PolicyServicing.Infrastructure.Config;
 using PolicyServicing.Infrastructure.Data;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -15,37 +11,22 @@ namespace PolicyServicing.Infrastructure.Repository
     public class UpdateContactService : IUpdateContact
     {
         private readonly AppDbContext db;
-        private readonly CustomerClient customerClient;
+        private readonly OtpService otp;
 
-        // Removed PolicyClient as we don't call it here anymore
-        public UpdateContactService(AppDbContext db, CustomerClient customerClient)
+        // 🚨 CustomerClient is completely removed!
+        public UpdateContactService(AppDbContext db, OtpService otp)
         {
             this.db = db;
-            this.customerClient = customerClient;
+            this.otp = otp;
         }
 
         public async Task<string> ProcessContactUpdateAsync(EndorsementRequestDTO request)
         {
             var contactData = JsonSerializer.Deserialize<ContactUpdateDTO>(request.PayloadJson);
 
-            // 1. Business Rule Validation (FR-SRV-003)
-            if (string.IsNullOrEmpty(contactData.OtpCode) || contactData.OtpCode != "123456")
-            {
-                throw new Exception("Invalid or missing OTP code.");
-            }
 
-            // Read from Customer Client for Duplicate Check
-            var existingEmail = await customerClient.SearchCustomers(contactData.EmailAddress);
-            if (existingEmail.Any(c => c.customer_id != request.CustomerId))
-                throw new Exception("Email address is already in use by another customer.");
-
-            var existingMobile = await customerClient.SearchCustomers(contactData.MobileNumber);
-            if (existingMobile.Any(c => c.customer_id != request.CustomerId))
-                throw new Exception("Mobile number is already in use by another customer.");
-
-            // Read from Customer Client to save the previous value
-            var oldCustomer = await customerClient.GetCustomerById(request.CustomerId);
-            string previousValueJson = JsonSerializer.Serialize(oldCustomer);
+            if (!await otp.VerifyAsync(contactData.EmailAddress, contactData.OtpCode))
+                throw new Exception("Invalid or expired OTP for the new email.");
 
             var newCustomerData = new
             {
@@ -54,7 +35,7 @@ namespace PolicyServicing.Infrastructure.Repository
             };
             string updatedValueJson = JsonSerializer.Serialize(newCustomerData);
 
-            // 2. Create Service Request (Pending Admin Approval)
+
             var serviceRequest = new service_request
             {
                 request_number = $"SR-{DateTime.UtcNow.Ticks}",
@@ -62,23 +43,22 @@ namespace PolicyServicing.Infrastructure.Repository
                 customer_id = request.CustomerId,
                 request_type = "Contact Update",
                 request_date = DateTime.UtcNow,
-                status = RequestStatus.UnderReview // Set to UnderReview
+                status = RequestStatus.UnderReview
             };
             db.service_request.Add(serviceRequest);
             await db.SaveChangesAsync();
 
-            // 3. Create Endorsement (Pending)
+
             db.policy_endorsements.Add(new policy_endorsement
             {
                 request_id = serviceRequest.request_id,
                 endorsement_number = $"END-{DateTime.UtcNow.Ticks}",
                 endorsement_type = "Contact Update",
-                previous_value = previousValueJson,
+                previous_value = "{}", // 🚨 Admin will fill this
                 updated_value = updatedValueJson,
-                approval_status = Approval_status.Pending // Set to Pending
+                approval_status = Approval_status.Pending
             });
 
-            // 4. Log History
             db.service_request_history.Add(new service_request_history
             {
                 request_id = serviceRequest.request_id,

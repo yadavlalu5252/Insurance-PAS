@@ -14,12 +14,12 @@ namespace PolicyServicing.Infrastructure.Repository
     {
         private readonly AppDbContext db;
 
-        // Inject all the validation services to route the POST request
-        private readonly IPolicyService _addressChangeService;
-        private readonly IProcessNominee _nomineeService;
-        private readonly IProcessCoverage _coverageService;
-        private readonly IProcessRiderModify _riderService;
-        private readonly IUpdateContact _contactService;
+
+        private readonly IPolicyService addressChangeService;
+        private readonly IProcessNominee nomineeService;
+        private readonly IProcessCoverage coverageService;
+        private readonly IProcessRiderModify riderService;
+        private readonly IUpdateContact contactService;
 
         public ServiceRequestService(
             AppDbContext db,
@@ -30,29 +30,29 @@ namespace PolicyServicing.Infrastructure.Repository
             IUpdateContact contactService)
         {
             this.db = db;
-            _addressChangeService = addressChangeService;
-            _nomineeService = nomineeService;
-            _coverageService = coverageService;
-            _riderService = riderService;
-            _contactService = contactService;
+            this.addressChangeService = addressChangeService;
+            this.nomineeService = nomineeService;
+            this.coverageService = coverageService;
+            this.riderService = riderService;
+            this.contactService = contactService;
         }
 
-        // 1. POST /api/v1/service-requests
+
         public async Task<string> CreateServiceRequestAsync(EndorsementRequestDTO request)
         {
-            // Routes to the specific service for validation and saving to DB
+
             return request.EndorsementType switch
             {
-                "Address Change" => await _addressChangeService.ProcessAddressChangeAsync(request),
-                "Nominee Change" => await _nomineeService.ProcessNomineeChangeAsync(request.CustomerId, request),
-                "Coverage Increase" or "Coverage Reduction" => await _coverageService.ProcessCoverageModificationAsync(request.CustomerId, request),
-                "Rider Addition" or "Rider Removal" => await _riderService.ProcessRiderModificationAsync(request.CustomerId, request),
-                "Contact Update" => await _contactService.ProcessContactUpdateAsync(request),
+                "Address Change" => await addressChangeService.ProcessAddressChangeAsync(request),
+                "Nominee Change" => await nomineeService.ProcessNomineeChangeAsync(request.CustomerId, request),
+                "Coverage Increase" or "Coverage Reduction" => await coverageService.ProcessCoverageModificationAsync(request.CustomerId, request),
+                "Rider Addition" or "Rider Removal" => await riderService.ProcessRiderModificationAsync(request.CustomerId, request),
+                "Contact Update" => await contactService.ProcessContactUpdateAsync(request),
                 _ => throw new Exception($"Invalid Endorsement Type: '{request.EndorsementType}'.")
             };
         }
 
-        // 2. GET /api/v1/service-requests
+
         public async Task<List<service_request>> ListRequestsAsync()
         {
             return await db.service_request
@@ -60,15 +60,13 @@ namespace PolicyServicing.Infrastructure.Repository
                 .ToListAsync();
         }
 
-        // 3. GET /api/v1/service-requests/{id}
-        public async Task<service_request> ViewRequestAsync(long id)
+        public async Task<service_request?> ViewRequestAsync(long id)
         {
             return await db.service_request
                 .Include(r => r.policy_endorsements)
                 .FirstOrDefaultAsync(r => r.request_id == id);
         }
 
-        // 4. PUT /api/v1/service-requests/{id}
         public async Task<bool> UpdateRequestAsync(long id, string newStatus, long adminId)
         {
             var request = await db.service_request.FindAsync(id);
@@ -78,7 +76,6 @@ namespace PolicyServicing.Infrastructure.Repository
             {
                 request.status = parsedStatus;
 
-                // Log the status change in history
                 db.service_request_history.Add(new service_request_history
                 {
                     request_id = request.request_id,
@@ -92,7 +89,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 return true;
             }
 
-            return false; // Invalid enum string
+            return false; 
         }
     }
 }
