@@ -94,6 +94,20 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
+
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("InsuranceFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+
 var app = builder.Build();
 
 // Exception middleware
@@ -105,6 +119,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseRouting();
+
+app.UseCors("InsuranceFrontend");
 
 app.UseHttpsRedirection();
 
