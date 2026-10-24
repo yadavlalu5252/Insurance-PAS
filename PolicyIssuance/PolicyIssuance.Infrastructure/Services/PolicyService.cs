@@ -285,6 +285,24 @@ namespace PolicyIssuance.Infrastructure.Services
             return true;
         }
 
+
+        public async Task<List<PolicyCoverageDTO>> GetCoveragesAsync(long policyId)
+        {
+            // Assuming she has a DbSet called PolicyCoverages in her DbContext
+            return await db.PolicyCoverages
+                .Where(c => c.policy_id == policyId)
+                .Select(c => new PolicyCoverageDTO
+                {
+                    coverage_id = c.coverage_id,
+                    policy_id = c.policy_id,
+                    coverage_name = c.coverage_name,
+                    sum_insured = c.sum_insured,
+                    coverage_start_date = c.coverage_start_date,
+                    coverage_end_date = c.coverage_end_date
+                })
+                .ToListAsync();
+        }
+
         private static PolicyResponseDTO ToResponse(
             PolicyEntity policy)
         {
@@ -304,6 +322,112 @@ namespace PolicyIssuance.Infrastructure.Services
                 customer_name = string.Empty,
                 product_name = string.Empty
             };
+        }
+
+
+        public async Task<PolicyCoverageDTO?> UpdateCoverageAsync(long policyId, long coverageId, PolicyCoverageDTO dto)
+        {
+            // 1. Find the coverage in her database
+            var coverage = await db.PolicyCoverages
+                .FirstOrDefaultAsync(c => c.policy_id == policyId && c.coverage_id == coverageId);
+
+            if (coverage == null)
+            {
+                return null; // Coverage not found
+            }
+
+            // 2. Update the allowed fields (usually just the sum insured)
+            coverage.sum_insured = dto.sum_insured;
+            coverage.coverage_name = dto.coverage_name;
+
+            // 3. Save changes
+            db.PolicyCoverages.Update(coverage);
+            await db.SaveChangesAsync();
+
+            // 4. Return the updated DTO
+            return new PolicyCoverageDTO
+            {
+                coverage_id = coverage.coverage_id,
+                policy_id = coverage.policy_id,
+                coverage_name = coverage.coverage_name,
+                sum_insured = coverage.sum_insured,
+                coverage_start_date = coverage.coverage_start_date,
+                coverage_end_date = coverage.coverage_end_date
+            };
+
+            // Note: If she uses AutoMapper, she can just return _mapper.Map<PolicyCoverageDTO>(coverage);
+        }
+
+        public async Task<bool> UpdateRidersAsync(long policyId, List<PolicyRiderDTO> riders)
+        {
+            // 1. Verify the policy exists and is Active
+            var policy = await db.Policies.FirstOrDefaultAsync(p => p.policy_id == policyId);
+
+            // 🚨 FIX: Use the Enum value instead of the string "Active"
+            if (policy == null || policy.policy_status != PolicyStatus.Active)
+                return false;
+
+            // 2. Delete ALL existing riders for this policy
+            var existingRiders = await db.PolicyRiders
+                .Where(r => r.policy_id == policyId)
+                .ToListAsync();
+
+            if (existingRiders.Any())
+            {
+                db.PolicyRiders.RemoveRange(existingRiders);
+            }
+
+            // 3. Add the new list of riders
+            foreach (var newRider in riders)
+            {
+                db.PolicyRiders.Add(new PolicyRider
+                {
+                    policy_id = policyId,
+                    rider_id = newRider.rider_id,
+                    rider_name = newRider.rider_name,
+                    premium_amount = newRider.premium_amount
+                });
+            }
+
+            // 4. Save changes
+            await db.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<List<PolicyRiderDTO>> GetRidersAsync(long policyId)
+        {
+            // Fetch from database and map manually using Select
+            var riders = await db.PolicyRiders
+                .Where(r => r.policy_id == policyId)
+                .Select(r => new PolicyRiderDTO
+                {
+                    rider_id = r.rider_id,
+                    policy_id = r.policy_id,
+                    rider_name = r.rider_name,
+                    premium_amount = r.premium_amount
+                })
+                .ToListAsync();
+
+            return riders;
+        }
+
+        public async Task<bool> RenewPolicyAsync(long id, DateTime newExpiryDate)
+        {
+            // 1. Find the policy
+            var policy = await db.Policies.FirstOrDefaultAsync(p => p.policy_id == id);
+            if (policy == null) return false;
+
+            // 2. Check if it's Active (using her Enum)
+            if (policy.policy_status != PolicyStatus.Active)
+                return false;
+
+            // 3. Update ONLY the expiry date
+            policy.expiry_date = newExpiryDate;
+
+            // 4. Save to database
+            await db.SaveChangesAsync();
+            return true;
         }
     }
 }

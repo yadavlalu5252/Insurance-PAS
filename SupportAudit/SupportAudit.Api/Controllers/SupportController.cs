@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SupportAudit.Api.Infrastructure;
 using SupportAudit.Application.DTOs;
 using SupportAudit.Application.Interfaces;
@@ -7,6 +9,7 @@ namespace SupportAudit.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/support/tickets")]
+[Authorize]
 public class SupportController : ControllerBase
 {
     private readonly ISupportService _service;
@@ -20,34 +23,23 @@ public class SupportController : ControllerBase
         _user = user;
     }
 
-    private bool HasUser =>
-        !string.IsNullOrWhiteSpace(_user.UserId);
-
-    private bool IsAdmin =>
-        string.Equals(
-            _user.Role,
-            "Admin",
+    private bool IsAdminOrSupport =>
+        string.Equals(_user.Role, "Admin",
             StringComparison.OrdinalIgnoreCase)
         ||
-        string.Equals(
-            _user.Role,
-            "Support",
+        string.Equals(_user.Role, "Support",
             StringComparison.OrdinalIgnoreCase);
 
+    [Authorize(Roles = "Customer,Admin,Support")]
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromBody] CreateTicketDto dto)
     {
-        if (!HasUser)
+        if (string.IsNullOrWhiteSpace(_user.UserId) ||
+            string.IsNullOrWhiteSpace(_user.Role))
         {
-            return BadRequest(
-                Error("Provide X-User-Id header for local testing."));
-        }
-
-        if (string.IsNullOrWhiteSpace(_user.Role))
-        {
-            return BadRequest(
-                Error("Provide X-User-Role header for local testing."));
+            return Unauthorized(Error(
+                "User ID or role is missing from the JWT."));
         }
 
         var ticket = await _service.CreateTicketAsync(
@@ -62,13 +54,14 @@ public class SupportController : ControllerBase
             OkData("Ticket created.", ticket));
     }
 
+    [Authorize(Roles = "Customer,Admin,Support")]
     [HttpGet("my")]
     public async Task<IActionResult> GetMyTickets()
     {
-        if (!HasUser)
+        if (string.IsNullOrWhiteSpace(_user.UserId))
         {
-            return BadRequest(
-                Error("Provide X-User-Id header for local testing."));
+            return Unauthorized(Error(
+                "User ID is missing from the JWT."));
         }
 
         var tickets =
@@ -77,28 +70,23 @@ public class SupportController : ControllerBase
         return Ok(OkData("Your tickets retrieved.", tickets));
     }
 
+    [Authorize(Roles = "Admin,Support")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        if (!IsAdmin)
-        {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                Error("Admin or Support role required."));
-        }
-
         var tickets = await _service.GetAllTicketsAsync();
 
         return Ok(OkData("Tickets retrieved.", tickets));
     }
 
+    [Authorize(Roles = "Customer,Admin,Support")]
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
-        if (!HasUser)
+        if (string.IsNullOrWhiteSpace(_user.UserId))
         {
-            return BadRequest(
-                Error("Provide X-User-Id header for local testing."));
+            return Unauthorized(Error(
+                "User ID is missing from the JWT."));
         }
 
         var ticket = await _service.GetTicketByIdAsync(id);
@@ -108,28 +96,27 @@ public class SupportController : ControllerBase
             return NotFound(Error("Ticket not found."));
         }
 
-        if (!IsAdmin
-            && ticket.CreatedByUserId != _user.UserId
-            && ticket.AssignedToUserId != _user.UserId)
+        if (!IsAdminOrSupport &&
+            ticket.CreatedByUserId != _user.UserId &&
+            ticket.AssignedToUserId != _user.UserId)
         {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                Error("You cannot view this ticket."));
+            return Forbid();
         }
 
         return Ok(OkData("Ticket retrieved.", ticket));
     }
 
+    [Authorize(Roles = "Admin,Support")]
     [HttpPatch("{id:int}/status")]
     public async Task<IActionResult> UpdateStatus(
         int id,
         [FromBody] UpdateTicketStatusDto dto)
     {
-        if (!IsAdmin)
+        if (string.IsNullOrWhiteSpace(_user.UserId) ||
+            string.IsNullOrWhiteSpace(_user.Role))
         {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                Error("Admin or Support role required."));
+            return Unauthorized(Error(
+                "User ID or role is missing from the JWT."));
         }
 
         var ticket = await _service.UpdateStatusAsync(
@@ -147,16 +134,17 @@ public class SupportController : ControllerBase
         return Ok(OkData("Ticket status updated.", ticket));
     }
 
+    [Authorize(Roles = "Admin,Support")]
     [HttpPatch("{id:int}/assign")]
     public async Task<IActionResult> Assign(
         int id,
         [FromBody] AssignTicketDto dto)
     {
-        if (!IsAdmin)
+        if (string.IsNullOrWhiteSpace(_user.UserId) ||
+            string.IsNullOrWhiteSpace(_user.Role))
         {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                Error("Admin or Support role required."));
+            return Unauthorized(Error(
+                "User ID or role is missing from the JWT."));
         }
 
         var ticket = await _service.AssignTicketAsync(

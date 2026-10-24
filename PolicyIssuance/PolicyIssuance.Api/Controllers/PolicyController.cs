@@ -120,5 +120,57 @@ namespace PolicyIssuance.Api.Controllers
 
             return Ok(new { message = "Policy expired successfully." });
         }
+
+
+        [HttpGet("{id:long}/coverages")]
+        public async Task<IActionResult> GetCoverages(long id)
+        {
+            return Ok(await service.GetCoveragesAsync(id));
+        }
+
+
+        // In her PolicyController.cs or a new PolicyCoverageController.cs
+        [HttpPut("{policyId:long}/coverages/{coverageId:long}")]
+        public async Task<IActionResult> UpdateCoverage(long policyId, long coverageId, [FromBody] PolicyCoverageDTO dto)
+        {
+            // Ensure the IDs match
+            if (coverageId != dto.coverage_id || policyId != dto.policy_id)
+                return BadRequest("Coverage ID or Policy ID mismatch.");
+
+            var result = await service.UpdateCoverageAsync(policyId, coverageId, dto); // She needs to write this method
+
+            if (result == null)
+                return NotFound("Coverage not found.");
+
+            return Ok(result);
+        }
+
+        [HttpPut("{id:long}/riders")]
+        public async Task<IActionResult> UpdateRiders(long id, [FromBody] List<PolicyRiderDTO> riders)
+        {
+            var result = await service.UpdateRidersAsync(id, riders); // She needs to write this service method
+            if (!result) return BadRequest("Failed to update riders.");
+            return Ok(new { message = "Riders updated successfully." });
+        }
+
+        [HttpGet("{id:long}/riders")]
+        public async Task<IActionResult> GetRiders(long id)
+        {
+            var result = await service.GetRidersAsync(id);
+            return Ok(result);
+        }
+
+
+        [HttpPut("{id:long}/renew")]
+        public async Task<IActionResult> Renew(long id, [FromBody] RenewPolicyDTO dto)
+        {
+            var result = await service.RenewPolicyAsync(id, dto.NewExpiryDate);
+
+            if (!result)
+                return BadRequest("Policy not found or is not in Active status.");
+
+            return Ok(new { message = "Policy renewed successfully." });
+        }
+
     }
 }

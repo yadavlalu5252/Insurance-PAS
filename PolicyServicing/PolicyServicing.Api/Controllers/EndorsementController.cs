@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using System;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace PolicyServicing.API.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/v1/endorsements")]
     public class EndorsementController : ControllerBase
@@ -36,8 +39,11 @@ namespace PolicyServicing.API.Controllers
 
         // PUT /api/v1/endorsements/{id}/approve
         [HttpPut("{id}/approve")]
-        public async Task<IActionResult> Approve(long id, [FromQuery] long adminId)
+        public async Task<IActionResult> Approve(long id)
         {
+            var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!long.TryParse(adminIdClaim, out long adminId))
+                return Unauthorized(new { Error = "Admin ID missing from token." });
             try
             {
                 var success = await _endorsementService.ApproveEndorsementAsync(id, adminId);
@@ -51,10 +57,14 @@ namespace PolicyServicing.API.Controllers
 
         // PUT /api/v1/endorsements/{id}/reject
         [HttpPut("{id}/reject")]
-        public async Task<IActionResult> Reject(long id, [FromQuery] long adminId, [FromBody] RejectEndorsementDTO dto)
+        public async Task<IActionResult> Reject(long id, [FromBody] RejectEndorsementDTO dto)
         {
             if (string.IsNullOrWhiteSpace(dto.RejectionReason))
                 return BadRequest("Rejection reason is mandatory.");
+
+            var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!long.TryParse(adminIdClaim, out long adminId))
+                return Unauthorized(new { Error = "Admin ID missing from token." });
 
             var success = await _endorsementService.RejectEndorsementAsync(id, adminId, dto.RejectionReason);
 

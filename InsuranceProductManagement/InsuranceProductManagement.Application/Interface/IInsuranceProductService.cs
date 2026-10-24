@@ -13,5 +13,8 @@ namespace InsuranceProductManagement.Application.Interface
         Task<InsuranceProductDTO?> UpdateAsync(int id, InsuranceProductDTO dto);
 
         Task<bool> DeleteAsync(int id);
+
+        Task<List<RiderMasterDTO>> GetRidersByProductIdAsync(long productId);
+        Task<List<CoverageMasterDTO>> GetCoveragesByProductIdAsync(long productId);
     }
 }
