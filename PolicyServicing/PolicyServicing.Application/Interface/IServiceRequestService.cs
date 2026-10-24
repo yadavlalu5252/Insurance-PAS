@@ -14,5 +14,7 @@ namespace PolicyServicing.Application.Interface
         Task<bool> UpdateRequestAsync(long id, string newStatus, long adminId);
 
         Task<List<PolicyDTO>> GetCustomerPoliciesAsync(long customerId);
+
+        Task<List<service_request>> GetRequestsByCustomerIdAsync(long customerId);
     }
 }

@@ -35,8 +35,20 @@ public class ServiceRequestController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var result = await service.ListRequestsAsync();
-        return Ok(result);
+        // 1. Get User Role and ID from JWT
+        var userRole = User.FindFirstValue(ClaimTypes.Role);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // 2. If Customer, fetch only their requests
+        if (userRole == "Customer" && long.TryParse(userIdClaim, out long customerId))
+        {
+            var myRequests = await service.GetRequestsByCustomerIdAsync(customerId);
+            return Ok(myRequests);
+        }
+
+        // 3. If Admin/Agent, fetch all
+        var allRequests = await service.ListRequestsAsync();
+        return Ok(allRequests);
     }
 
     [HttpGet("{id}")]

@@ -105,10 +105,9 @@ namespace PolicyServicing.Infrastructure.Repository
             return false; 
         }
 
-        public async Task<List<PolicyDTO>> GetCustomerPoliciesAsync(long customerId, string token)
+        public async Task<List<PolicyDTO>> GetCustomerPoliciesAsync(long customerId)
         {
             var token = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
-            // The service layer handles the cross-service communication
             return await policyClient.GetPoliciesByCustomerId(customerId, token);
         }
     }
