@@ -118,5 +118,21 @@ namespace PolicyServicing.Infrastructure.Repository
                 .OrderByDescending(r => r.request_date)
                 .ToListAsync();
         }
+
+        public async Task<List<PolicyCoverageDTO>> GetCoveragesForPolicyAsync(long policyId)
+        {
+            // Extract the token from the current HTTP context
+            var token = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString() ?? string.Empty;
+
+            // Call the client
+            return await policyClient.GetPolicyCoverages(policyId, token);
+        }
+
+        public async Task<List<PolicyRiderDTO>> GetRidersForPolicyAsync(long policyId)
+        {
+            var token = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString() ?? string.Empty;
+
+            return await policyClient.GetPolicyRiders(policyId, token);
+        }
     }
 }
