@@ -62,6 +62,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     ));
 
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:4200"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 // Premium Schedule
 builder.Services.AddScoped<IPremiumSchedule, PremiumScheduleService>();
 
@@ -82,20 +96,35 @@ builder.Services.AddHangfireServer();
 
 
 // Policy Issuance Interservice Communication
-var policyUrl = builder.Configuration["ServiceUrls:PolicyIssuance"];
+builder.Services.AddHttpClient<IPolicyIssuanceClient, PolicyIssuanceClient>(
+    client =>
+    {
+        client.BaseAddress = new Uri(
+            "https://localhost:7129/");
+    });
 
-builder.Services.AddHttpClient<IPolicyIssuanceClient, PolicyIssuanceClient>(client =>
+builder.Services.AddHttpClient<IQuoteClient, QuoteClient>(client =>
 {
-    client.BaseAddress = new Uri(policyUrl);
+    client.BaseAddress = new Uri("https://localhost:7129/api/Quote/");
 });
+
+//builder.Services.AddHttpClient<
+//    IPremiumFrequencyClient,
+//    PremiumFrequencyClient
+//>(client =>
+//{
+//    client.BaseAddress = new Uri(
+//        "https://localhost:YYYY/api/PremiumFrequency/"
+//    );
+//});
 
 
 // Premium Payment
-//builder.Services.AddScoped<IPremiumPaymentService, PremiumPaymentService>();
+builder.Services.AddScoped<IPremiumPaymentService, PremiumPaymentService>();
 
 
 // Refund
-//builder.Services.AddScoped<IRefundService, RefundService>();
+builder.Services.AddScoped<IRefundService, RefundService>();
 
 
 // ============================================================
@@ -186,6 +215,8 @@ if (app.Environment.IsDevelopment())
 
     app.UseSwaggerUI();
 }
+
+app.UseCors("AngularPolicy");
 
 app.UseHttpsRedirection();
 

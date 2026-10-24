@@ -23,14 +23,11 @@ namespace PremiumSchedule.Infrastructure.Repositories
             this.mapper = mapper;
         }
 
-        // =========================================================
-        // CREATE REFUND
-        // =========================================================
-
+        
         public async Task<RefundResponseDto> CreateRefundAsync(
             CreateRefundDto dto)
         {
-            // Find original payment
+           
             var payment = await db.PremiumPayments
                 .FirstOrDefaultAsync(x =>
                     x.payment_id == dto.payment_id);
@@ -41,14 +38,13 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     "Payment not found.");
             }
 
-            // Refund only successful payments
             if (payment.payment_status != PaymentStatus.Success)
             {
                 throw new InvalidOperationException(
                     "Refund can only be created for a successful payment.");
             }
 
-            // Calculate already approved/completed refund amount
+            
             decimal alreadyRefunded = await db.PremiumRefunds
                 .Where(x =>
                     x.payment_id == dto.payment_id &&
@@ -56,7 +52,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
                      x.refund_status == RefundStatus.Completed))
                 .SumAsync(x => x.refund_amount);
 
-            // Check refund amount
+         
             if (alreadyRefunded + dto.refund_amount >
                 payment.amount_paid)
             {
@@ -64,7 +60,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     "Refund amount cannot exceed the payment amount.");
             }
 
-            // Check pending refund
+          
             bool pendingRefundExists =
                 await db.PremiumRefunds
                     .AnyAsync(x =>
@@ -77,7 +73,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     "A refund request is already pending for this payment.");
             }
 
-            // Create refund
+         
             var refund = new PremiumRefund
             {
                 payment_id = dto.payment_id,
@@ -85,7 +81,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 refund_date = DateTime.UtcNow,
                 refund_status = RefundStatus.Pending,
 
-                // Approval has not happened yet.
+              
                 approved_by = 0
             };
 
@@ -97,15 +93,13 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
-        // APPROVE REFUND
-        // =========================================================
+  
 
         public async Task<RefundResponseDto?> ApproveRefundAsync(
             int refundId,
             ApproveRefundDto dto)
         {
-            // Find refund
+           
             var refund = await db.PremiumRefunds
                 .FirstOrDefaultAsync(x =>
                     x.refund_id == refundId);
@@ -115,14 +109,14 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 return null;
             }
 
-            // Only pending refund can be approved
+          
             if (refund.refund_status != RefundStatus.Pending)
             {
                 throw new InvalidOperationException(
                     "Only pending refunds can be approved.");
             }
 
-            // Find original payment
+           
             var payment = await db.PremiumPayments
                 .FirstOrDefaultAsync(x =>
                     x.payment_id == refund.payment_id);
@@ -133,14 +127,14 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     "Original payment not found.");
             }
 
-            // Original payment must be successful
+       
             if (payment.payment_status != PaymentStatus.Success)
             {
                 throw new InvalidOperationException(
                     "Refund cannot be approved because the original payment is not successful.");
             }
 
-            // Calculate previous refunds
+           
             decimal alreadyRefunded =
                 await db.PremiumRefunds
                     .Where(x =>
@@ -150,7 +144,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
                         x.refund_id != refund.refund_id)
                     .SumAsync(x => x.refund_amount);
 
-            // Prevent over-refund
+           
             if (alreadyRefunded + refund.refund_amount >
                 payment.amount_paid)
             {
@@ -158,7 +152,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
                     "Total refund amount cannot exceed the payment amount.");
             }
 
-            // Approve refund
+           
             refund.refund_status =
                 RefundStatus.Approved;
 
@@ -175,9 +169,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
-        // GET REFUND BY ID
-        // =========================================================
+        
 
         public async Task<RefundResponseDto?> GetRefundByIdAsync(
             int refundId)

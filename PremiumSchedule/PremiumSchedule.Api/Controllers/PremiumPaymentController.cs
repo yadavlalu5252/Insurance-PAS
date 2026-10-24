@@ -167,7 +167,7 @@ namespace PremiumSchedule.Api.Controllers
         }
 
 
-        // POST /api/v1/payments/{paymentId}/receipt/regenerate
+       
         [HttpPost("{paymentId}/receipt/regenerate")]
             public async Task<IActionResult> RegenerateReceipt(
                 int paymentId)

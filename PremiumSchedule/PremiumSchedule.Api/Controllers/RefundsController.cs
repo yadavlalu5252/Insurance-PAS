@@ -18,10 +18,6 @@ namespace PremiumSchedule.Api.Controllers
         }
 
 
-        // =========================================================
-        // POST /api/v1/refunds
-        // CREATE REFUND
-        // =========================================================
 
         [HttpPost]
         public async Task<IActionResult> CreateRefund(
@@ -50,11 +46,7 @@ namespace PremiumSchedule.Api.Controllers
         }
 
 
-        // =========================================================
-        // PUT /api/v1/refunds/{refundId}/approve
-        // APPROVE REFUND
-        // =========================================================
-
+       
         [HttpPut("{refundId}/approve")]
         public async Task<IActionResult> ApproveRefund(
             int refundId,
@@ -87,10 +79,7 @@ namespace PremiumSchedule.Api.Controllers
         }
 
 
-        // =========================================================
-        // GET /api/v1/refunds/{refundId}
-        // GET REFUND DETAILS
-        // =========================================================
+        
 
         [HttpGet("{refundId}")]
         public async Task<IActionResult> GetRefund(
