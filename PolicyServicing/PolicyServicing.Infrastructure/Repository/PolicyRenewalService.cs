@@ -136,18 +136,24 @@ namespace PolicyServicing.Infrastructure.Repository
             }
         }
 
-        public async Task<RenewalDetailsResponseDTO> GetRenewalDetailsAsync(long renewalId, long customerId)
+
+        public async Task<RenewalDetailsResponseDTO> GetRenewalDetailsAsync(long policyId, long customerId)
         {
-            var renewal = await db.policy_renewal.FirstOrDefaultAsync(r => r.renewal_id == renewalId);
+  
+            var renewal = await db.policy_renewal
+                .Where(r => r.policy_id == policyId)
+                .OrderByDescending(r => r.renewal_id) 
+                .FirstOrDefaultAsync();
+
             if (renewal == null) return null;
 
-            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
-            var policy = await client.GetPolicyById(renewal.policy_id, token);
 
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+            var policy = await client.GetPolicyById(policyId, token);
 
             if (policy == null || policy.customer_id != customerId)
             {
-                return null;
+                return null; 
             }
 
             // 🚨 MANUAL MAPPING
