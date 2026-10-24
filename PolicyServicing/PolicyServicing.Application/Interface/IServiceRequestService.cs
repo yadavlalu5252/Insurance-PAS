@@ -16,5 +16,8 @@ namespace PolicyServicing.Application.Interface
         Task<List<PolicyDTO>> GetCustomerPoliciesAsync(long customerId);
 
         Task<List<service_request>> GetRequestsByCustomerIdAsync(long customerId);
+
+        Task<List<PolicyCoverageDTO>> GetCoveragesForPolicyAsync(long policyId);
+        Task<List<PolicyRiderDTO>> GetRidersForPolicyAsync(long policyId);
     }
 }

@@ -11,12 +11,12 @@ using System.Security.Claims;
 public class ServiceRequestController : ControllerBase
 {
     private readonly IServiceRequestService service;
-    private readonly PolicyClient policyClient;
 
-    public ServiceRequestController(IServiceRequestService service, PolicyClient policyClient)
+
+    public ServiceRequestController(IServiceRequestService service)
     {
         this.service = service;
-        this.policyClient = policyClient;
+
     }
 
     [HttpPost]
@@ -84,24 +84,20 @@ public class ServiceRequestController : ControllerBase
         return Ok(policies);
     }
 
-    
+
     [HttpGet("policies/{policyId}/coverages")]
     public async Task<IActionResult> GetCoveragesForPolicy(long policyId)
     {
-        // Forward the token from the current request to her API
-        var token = Request.Headers["Authorization"].ToString();
-
-        // Use your perfect PolicyClient to fetch the data
-        var coverages = await policyClient.GetPolicyCoverages(policyId, token);
-
+      
+        var coverages = await service.GetCoveragesForPolicyAsync(policyId);
         return Ok(coverages);
     }
 
     [HttpGet("policies/{policyId}/riders")]
     public async Task<IActionResult> GetRidersForPolicy(long policyId)
     {
-        var token = Request.Headers["Authorization"].ToString();
-        var riders = await policyClient.GetPolicyRiders(policyId, token);
+ 
+        var riders = await service.GetRidersForPolicyAsync(policyId);
         return Ok(riders);
     }
 }
