@@ -82,20 +82,20 @@ builder.Services.AddHangfireServer();
 
 
 // Policy Issuance Interservice Communication
-builder.Services.AddHttpClient<IPolicyIssuanceClient, PolicyIssuanceClient>(
-    client =>
-    {
-        client.BaseAddress = new Uri(
-            "https://localhost:7179/");
-    });
+var policyUrl = builder.Configuration["ServiceUrls:PolicyIssuance"];
+
+builder.Services.AddHttpClient<IPolicyIssuanceClient, PolicyIssuanceClient>(client =>
+{
+    client.BaseAddress = new Uri(policyUrl);
+});
 
 
 // Premium Payment
-builder.Services.AddScoped<IPremiumPaymentService, PremiumPaymentService>();
+//builder.Services.AddScoped<IPremiumPaymentService, PremiumPaymentService>();
 
 
 // Refund
-builder.Services.AddScoped<IRefundService, RefundService>();
+//builder.Services.AddScoped<IRefundService, RefundService>();
 
 
 // ============================================================

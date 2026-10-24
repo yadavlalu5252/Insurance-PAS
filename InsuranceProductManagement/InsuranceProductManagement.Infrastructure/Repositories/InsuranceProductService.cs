@@ -82,5 +82,27 @@ namespace InsuranceProductManagement.Infrastructure.Repositories
 
             return true;
         }
+
+
+        public async Task<List<RiderMasterDTO>> GetRidersByProductIdAsync(long productId)
+        {
+            // Assuming he has a mapping table or a direct FK. Adjust based on his DB schema.
+            var riders = await db.RiderMasters
+                .Where(r => r.product_id == productId && r.status == "Active")
+                .ToListAsync();
+
+            // If he uses AutoMapper:
+            return mapper.Map<List<RiderMasterDTO>>(riders);
+        }
+
+        public async Task<List<CoverageMasterDTO>> GetCoveragesByProductIdAsync(long productId)
+        {
+            var coverages = await db.CoverageMasters
+                .Where(c => c.product_id == productId)
+                .ToListAsync();
+
+            // If he uses AutoMapper:
+            return mapper.Map<List<CoverageMasterDTO>>(coverages);
+        }
     }
 }

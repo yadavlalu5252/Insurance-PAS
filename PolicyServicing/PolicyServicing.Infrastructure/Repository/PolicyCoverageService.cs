@@ -2,103 +2,79 @@
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using PolicyServicing.Domain.Entities;
-using PolicyServicing.Infrastructure.Config;
 using PolicyServicing.Infrastructure.Data;
 using System;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace PolicyServicing.Infrastructure.Repository
 {
-    public class PolicyCoverageService : IProcessCoverage
+
+
+    namespace PolicyServicing.Infrastructure.Repository
     {
-        private readonly AppDbContext db;
-        private readonly PolicyClient client;
-        private readonly ProductClient productClient; // <-- 1. Inject ProductClient
-
-        public PolicyCoverageService(AppDbContext db, PolicyClient client, ProductClient productClient)
+        public class PolicyCoverageService : IProcessCoverage
         {
-            this.db = db;
-            this.client = client;
-            this.productClient = productClient;
-        }
+            private readonly AppDbContext db;
 
-        public async Task<string> ProcessCoverageModificationAsync(long customerId, EndorsementRequestDTO request)
-        {
-            var coverageData = JsonSerializer.Deserialize<CoverageModifyDTO>(request.PayloadJson);
-            if (coverageData == null) throw new Exception("Invalid payload.");
-
-            // Read policy details to validate and get the previous value
-            var policyDetails = await client.GetPolicyById(request.PolicyId);
-            if (policyDetails == null) throw new Exception("Policy not found.");
-
-            var oldCoverage = policyDetails.coverages.FirstOrDefault(c => c.coverage_id == coverageData.CoverageId);
-            if (oldCoverage == null) throw new Exception("Coverage not found on this policy.");
-
-           
-            var productCoverages = await productClient.GetProductCoverages(policyDetails.product_id);
-            var coverageRules = productCoverages.FirstOrDefault(c => c.coverage_id == coverageData.CoverageId);
-
-            if (coverageRules == null)
-                throw new Exception("Coverage rules not found in Product Microservice.");
-
-            if (coverageData.NewSumInsured < coverageRules.minimum_coverage ||
-                coverageData.NewSumInsured > coverageRules.maximum_coverage)
+            // 🚨 Notice: PolicyClient and ProductClient are completely removed from the constructor!
+            public PolicyCoverageService(AppDbContext db)
             {
-                throw new Exception($"Sum insured must be between {coverageRules.minimum_coverage} and {coverageRules.maximum_coverage} for this coverage.");
+                this.db = db;
             }
 
-            string previousValueJson = JsonSerializer.Serialize(oldCoverage);
-
-            var newCoveragePayload = new
+            public async Task<string> ProcessCoverageModificationAsync(long customerId, EndorsementRequestDTO request)
             {
-                coverage_id = coverageData.CoverageId,
-                sum_insured = coverageData.NewSumInsured
-            };
+                var coverageData = JsonSerializer.Deserialize<CoverageModifyDTO>(request.PayloadJson);
+                if (coverageData == null) throw new Exception("Invalid payload.");
 
-            string updatedValueJson = JsonSerializer.Serialize(newCoveragePayload);
+                // 1. Just package the customer's request
+                var newCoveragePayload = new
+                {
+                    coverage_id = coverageData.CoverageId,
+                    sum_insured = coverageData.NewSumInsured
+                };
+                string updatedValueJson = JsonSerializer.Serialize(newCoveragePayload);
 
-            bool isIncrease = coverageData.NewSumInsured > oldCoverage.sum_insured;
-            string requestType = isIncrease ? "Coverage Increase" : "Coverage Reduction";
+                // 2. Create Service Request
+                var serviceRequest = new service_request
+                {
+                    request_number = $"SR-{DateTime.UtcNow.Ticks}",
+                    policy_id = request.PolicyId,
+                    customer_id = customerId,
+                    request_type = "Coverage Update", // Generic type (we don't know if it's increase/reduction without the old data)
+                    request_date = DateTime.UtcNow,
+                    status = RequestStatus.UnderReview
+                };
 
-            
-            var serviceRequest = new service_request
-            {
-                request_number = $"SR-{DateTime.UtcNow.Ticks}",
-                policy_id = request.PolicyId,
-                customer_id = customerId,
-                request_type = requestType,
-                request_date = DateTime.UtcNow,
-                status = RequestStatus.UnderReview
-            };
+                db.service_request.Add(serviceRequest);
+                await db.SaveChangesAsync();
 
-            db.service_request.Add(serviceRequest);
-            await db.SaveChangesAsync();
+                // 3. Create Endorsement with an empty previous_value
+                db.policy_endorsements.Add(new policy_endorsement
+                {
+                    request_id = serviceRequest.request_id,
+                    endorsement_number = $"END-{DateTime.UtcNow.Ticks}",
+                    endorsement_type = "Coverage Update",
+                    previous_value = "{}", // The Admin side will fill this during approval
+                    updated_value = updatedValueJson,
+                    approval_status = Approval_status.Pending
+                });
 
-            db.policy_endorsements.Add(new policy_endorsement
-            {
-                request_id = serviceRequest.request_id,
-                endorsement_number = $"END-{DateTime.UtcNow.Ticks}",
-                endorsement_type = requestType,
-                previous_value = previousValueJson,
-                updated_value = updatedValueJson,
-                approval_status = Approval_status.Pending
-            });
+                // 4. Log History
+                db.service_request_history.Add(new service_request_history
+                {
+                    request_id = serviceRequest.request_id,
+                    action = "Coverage Update Requested (Pending Admin)",
+                    action_by = customerId,
+                    action_date = DateTime.UtcNow,
+                    remarks = $"Requested new sum insured: {coverageData.NewSumInsured}."
+                });
 
-     
-            db.service_request_history.Add(new service_request_history
-            {
-                request_id = serviceRequest.request_id,
-                action = $"{requestType} Requested (Pending Admin)",
-                action_by = customerId,
-                action_date = DateTime.UtcNow,
-                remarks = $"Coverage changed from {oldCoverage.sum_insured} to {coverageData.NewSumInsured}."
-            });
+                await db.SaveChangesAsync();
 
-            await db.SaveChangesAsync();
-
-            return $"{serviceRequest.request_number} (Pending Admin Approval)";
+                return $"{serviceRequest.request_number} (Pending Admin Approval)";
+            }
         }
     }
 }

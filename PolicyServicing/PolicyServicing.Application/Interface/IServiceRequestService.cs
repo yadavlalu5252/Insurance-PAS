@@ -10,7 +10,11 @@ namespace PolicyServicing.Application.Interface
     {
         Task<string> CreateServiceRequestAsync(EndorsementRequestDTO request);
         Task<List<service_request>> ListRequestsAsync();
-        Task<service_request> ViewRequestAsync(long id);
+        Task<service_request?> ViewRequestAsync(long id);
         Task<bool> UpdateRequestAsync(long id, string newStatus, long adminId);
+
+        Task<List<PolicyDTO>> GetCustomerPoliciesAsync(long customerId);
+
+        Task<List<service_request>> GetRequestsByCustomerIdAsync(long customerId);
     }
 }
