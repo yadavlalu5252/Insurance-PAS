@@ -50,8 +50,9 @@ namespace PolicyServicing.API.Controllers
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!long.TryParse(userIdClaim, out long customerId))
-                return Unauthorized("Customer ID missing.");
+                return Unauthorized("Customer ID missing from token.");
 
+            // Pass the policyId (id) and customerId to the service
             var result = await _renewalService.GetRenewalDetailsAsync(id, customerId);
 
             if (result == null)
