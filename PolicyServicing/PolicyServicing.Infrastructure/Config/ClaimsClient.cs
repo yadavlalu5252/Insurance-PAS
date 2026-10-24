@@ -47,20 +47,18 @@ namespace PolicyServicing.Infrastructure.Config
         {
             SetAuthHeader(token);
 
-            // 🚨 Change page_size to 10 just to test if 1000 is too high
+
             var url = "/api/v1/claims?page_number=1&page_size=10";
 
-            // 1. Send the request manually to read the error body
             var response = await client.GetAsync(url);
 
-            // 2. If it fails, read her error message and throw it!
             if (!response.IsSuccessStatusCode)
             {
                 var errorBody = await response.Content.ReadAsStringAsync();
                 throw new Exception($"Claims API Error: {response.StatusCode} - {errorBody}");
             }
 
-            // 3. If successful, parse the JSON normally
+
             var responseData = await response.Content.ReadFromJsonAsync<ClaimsApiResponse<ClaimsPagedResult<ClaimDTO>>>();
             return responseData?.data?.items ?? new List<ClaimDTO>();
         }
