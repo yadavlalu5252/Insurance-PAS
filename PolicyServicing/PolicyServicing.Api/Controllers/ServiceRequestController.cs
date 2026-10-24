@@ -84,7 +84,7 @@ public class ServiceRequestController : ControllerBase
         return Ok(policies);
     }
 
-
+    
     [HttpGet("policies/{policyId}/coverages")]
     public async Task<IActionResult> GetCoveragesForPolicy(long policyId)
     {
@@ -95,5 +95,13 @@ public class ServiceRequestController : ControllerBase
         var coverages = await policyClient.GetPolicyCoverages(policyId, token);
 
         return Ok(coverages);
+    }
+
+    [HttpGet("policies/{policyId}/riders")]
+    public async Task<IActionResult> GetRidersForPolicy(long policyId)
+    {
+        var token = Request.Headers["Authorization"].ToString();
+        var riders = await policyClient.GetPolicyRiders(policyId, token);
+        return Ok(riders);
     }
 }
