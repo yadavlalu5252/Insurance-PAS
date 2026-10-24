@@ -22,6 +22,122 @@ namespace PremiumSchedule.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("PremiumSchedule.Domain.Entities.PaymentReceipt", b =>
+                {
+                    b.Property<int>("receipt_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("receipt_id"));
+
+                    b.Property<int>("payment_id")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("receipt_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("receipt_number")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("receipt_path")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("receipt_id");
+
+                    b.ToTable("PaymentReceipts");
+                });
+
+            modelBuilder.Entity("PremiumSchedule.Domain.Entities.PremiumPayments", b =>
+                {
+                    b.Property<int>("payment_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("payment_id"));
+
+                    b.Property<decimal>("amount_paid")
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<DateTime>("payment_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("payment_mode")
+                        .HasColumnType("int");
+
+                    b.Property<int>("payment_status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("policy_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("schedule_id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("transaction_reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("payment_id");
+
+                    b.ToTable("PremiumPayments");
+                });
+
+            modelBuilder.Entity("PremiumSchedule.Domain.Entities.PremiumRefund", b =>
+                {
+                    b.Property<int>("refund_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("refund_id"));
+
+                    b.Property<int>("approved_by")
+                        .HasColumnType("int");
+
+                    b.Property<int>("payment_id")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("refund_amount")
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<DateTime>("refund_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("refund_status")
+                        .HasColumnType("int");
+
+                    b.HasKey("refund_id");
+
+                    b.ToTable("PremiumRefunds");
+                });
+
+            modelBuilder.Entity("PremiumSchedule.Domain.Entities.PremiumReminder", b =>
+                {
+                    b.Property<long>("reminder_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("reminder_id"));
+
+                    b.Property<int>("delivery_status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("reminder_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("reminder_type")
+                        .HasColumnType("int");
+
+                    b.Property<long>("schedule_id")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("reminder_id");
+
+                    b.ToTable("PremiumReminders");
+                });
+
             modelBuilder.Entity("PremiumSchedule.Domain.Entities.PremiumSchedules", b =>
                 {
                     b.Property<int>("schedule_id")

@@ -43,6 +43,7 @@
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Infrastructure/InsuranceProductManagement.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/KycVerification/">
+    <Project Path="KycVerification/KycVerification.Api/KycVerification.Api.csproj" />
     <Project Path="KycVerification/KycVerification.Application/KycVerification.Application.csproj" />
     <Project Path="KycVerification/KycVerification.Domain/KycVerification.Domain.csproj" />
     <Project Path="KycVerification/KycVerification.Infrastructure/KycVerification.Infrastructure.csproj" />
