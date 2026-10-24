@@ -65,7 +65,7 @@ public class ServiceRequestController : ControllerBase
         if (!long.TryParse(userIdClaim, out long customerId))
             return Unauthorized("Customer ID missing.");
 
-        var token = Request.Headers["Authorization"].ToString();
+
         var policies = await service.GetCustomerPoliciesAsync(customerId, token);
         return Ok(policies);
     }
