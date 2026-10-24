@@ -110,5 +110,13 @@ namespace PolicyServicing.Infrastructure.Repository
             var token = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
             return await policyClient.GetPoliciesByCustomerId(customerId, token);
         }
+
+        public async Task<List<service_request>> GetRequestsByCustomerIdAsync(long customerId)
+        {
+            return await db.service_request
+                .Where(r => r.customer_id == customerId)
+                .OrderByDescending(r => r.request_date)
+                .ToListAsync();
+        }
     }
 }
