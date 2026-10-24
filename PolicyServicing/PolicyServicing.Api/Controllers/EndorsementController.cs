@@ -20,7 +20,7 @@ namespace PolicyServicing.API.Controllers
             _endorsementService = endorsementService;
         }
 
-        // POST /api/v1/endorsements
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateEndorsementDTO dto)
         {
@@ -37,7 +37,7 @@ namespace PolicyServicing.API.Controllers
             }
         }
 
-        // PUT /api/v1/endorsements/{id}/approve
+
         [HttpPut("{id}/approve")]
         public async Task<IActionResult> Approve(long id)
         {
@@ -55,7 +55,7 @@ namespace PolicyServicing.API.Controllers
             }
         }
 
-        // PUT /api/v1/endorsements/{id}/reject
+
         [HttpPut("{id}/reject")]
         public async Task<IActionResult> Reject(long id, [FromBody] RejectEndorsementDTO dto)
         {
@@ -71,7 +71,7 @@ namespace PolicyServicing.API.Controllers
             return success ? Ok(new { Message = "Endorsement Rejected Successfully" }) : NotFound(new { Message = "Endorsement not found." });
         }
 
-        // GET /api/v1/endorsements/{id}
+
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(long id)
         {
