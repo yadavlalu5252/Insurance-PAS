@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿
+using Microsoft.EntityFrameworkCore;
 using SupportAudit.Application.DTOs;
 using SupportAudit.Application.Interfaces;
 using SupportAudit.Domain.Entities;
@@ -33,8 +34,16 @@ public class AuditService : IAuditService
 
     public async Task<AuditLog> CreateAsync(
         CreateAuditEventDto dto,
-        string? requestIp)
+        string? requestIp,
+        string sourceService)
     {
+        if (string.IsNullOrWhiteSpace(dto.ModuleName) ||
+            string.IsNullOrWhiteSpace(dto.Action))
+        {
+            throw new ArgumentException(
+                "ModuleName and Action are required.");
+        }
+
         var log = new AuditLog
         {
             ModuleName = dto.ModuleName.Trim(),
@@ -43,8 +52,7 @@ public class AuditService : IAuditService
             ActorUserId = dto.ActorUserId,
             ActorRole = dto.ActorRole,
 
-            // Prefer the IP obtained from the HTTP request.
-            IpAddress = requestIp ?? dto.IpAddress,
+            IpAddress = requestIp,
 
             LoginTimeUtc = dto.LoginTimeUtc,
             LogoutTimeUtc = dto.LogoutTimeUtc,
@@ -59,16 +67,18 @@ public class AuditService : IAuditService
                 ? "Success"
                 : dto.Outcome.Trim(),
 
-            SourceService = "SupportAudit",
+            // Set from the service whose credentials were validated.
+            SourceService = sourceService,
 
-            CorrelationId = dto.CorrelationId,
+            CorrelationId = string.IsNullOrWhiteSpace(dto.CorrelationId)
+                ? null
+                : dto.CorrelationId.Trim(),
 
-            OccurredAtUtc =
-                dto.OccurredAtUtc ?? DateTime.UtcNow
+            // Set by the central audit API, not by the caller.
+            OccurredAtUtc = DateTime.UtcNow
         };
 
         _db.AuditLogs.Add(log);
-
         await _db.SaveChangesAsync();
 
         return log;

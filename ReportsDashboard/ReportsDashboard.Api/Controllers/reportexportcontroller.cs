@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportsDashboard.Application.Interfaces;
 using System.Text;
@@ -11,6 +12,7 @@ namespace ReportsDashboard.Api.Controllers
 {
     [ApiController]
     [Route("api/v1/reports/export")]
+    [Authorize(Roles = "Admin")]
     public class reportexportcontroller : ControllerBase
     {
         private readonly Ifinancialreport service;

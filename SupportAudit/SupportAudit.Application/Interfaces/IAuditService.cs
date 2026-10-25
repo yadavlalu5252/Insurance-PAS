@@ -1,4 +1,5 @@
-﻿using SupportAudit.Application.DTOs;
+﻿
+using SupportAudit.Application.DTOs;
 using SupportAudit.Domain.Entities;
 
 namespace SupportAudit.Application.Interfaces;
@@ -11,5 +12,6 @@ public interface IAuditService
 
     Task<AuditLog> CreateAsync(
         CreateAuditEventDto dto,
-        string? requestIp);
+        string? requestIp,
+        string sourceService);
 }

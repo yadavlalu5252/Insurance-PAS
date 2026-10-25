@@ -15,5 +15,7 @@ namespace PolicyServicing.Application.DTO
         public DateTime effective_date { get; set; }
         public DateTime expiry_date { get; set; }
         public string policy_status { get; set; }
+
+        public decimal premium_amount { get; set; }
     }
 }

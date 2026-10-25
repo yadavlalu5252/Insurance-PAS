@@ -62,6 +62,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     ));
 
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:4200"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 // Premium Schedule
 builder.Services.AddScoped<IPremiumSchedule, PremiumScheduleService>();
 
@@ -86,8 +100,23 @@ builder.Services.AddHttpClient<IPolicyIssuanceClient, PolicyIssuanceClient>(
     client =>
     {
         client.BaseAddress = new Uri(
-            "https://localhost:7179/");
+            "https://localhost:7129/");
     });
+
+builder.Services.AddHttpClient<IQuoteClient, QuoteClient>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7129/api/Quote/");
+});
+
+//builder.Services.AddHttpClient<
+//    IPremiumFrequencyClient,
+//    PremiumFrequencyClient
+//>(client =>
+//{
+//    client.BaseAddress = new Uri(
+//        "https://localhost:YYYY/api/PremiumFrequency/"
+//    );
+//});
 
 
 // Premium Payment
@@ -186,6 +215,8 @@ if (app.Environment.IsDevelopment())
 
     app.UseSwaggerUI();
 }
+
+app.UseCors("AngularPolicy");
 
 app.UseHttpsRedirection();
 

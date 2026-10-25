@@ -28,5 +28,7 @@ namespace PolicyIssuance.Infrastructure.Clients
 
             return result?.data;
         }
+
+
     }
 }

@@ -1,31 +1,38 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using PremiumSchedule.Application.DTO;
 using PremiumSchedule.Application.Interfaces;
 using PremiumSchedule.Domain.Entities;
 using PremiumSchedule.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace PremiumSchedule.Infrastructure.Repositories
 {
     public class PremiumScheduleService : IPremiumSchedule
     {
-        AppDbContext db;
-        IMapper mapper;
-        IPolicyIssuanceClient policyIssuanceClient;
+        private readonly AppDbContext db;
+        private readonly IMapper mapper;
+        private readonly IPolicyIssuanceClient policyIssuanceClient;
+        private readonly IQuoteClient quoteClient;
 
-        public PremiumScheduleService(AppDbContext db, IMapper mapper, IPolicyIssuanceClient policyIssuanceClient)
+        public PremiumScheduleService(
+            AppDbContext db,
+            IMapper mapper,
+            IPolicyIssuanceClient policyIssuanceClient,
+            IQuoteClient quoteClient)
         {
             this.db = db;
             this.mapper = mapper;
             this.policyIssuanceClient = policyIssuanceClient;
+            this.quoteClient = quoteClient;
         }
+
+
 
         public async Task GeneratePremiumSchedule(
             GeneratePremiumScheduleDto dto)
         {
+           
+
             bool scheduleExists = await db.PremiumSchedule
                 .AnyAsync(x => x.policy_id == dto.policy_id);
 
@@ -34,28 +41,85 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 return;
             }
 
-            int installmentCount = CalculateInstallmentCount(
-                dto.issue_date,
-                dto.expiry_date,
-                dto.premium_frequency);
+           
+
+            var policy =
+                await policyIssuanceClient.GetPolicyAsync(dto.policy_id);
+
+            if (policy == null)
+            {
+                throw new InvalidOperationException(
+                    "Policy not found.");
+            }
+
+           
+
+            if (policy.policy_status != "Active")
+            {
+                throw new InvalidOperationException(
+                    "Premium schedule can only be generated for an active policy.");
+            }
+
+            
+
+            var quote =
+                await quoteClient.GetQuoteByIdAsync(
+                    policy.quote_id);
+
+            if (quote == null)
+            {
+                throw new InvalidOperationException(
+                    "Quote not found for the policy.");
+            }
+
+            
+ 
+
+            if (!quote.premium_frequency_id.HasValue)
+            {
+                throw new InvalidOperationException(
+                    "Premium frequency is not configured for this quote.");
+            }
+
+           
+
+            string premiumFrequency =
+                GetPremiumFrequencyName(
+                    quote.premium_frequency_id.Value);
+
+         
+  
+
+            int installmentCount =
+                CalculateInstallmentCount(
+                    policy.issue_date,
+                    policy.expiry_date,
+                    premiumFrequency);
+
+        
 
             decimal installmentAmount =
                 CalculateInstallmentAmount(
-                    dto.total_premium,
-                    dto.premium_frequency);
+                    policy.premium_amount,
+                    premiumFrequency);
 
-            int months = GetFrequencyMonths(
-                dto.premium_frequency);
+      
+
+            int months =
+                GetFrequencyMonths(
+                    premiumFrequency);
+
+    
 
             for (int i = 1; i <= installmentCount; i++)
             {
                 var schedule = new PremiumSchedules
                 {
-                    policy_id = dto.policy_id,
+                    policy_id = policy.policy_id,
 
                     installment_no = i,
 
-                    due_date = dto.effective_date.AddMonths(
+                    due_date = policy.effective_date.AddMonths(
                         (i - 1) * months),
 
                     premium_amount = installmentAmount,
@@ -68,11 +132,35 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 db.PremiumSchedule.Add(schedule);
             }
 
+         
+
             await db.SaveChangesAsync();
         }
 
 
-        // Get all installments for one policy
+      
+
+        private string GetPremiumFrequencyName(
+            int premiumFrequencyId)
+        {
+            return premiumFrequencyId switch
+            {
+                1 => "Monthly",
+
+                2 => "Quarterly",
+
+                3 => "Half-Yearly",
+
+                4 => "Yearly",
+
+                _ => throw new ArgumentException(
+                    $"Invalid premium frequency ID: {premiumFrequencyId}")
+            };
+        }
+
+
+
+
         public async Task<List<PremiumScheduleDto>>
             GetPremiumScheduleByPolicyId(int policy_id)
         {
@@ -81,13 +169,12 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 .OrderBy(x => x.installment_no)
                 .ToListAsync();
 
-            // Entity -> DTO using AutoMapper
             return mapper.Map<List<PremiumScheduleDto>>(
                 schedules);
         }
 
 
-        // Get one schedule record
+
         public async Task<PremiumScheduleDto?>
             GetPremiumScheduleById(int schedule_id)
         {
@@ -100,19 +187,18 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 return null;
             }
 
-            // Entity -> DTO using AutoMapper
             return mapper.Map<PremiumScheduleDto>(
                 schedule);
         }
 
 
-        // Calculate number of installments
         private int CalculateInstallmentCount(
             DateTime issue_date,
             DateTime expiry_date,
             string frequency)
         {
-            int months = GetFrequencyMonths(frequency);
+            int months =
+                GetFrequencyMonths(frequency);
 
             int totalMonths =
                 ((expiry_date.Year - issue_date.Year) * 12)
@@ -124,7 +210,8 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // Convert frequency into months
+
+
         private int GetFrequencyMonths(
             string frequency)
         {
@@ -144,8 +231,8 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // Calculate installment amount
-        // based on total premium and frequency
+
+
         private decimal CalculateInstallmentAmount(
             decimal totalPremium,
             string frequency)
@@ -166,16 +253,10 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
-        // GRACE PERIOD
-        // =========================================================
-        // Monthly       = 15 days
-        // Quarterly     = 30 days
-        // Half-Yearly   = 30 days
-        // Yearly        = 30 days
-        // =========================================================
+   
 
-        private int GetGracePeriodDays(string frequency)
+        private int GetGracePeriodDays(
+            string frequency)
         {
             return frequency.ToLower() switch
             {
@@ -193,14 +274,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
-        // LATE FEE CALCULATION
-        // =========================================================
-        // Late Fee = Overdue Days × Daily Penalty Rate
-        //
-        // Late fee starts only after grace period expires.
-        // Maximum late fee is also supported.
-        // =========================================================
+   
 
         private decimal CalculateLateFee(
             DateTime dueDate,
@@ -215,7 +289,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
             DateTime gracePeriodEndDate =
                 dueDate.AddDays(gracePeriodDays);
 
-            // Payment is still within grace period
+            // Still inside grace period
             if (currentDate <= gracePeriodEndDate)
             {
                 return 0;
@@ -227,7 +301,7 @@ namespace PremiumSchedule.Infrastructure.Repositories
             decimal lateFee =
                 overdueDays * dailyPenaltyRate;
 
-            // Do not exceed maximum late fee
+            // Maximum late fee
             if (lateFee > maxLateFee)
             {
                 lateFee = maxLateFee;
@@ -237,25 +311,11 @@ namespace PremiumSchedule.Infrastructure.Repositories
         }
 
 
-        // =========================================================
-        // UPDATE OVERDUE SCHEDULES AND CALCULATE LATE FEES
-        // =========================================================
-        //
-        // This method can be called daily by Hangfire/background job.
-        //
-        // Example:
-        // Due Date       = 10 Oct
-        // Grace Period   = 15 days
-        // Grace Ends     = 25 Oct
-        // Current Date   = 30 Oct
-        // Overdue Days   = 5
-        // Daily Rate     = 10
-        // Late Fee       = 50
-        // =========================================================
+       
 
         public async Task UpdateOverdueSchedules(
-    decimal dailyPenaltyRate,
-    decimal maxLateFee)
+            decimal dailyPenaltyRate,
+            decimal maxLateFee)
         {
             var schedules = await db.PremiumSchedule
                 .Where(x =>
@@ -267,41 +327,83 @@ namespace PremiumSchedule.Infrastructure.Repositories
 
             foreach (var schedule in schedules)
             {
-                string? premiumFrequency =
-                    await policyIssuanceClient.GetPremiumFrequency(
+                
+
+                var policy =
+                    await policyIssuanceClient.GetPolicyAsync(
                         schedule.policy_id);
 
-                if (string.IsNullOrEmpty(premiumFrequency))
+                if (policy == null)
                 {
                     continue;
                 }
 
-                int gracePeriodDays =
-                    GetGracePeriodDays(premiumFrequency);
+              
 
-                DateTime gracePeriodEndDate =
-                    schedule.due_date.AddDays(gracePeriodDays);
+                var quote =
+                    await quoteClient.GetQuoteByIdAsync(
+                        policy.quote_id);
 
-                if (currentDate <= gracePeriodEndDate)
+                if (quote == null)
                 {
-                    schedule.late_fee = 0;
                     continue;
                 }
 
-                int overdueDays =
-                    (currentDate - gracePeriodEndDate).Days;
+
+                if (!quote.premium_frequency_id.HasValue)
+                {
+                    continue;
+                }
+
+          
+
+                string premiumFrequency;
+
+                try
+                {
+                    premiumFrequency =
+                        GetPremiumFrequencyName(
+                            quote.premium_frequency_id.Value);
+                }
+                catch (ArgumentException)
+                {
+                    continue;
+                }
+
+             
+      
 
                 decimal lateFee =
-                    overdueDays * dailyPenaltyRate;
+                    CalculateLateFee(
+                        schedule.due_date,
+                        currentDate,
+                        premiumFrequency,
+                        dailyPenaltyRate,
+                        maxLateFee);
 
-                schedule.late_fee =
-                    Math.Min(lateFee, maxLateFee);
+                schedule.late_fee = lateFee;
 
-                schedule.status = "Overdue";
+             
+
+                int gracePeriodDays =
+                    GetGracePeriodDays(
+                        premiumFrequency);
+
+                DateTime gracePeriodEndDate =
+                    schedule.due_date.AddDays(
+                        gracePeriodDays);
+
+                if (currentDate > gracePeriodEndDate)
+                {
+                    schedule.status = "Overdue";
+                }
             }
 
             await db.SaveChangesAsync();
         }
+
+
+
 
         public async Task<PremiumScheduleDto?>
             UpdatePremiumSchedule(
@@ -317,14 +419,14 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 return null;
             }
 
-            // Paid installments cannot be modified
+        
             if (schedule.status == "Paid")
             {
                 throw new InvalidOperationException(
                     "Paid installments cannot be modified.");
             }
 
-            // Validate status
+            
             var allowedStatuses = new[]
             {
                 "Pending",
@@ -349,28 +451,37 @@ namespace PremiumSchedule.Infrastructure.Repositories
                 schedule);
         }
 
-        public async Task<PremiumScheduleDto?> UpdateScheduleAfterPayment(
-    int schedule_id,
-    PaymentUpdateDto dto)
+
+
+
+
+        public async Task<PremiumScheduleDto?>
+            UpdateScheduleAfterPayment(
+                int schedule_id,
+                PaymentUpdateDto dto)
         {
             var schedule = await db.PremiumSchedule
-                .FirstOrDefaultAsync(x => x.schedule_id == schedule_id);
+                .FirstOrDefaultAsync(
+                    x => x.schedule_id == schedule_id);
 
             if (schedule == null)
+            {
                 return null;
+            }
 
-            // Prevent payment from being applied to an already paid installment
+
             if (schedule.status == "Paid")
             {
                 throw new InvalidOperationException(
                     "This premium schedule is already fully paid.");
             }
 
-            // Partial or full payment
+          
             if (dto.amount_paid >= schedule.premium_amount)
             {
                 schedule.status = "Paid";
             }
+   
             else if (dto.amount_paid > 0)
             {
                 schedule.status = "Partial Paid";
@@ -378,7 +489,8 @@ namespace PremiumSchedule.Infrastructure.Repositories
 
             await db.SaveChangesAsync();
 
-            return mapper.Map<PremiumScheduleDto>(schedule);
+            return mapper.Map<PremiumScheduleDto>(
+                schedule);
         }
     }
 }

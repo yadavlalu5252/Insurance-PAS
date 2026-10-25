@@ -102,6 +102,20 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(AuthMapping));
 
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("InsuranceFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -110,6 +124,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+app.UseRouting();
+app.UseCors("InsuranceFrontend");
 app.UseHttpsRedirection();
 
 // CORS must run before authentication and authorization

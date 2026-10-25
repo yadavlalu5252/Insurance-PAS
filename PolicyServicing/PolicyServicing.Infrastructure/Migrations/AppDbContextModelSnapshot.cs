@@ -191,9 +191,6 @@ namespace PolicyServicing.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("history_id"));
 
-                    b.Property<long>("Service_Requestrequest_id")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("action")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -213,7 +210,7 @@ namespace PolicyServicing.Infrastructure.Migrations
 
                     b.HasKey("history_id");
 
-                    b.HasIndex("Service_Requestrequest_id");
+                    b.HasIndex("request_id");
 
                     b.ToTable("service_request_history");
                 });
@@ -233,7 +230,7 @@ namespace PolicyServicing.Infrastructure.Migrations
                 {
                     b.HasOne("PolicyServicing.Domain.Entities.service_request", "Service_Request")
                         .WithMany()
-                        .HasForeignKey("Service_Requestrequest_id")
+                        .HasForeignKey("request_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

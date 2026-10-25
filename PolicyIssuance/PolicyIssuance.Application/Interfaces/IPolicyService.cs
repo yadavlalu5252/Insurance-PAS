@@ -22,5 +22,16 @@ namespace PolicyIssuance.Application.Interface
         Task<bool> CancelAsync(long id, string performed_by);
 
         Task<bool> ExpireAsync(long id, string performed_by);
+
+        Task<List<PolicyCoverageDTO>> GetCoveragesAsync(long policyId);
+
+        Task<PolicyCoverageDTO?> UpdateCoverageAsync(long policyId, long coverageId, PolicyCoverageDTO dto);
+
+        Task<bool> UpdateRidersAsync(long policyId, List<PolicyRiderDTO> riders);
+        Task<List<PolicyRiderDTO>> GetRidersAsync(long policyId);
+
+        Task<bool> RenewPolicyAsync(long id, DateTime newExpiryDate);
+
+        Task<List<PolicyDTO>> GetPoliciesByCustomerIdAsync(long customerId);
     }
 }

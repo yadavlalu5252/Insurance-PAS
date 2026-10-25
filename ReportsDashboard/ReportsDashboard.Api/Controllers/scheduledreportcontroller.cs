@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportsDashboard.Application.DTO;
 using ReportsDashboard.Application.Interfaces;
@@ -7,6 +8,7 @@ namespace ReportsDashboard.Api.Controllers
 {
     [Route("api/v1/reports/schedule")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class scheduledreportcontroller : ControllerBase
     {
         private readonly Ischeduledreport service;
