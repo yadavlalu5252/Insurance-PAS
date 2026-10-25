@@ -78,7 +78,6 @@ builder.Services.AddScoped<INotificationTemplate, NotificationTemplateService>()
 
 builder.Services.AddHttpClient<IDashboardMetrics, DashboardMetricsRepository>();
 
-builder.Services.AddHttpClient<ICustomerDashboard, CustomerDashboardRepository>();
 
 var app = builder.Build();
 
