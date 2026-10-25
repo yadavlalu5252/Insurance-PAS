@@ -4,8 +4,10 @@ using ClaimManagement.Application.Exceptions;
 using ClaimManagement.Application.Helpers;
 using ClaimManagement.Application.Interface;
 using ClaimManagement.Domain.Entities;
+using ClaimManagement.Infrastructure.Config;
 using ClaimManagement.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace ClaimManagement.Infrastructure.Repositories;
 
@@ -14,12 +16,14 @@ public class ClaimDocumentService : IClaimDocumentService
     ClaimDbContext db;
     IMapper mapper;
     IFileStorageService storage;
+    IConfiguration configuration;
 
-    public ClaimDocumentService(ClaimDbContext db, IMapper mapper, IFileStorageService storage)
+    public ClaimDocumentService(ClaimDbContext db, IMapper mapper, IFileStorageService storage, IConfiguration configuration)
     {
         this.db = db;
         this.mapper = mapper;
         this.storage = storage;
+        this.configuration = configuration;
     }
 
     public async Task<DocumentResponseDTO> AddDocumentAsync(long claimId, string? documentName,
@@ -64,6 +68,12 @@ public class ClaimDocumentService : IClaimDocumentService
         await db.SaveChangesAsync();
 
         return mapper.Map<DocumentResponseDTO>(doc);
+    }
+
+    public async Task<List<string>> FetchRequiredAsync(long claimId)
+    {
+        var claim = await GetClaimOrThrowAsync(claimId);
+        return RequiredDocuments.For(configuration, claim.claim_type);
     }
 
     public async Task<List<DocumentResponseDTO>> FetchDocumentsAsync(long claimId)

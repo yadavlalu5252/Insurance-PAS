@@ -11,6 +11,7 @@ namespace ClaimManagement.Application.Interface
             string? fileName, long fileLength, Stream? content, long performedBy);
 
         Task<List<DocumentResponseDTO>> FetchDocumentsAsync(long claimId);
+        Task<List<string>> FetchRequiredAsync(long claimId);
 
         Task VerifyDocumentAsync(long claimId, VerifyDocumentDTO dto, long performedBy);
     }
