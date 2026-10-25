@@ -9,7 +9,7 @@ namespace InsuranceProductManagement.Api.Controllers
 {
     [Route("api/v1/insurance-products")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class InsuranceProductController : ControllerBase
     {
         private readonly IInsuranceProductService service;
@@ -21,7 +21,7 @@ namespace InsuranceProductManagement.Api.Controllers
 
        
         [HttpGet]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetAll()
         {
             var products = await service.GetAllAsync();
@@ -31,7 +31,7 @@ namespace InsuranceProductManagement.Api.Controllers
 
         
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetById(int id)
         {
             var product = await service.GetByIdAsync(id);
@@ -46,7 +46,7 @@ namespace InsuranceProductManagement.Api.Controllers
 
      
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(InsuranceProductDTO dto)
         {
             var product = await service.CreateAsync(dto);
@@ -55,7 +55,7 @@ namespace InsuranceProductManagement.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, InsuranceProductDTO dto)
         {
             var product = await service.UpdateAsync(id, dto);
@@ -69,7 +69,7 @@ namespace InsuranceProductManagement.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await service.DeleteAsync(id);

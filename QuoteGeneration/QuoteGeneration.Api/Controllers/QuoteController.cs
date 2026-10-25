@@ -9,7 +9,7 @@ namespace QuoteGeneration.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class QuoteController : ControllerBase
     {
         private readonly IQuoteService service;
@@ -20,7 +20,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpPost("Create")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> CreateQuote(QuoteDTO dto)
         {
             if (!ModelState.IsValid)
@@ -39,7 +39,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpGet("Get/{id}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetQuoteById(int id)
         {
             var quote = await service.GetQuoteByIdAsync(id);
@@ -52,7 +52,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpGet("GetAll")]
-        [Authorize(Roles = "Admin,Agent")]
+        //[Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> GetAllQuotes()
         {
             var quotes = await service.GetAllQuotesAsync();

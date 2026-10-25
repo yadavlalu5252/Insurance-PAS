@@ -47,6 +47,16 @@ static void ConfigureJwtAuthentication(
 }
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("myapp", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 ConfigureJwtAuthentication(
     builder.Services,
     builder.Configuration);
@@ -102,7 +112,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("myapp");
 app.UseAuthentication();
 app.UseAuthorization();
 

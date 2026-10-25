@@ -10,7 +10,7 @@ namespace Underwriting.Api.Controllers
 {
     [Route("api/v1/underwriting")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class underwritingcontroller : ControllerBase
     {
         private readonly Iunderwriting service;
@@ -21,7 +21,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Agent")]
+       // [Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> underwritng(createunderwritingdto dto)
         {
             await service.addunerwriting(dto);
@@ -29,7 +29,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+       // [Authorize(Roles = "Admin")]
         public async Task<IActionResult> fetchunderwriting()
         {
             var data = await service.fetchunderwriting();
@@ -37,7 +37,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> fetchunderwritingbyid(int id)
         {
             var data = await service.fetchunderwritingbyid(id);
@@ -51,7 +51,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> updateunderwritingbyid(int id, createunderwritingdto dto)
         {
             await service.updateunderwritingbyid(id, dto);
@@ -60,7 +60,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPut("{id}/approve")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> approveunderwriting(int id)
         {
             await service.approveunderwriting(id);
@@ -69,7 +69,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPut("{id}/reject")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> rejectunderwriting(
             int id, [FromBody] string reason)
         {
@@ -79,7 +79,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPut("{id}/loading")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> loadingunderwriting(int id)
         {
             await service.loadingunderwriting(id);
@@ -88,7 +88,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpGet("{id}/decision")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> fetchdecision(int id)
         {
             var data = await service.fetchdecision(id);
@@ -102,7 +102,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpGet("quote/{quoteId}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+       // [Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> fetchunderwritingbyquoteid(int quoteId)
         {
             var data = await service.fetchunderwritingbyquoteid(quoteId);

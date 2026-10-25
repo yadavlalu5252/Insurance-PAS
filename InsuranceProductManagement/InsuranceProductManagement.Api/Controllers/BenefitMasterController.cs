@@ -9,7 +9,7 @@ namespace InsuranceProductManagement.Api.Controllers
 {
     [Route("api/v1/benefits")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class BenefitMasterController : ControllerBase
     {
         private readonly IBenefitMasterService service;
@@ -20,7 +20,7 @@ namespace InsuranceProductManagement.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetAll()
         {
             var benefits = await service.GetAllAsync();
@@ -29,7 +29,7 @@ namespace InsuranceProductManagement.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetById(int id)
         {
             var benefit = await service.GetByIdAsync(id);
@@ -44,7 +44,7 @@ namespace InsuranceProductManagement.Api.Controllers
 
    
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(BenefitMasterDTO dto)
         {
             var benefit = await service.CreateAsync(dto);
@@ -54,7 +54,7 @@ namespace InsuranceProductManagement.Api.Controllers
 
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, BenefitMasterDTO dto)
         {
             var benefit = await service.UpdateAsync(id, dto);
@@ -68,7 +68,7 @@ namespace InsuranceProductManagement.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+       // [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await service.DeleteAsync(id);

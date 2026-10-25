@@ -9,7 +9,7 @@ namespace QuoteGeneration.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class QuoteRiderController : ControllerBase
     {
         private readonly IQuoteRiderService service;
@@ -20,7 +20,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpPost("Add")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+       // [Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> AddRider(QuoteRiderDTO dto)
         {
             if (!ModelState.IsValid)
@@ -34,7 +34,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpGet("GetByQuoteId/{quoteId}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetRidersByQuoteId(int quoteId)
         {
             var result = await service.GetRidersByQuoteIdAsync(quoteId);
@@ -43,7 +43,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpDelete("Remove/{id}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> RemoveRider(int id)
         {
             var removed = await service.RemoveRiderAsync(id);
