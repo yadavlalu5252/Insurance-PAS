@@ -1,3 +1,4 @@
+
 using CustomerRegistration.Api.Middleware;
 using CustomerRegistration.Application.Interface;
 using CustomerRegistration.Application.Interfaces;
@@ -15,6 +16,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddControllers();
+
+// CORS configuration for Angular
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
@@ -65,7 +77,6 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtKey)),
 
-            // Recognize the JWT role claim
             RoleClaimType = System.Security.Claims.ClaimTypes.Role,
             NameClaimType = System.Security.Claims.ClaimTypes.Name
         };
@@ -126,7 +137,9 @@ app.UseCors("InsuranceFrontend");
 
 app.UseHttpsRedirection();
 
-// Authentication must run before authorization
+// CORS must run before authentication and authorization
+app.UseCors("AngularPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -1,3 +1,4 @@
+
 using InsuranceProductManagement.Application.Interface;
 using InsuranceProductManagement.Application.Mapper;
 using InsuranceProductManagement.Infrastructure.Data;
@@ -45,10 +46,23 @@ static void ConfigureJwtAuthentication(
 
     services.AddAuthorization();
 }
+
 var builder = WebApplication.CreateBuilder(args);
+
 ConfigureJwtAuthentication(
     builder.Services,
     builder.Configuration);
+
+// Configure CORS for Angular
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Register controllers
 builder.Services.AddControllers();
@@ -78,20 +92,19 @@ builder.Services.AddSwaggerGen(options =>
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("dbconn")));
+
 builder.Services.AddScoped<IProductCategoryService, ProductCategoryService>();
 builder.Services.AddScoped<ICoverageMasterService, CoverageMasterService>();
-
 builder.Services.AddScoped<IRiderMasterService, RiderMasterService>();
-
 builder.Services.AddScoped<IBenefitMasterService, BenefitMasterService>();
-
 builder.Services.AddScoped<IPremiumFrequencyService, PremiumFrequencyService>();
-
 builder.Services.AddScoped<IProductCommissionService, ProductCommissionService>();
 builder.Services.AddScoped<IInsuranceProductService, InsuranceProductService>();
+
 builder.Services.AddAutoMapper(
     cfg => { },
     typeof(ProductCategoryMappingProfile).Assembly);
@@ -106,6 +119,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Enable CORS before authentication and authorization
+app.UseCors("AngularPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
