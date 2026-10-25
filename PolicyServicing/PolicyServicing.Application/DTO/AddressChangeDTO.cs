@@ -16,7 +16,6 @@ namespace PolicyServicing.Application.DTO
         public string Country { get; set; }
         public string PinCode { get; set; }
 
-        
-        public string AddressProofDocumentPath { get; set; }
+       
     }
 }

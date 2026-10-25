@@ -1,11 +1,13 @@
 ﻿
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolicyIssuance.Application.DTOs;
 using PolicyIssuance.Application.Interface;
 
 namespace PolicyIssuance.Api.Controllers
 {
+    [Authorize]
     [Route("policyclosures")]
     [ApiController]
     public class PolicyClosureController : ControllerBase

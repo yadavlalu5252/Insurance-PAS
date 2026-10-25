@@ -1,32 +1,138 @@
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PolicyIssuance.Api.Middleware;
 using PolicyIssuance.Application.Config;
 using PolicyIssuance.Application.Interface;
 using PolicyIssuance.Infrastructure.Clients;
 using PolicyIssuance.Infrastructure.Data;
 using PolicyIssuance.Infrastructure.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// Configure CORS for Angular
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
+    {
+        Title = "PolicyIssuance.Api",
+        Version = "v1"
+    });
+
+    options.AddSecurityDefinition("Bearer",
+        new Microsoft.OpenApi.OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = Microsoft.OpenApi.ParameterLocation.Header,
+            Description = "Enter your JWT access token."
+        });
+
+    options.AddSecurityRequirement(document =>
+        new Microsoft.OpenApi.OpenApiSecurityRequirement
+        {
+            [
+                new Microsoft.OpenApi.OpenApiSecuritySchemeReference(
+                    "Bearer", document)
+            ] = new List<string>()
+        });
+});
+
+// Database
+var connectionString =
+    builder.Configuration.GetConnectionString("dbconn");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Database connection string 'dbconn' is missing.");
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("dbconn")
-    ));
+    options.UseSqlServer(connectionString));
 
+// JWT settings must match Authentication API
+var jwtKey = builder.Configuration["Jwt:Key"];
+var issuer = builder.Configuration["Jwt:Issuer"];
+var audience = builder.Configuration["Jwt:Audience"];
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException(
+        "JWT Key is missing. Configure Jwt:Key in PolicyIssuance.Api.");
+}
+
+if (string.IsNullOrWhiteSpace(issuer))
+{
+    throw new InvalidOperationException(
+        "JWT Issuer is missing. Configure Jwt:Issuer.");
+}
+
+if (string.IsNullOrWhiteSpace(audience))
+{
+    throw new InvalidOperationException(
+        "JWT Audience is missing. Configure Jwt:Audience.");
+}
+
+if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
+{
+    throw new InvalidOperationException(
+        "JWT Key must be at least 32 bytes.");
+}
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = issuer,
+
+                ValidateAudience = true,
+                ValidAudience = audience,
+
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtKey)),
+
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromSeconds(30)
+            };
+    });
+
+builder.Services.AddAuthorization();
+
+// AutoMapper
 builder.Services.AddAutoMapper(
     cfg => { },
-    typeof(MapperConfig).Assembly
-);
+    typeof(MapperConfig).Assembly);
 
+// Policy services
 builder.Services.AddScoped<IPolicyService, PolicyService>();
 builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
 builder.Services.AddScoped<IPolicyEndorsementService, PolicyEndorsementService>();
 builder.Services.AddScoped<IPolicyClosureService, PolicyClosureService>();
+
+// Interservice clients
 builder.Services.AddHttpClient<CustomerClient>(client =>
 {
     client.BaseAddress = new Uri(
@@ -63,6 +169,15 @@ builder.Services.AddHttpClient<PremiumPaymentClient>(client =>
         builder.Configuration["ServiceUrls:PremiumPayment"]!);
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -75,8 +190,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+// Enable CORS before authorization
+app.UseCors("AngularPolicy");
 
+app.UseCors("AngularPolicy");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

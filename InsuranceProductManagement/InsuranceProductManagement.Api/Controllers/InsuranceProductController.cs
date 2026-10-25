@@ -82,5 +82,20 @@ namespace InsuranceProductManagement.Api.Controllers
             return Ok(SuccessResponse.Create<object>("Product deactivated successfully", null
             ));
         }
+
+        // Add these two endpoints to his existing InsuranceProductController
+        [HttpGet("{id}/riders")]
+        public async Task<IActionResult> GetRidersByProductId(int id)
+        {
+            var result = await service.GetRidersByProductIdAsync(id);
+            return Ok(SuccessResponse.Create("Riders retrieved successfully", result));
+        }
+
+        [HttpGet("{id}/coverages")]
+        public async Task<IActionResult> GetCoveragesByProductId(int id)
+        {
+            var result = await service.GetCoveragesByProductIdAsync(id);
+            return Ok(SuccessResponse.Create("Coverages retrieved successfully", result));
+        }
     }
 }

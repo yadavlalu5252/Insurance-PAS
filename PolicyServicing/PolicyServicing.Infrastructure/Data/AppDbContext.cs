@@ -37,6 +37,11 @@ namespace PolicyServicing.Infrastructure.Data
                 .WithMany(sr => sr.policy_endorsements)
                 .HasForeignKey(pe => pe.request_id)
                 .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<service_request>()
+        .Property(s => s.request_id)
+        .ValueGeneratedOnAdd();
         }
 
 

@@ -32,6 +32,14 @@ public class ClaimDocumentsController : ControllerBase
     }
 
     [HttpGet]
+    [Route("required")]
+    public async Task<IActionResult> RequiredDocuments(long id)
+    {
+        var d = await service.FetchRequiredAsync(id);
+        return Ok(ApiResponse<List<string>>.Ok(d));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> DocumentList(long id)
     {
         var d = await service.FetchDocumentsAsync(id);

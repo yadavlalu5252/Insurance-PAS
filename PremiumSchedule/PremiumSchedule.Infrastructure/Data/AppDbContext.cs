@@ -14,5 +14,10 @@ namespace PremiumSchedule.Infrastructure.Data
             
         }
         public DbSet<PremiumSchedules> PremiumSchedule { get; set; }
+        public DbSet<PremiumPayments> PremiumPayments { get; set; }
+        public DbSet<PremiumReminder> PremiumReminders { get; set; }
+        public DbSet<PaymentReceipt> PaymentReceipts { get; set; }
+        public DbSet<PremiumRefund> PremiumRefunds { get; set; }
+
     }
 }

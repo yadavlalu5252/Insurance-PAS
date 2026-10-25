@@ -11,4 +11,6 @@ public interface ICustomerService
     Task<CustomerResponseDto?> UpdateCustomer(long id, UpdateCustomerDto dto);
     Task<bool> DeleteCustomer(long id);
     Task<List<CustomerResponseDto>> SearchCustomers(CustomerSearchDto dto);
+
+    Task<object> GetCustomerDashboard();
 }

@@ -10,4 +10,6 @@ public class NomineeResponseDto
     public DateTime date_of_birth { get; set; }
     public string? mobile_number { get; set; }
     public decimal share_percentage { get; set; }
+
+    public string? guardian_name { get; set; }
 }

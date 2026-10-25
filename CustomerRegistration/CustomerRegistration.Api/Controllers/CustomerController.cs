@@ -22,7 +22,7 @@ public class CustomerController : ControllerBase
 
     // Admin and Agent can create customers
     [HttpPost]
-    [Authorize(Roles = "Admin,Agent")]
+    [Authorize(Roles = "Admin,Agent,Customer")]
     public async Task<IActionResult> CreateCustomer(CreateCustomerDto dto)
     {
         var result = await service.CreateCustomer(dto);
@@ -34,7 +34,7 @@ public class CustomerController : ControllerBase
 
     // Only Admin and Agent can view all customers
     [HttpGet]
-    [Authorize(Roles = "Admin,Agent")]
+    [Authorize(Roles = "Admin,Agent,Customer")]
     public async Task<IActionResult> GetAllCustomers()
     {
         var result = await service.GetAllCustomers();
@@ -69,7 +69,7 @@ public class CustomerController : ControllerBase
 
     // Admin and Agent can update customers
     [HttpPut("{id:long}")]
-    [Authorize(Roles = "Admin,Agent")]
+    [Authorize(Roles = "Admin,Agent,Customer")]
     public async Task<IActionResult> UpdateCustomer(
         long id, UpdateCustomerDto dto)
     {
@@ -105,7 +105,7 @@ public class CustomerController : ControllerBase
 
     // Admin and Agent can search customers
     [HttpGet("search")]
-    [Authorize(Roles = "Admin,Agent")]
+    [Authorize(Roles = "Admin,Agent,Customer")]
     public async Task<IActionResult> SearchCustomers(
         [FromQuery] CustomerSearchDto dto)
     {
@@ -114,5 +114,14 @@ public class CustomerController : ControllerBase
         return Ok(
             ApiResponse<List<CustomerResponseDto>>.SuccessResponse(
                 result, "Customer search completed successfully."));
+    }
+
+    [HttpGet("dashboard")]
+    [Authorize(Roles = "Admin,Agent,Customer")]
+    public async Task<IActionResult> GetCustomerDashboard()
+    {
+        var result = await service.GetCustomerDashboard();
+
+        return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 }
