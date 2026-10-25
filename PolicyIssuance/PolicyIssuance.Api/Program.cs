@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using PolicyIssuance.Api.Middleware;
 using PolicyIssuance.Application.Config;
@@ -7,6 +8,17 @@ using PolicyIssuance.Infrastructure.Data;
 using PolicyIssuance.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure CORS for Angular
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddControllers();
 
@@ -27,6 +39,7 @@ builder.Services.AddScoped<IPolicyService, PolicyService>();
 builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
 builder.Services.AddScoped<IPolicyEndorsementService, PolicyEndorsementService>();
 builder.Services.AddScoped<IPolicyClosureService, PolicyClosureService>();
+
 builder.Services.AddHttpClient<CustomerClient>(client =>
 {
     client.BaseAddress = new Uri(
@@ -74,6 +87,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Enable CORS before authorization
+app.UseCors("AngularPolicy");
 
 app.UseAuthorization();
 
