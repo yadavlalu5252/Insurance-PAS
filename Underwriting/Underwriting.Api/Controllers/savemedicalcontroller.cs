@@ -10,7 +10,7 @@ namespace Underwriting.Api.Controllers
 {
     [Route("api/v1/underwriting/{id}/medical")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class savemedicalcontroller : ControllerBase
     {
         private readonly Isavemedical service;
@@ -21,7 +21,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> addmedical(int id, savemedicaldto dto)
         {
             await service.addmedical(id, dto);
@@ -30,7 +30,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Customer")]
+        //[Authorize(Roles = "Admin,Customer")]
         public async Task<IActionResult> fetchmedical(int id)
         {
             var data = await service.fetchmedical(id);
@@ -44,7 +44,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> updatemedical(int id, savemedicaldto dto)
         {
             await service.updatemedical(id, dto);

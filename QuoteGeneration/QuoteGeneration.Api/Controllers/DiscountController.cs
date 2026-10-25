@@ -9,7 +9,7 @@ namespace QuoteGeneration.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class DiscountController : ControllerBase
     {
         private readonly IDiscountService service;
@@ -20,7 +20,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpGet("GetActive")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetActiveDiscounts()
         {
             var result = await service.GetActiveDiscountsAsync();

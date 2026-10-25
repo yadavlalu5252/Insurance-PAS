@@ -9,7 +9,7 @@ namespace QuoteGeneration.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class QuoteHistoryController : ControllerBase
     {
         private readonly IQuoteHistoryService service;
@@ -20,7 +20,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpGet("GetByQuoteId/{quoteId}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetHistoryByQuoteId(int quoteId)
         {
             var result = await service.GetHistoryByQuoteIdAsync(quoteId);

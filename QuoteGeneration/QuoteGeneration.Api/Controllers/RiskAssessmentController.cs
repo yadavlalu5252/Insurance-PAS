@@ -9,7 +9,7 @@ namespace QuoteGeneration.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+   // [Authorize]
     public class RiskAssessmentController : ControllerBase
     {
         private readonly IRiskAssessmentService service;
@@ -20,7 +20,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpPost("Assess")]
-        [Authorize(Roles = "Admin,Agent")]
+        //[Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> AssessRisk(RiskAssessmentDTO dto)
         {
             if (!ModelState.IsValid)
@@ -34,7 +34,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpGet("GetByQuoteId/{quoteId}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetRiskByQuoteId(int quoteId)
         {
             var result = await service.GetRiskByQuoteIdAsync(quoteId);

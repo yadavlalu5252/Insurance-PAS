@@ -10,7 +10,7 @@ namespace Underwriting.Api.Controllers
 {
     [Route("api/v1/underwriting/{id}/financial")]
     [ApiController]
-    [Authorize]
+   // [Authorize]
     public class savefinancialcontroller : ControllerBase
     {
         private readonly Isavefinancial service;
@@ -21,7 +21,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> addfinancial(int id, savefinancialdto dto)
         {
             await service.addfinancial(id, dto);
@@ -30,7 +30,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Customer")]
+      //  [Authorize(Roles = "Admin,Customer")]
         public async Task<IActionResult> fetchfinancial(int id)
         {
             var data = await service.fetchfinancial(id);
@@ -44,7 +44,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = "Admin")]
+       // [Authorize(Roles = "Admin")]
         public async Task<IActionResult> updatefinancial(int id, savefinancialdto dto)
         {
             await service.updatefinancial(id, dto);

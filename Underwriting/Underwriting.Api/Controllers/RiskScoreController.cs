@@ -7,7 +7,7 @@ namespace Underwriting.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class RiskScoreController : ControllerBase
     {
         private readonly IRiskScoringService service;
@@ -18,7 +18,7 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPost("Calculate/{id}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Calculate(int id)
         {
             var result = await service.CalculateRiskScore(id);

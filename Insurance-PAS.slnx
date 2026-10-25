@@ -29,13 +29,6 @@
     <Project Path="CustomerRegistration/CustomerRegistration.Domain/CustomerRegistration.Domain.csproj" />
     <Project Path="CustomerRegistration/CustomerRegistration.Infrastructure/CustomerRegistration.Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/DashboardNotification/">
-    <Project Path="DashboardNotification/DashboardNotification.Api/DashboardNotification.Api.csproj" />
-    <Project Path="DashboardNotification/DashboardNotification.Application/DashboardNotification.Application.csproj" />
-    <Project Path="DashboardNotification/DashboardNotification.Domain/DashboardNotification.Domain.csproj" />
-    <Project Path="DashboardNotification/DashboardNotification.Infrastructure/DashboardNotification.Infrastructure.csproj" />
-    <Project Path="PlaceholderTest/PlaceholderTest.csproj" Id="0627776a-10ef-4bfc-b1a3-afb9a368d66e" />
-  </Folder>
   <Folder Name="/InsuranceProductManagement/">
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Api/InsuranceProductManagement.Api.csproj" />
     <Project Path="InsuranceProductManagement/InsuranceProductManagement.Application/InsuranceProductManagement.Application.csproj" />
@@ -100,5 +93,12 @@
     <Project Path="Underwriting/Underwriting.Application/Underwriting.Application.csproj" />
     <Project Path="Underwriting/Underwriting.Domain/Underwriting.Domain.csproj" />
     <Project Path="Underwriting/Underwriting.Infrastructure/Underwriting.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Underwriting/DashboardNotification/">
+    <Project Path="DashboardNotification/DashboardNotification.Api/DashboardNotification.Api.csproj" />
+    <Project Path="DashboardNotification/DashboardNotification.Application/DashboardNotification.Application.csproj" />
+    <Project Path="DashboardNotification/DashboardNotification.Domain/DashboardNotification.Domain.csproj" />
+    <Project Path="DashboardNotification/DashboardNotification.Infrastructure/DashboardNotification.Infrastructure.csproj" />
+    <Project Path="PlaceholderTest/PlaceholderTest.csproj" Id="0627776a-10ef-4bfc-b1a3-afb9a368d66e" />
   </Folder>
 </Solution>

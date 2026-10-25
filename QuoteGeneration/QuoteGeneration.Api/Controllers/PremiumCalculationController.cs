@@ -9,7 +9,7 @@ namespace QuoteGeneration.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class PremiumCalculationController : ControllerBase
     {
         private readonly IPremiumCalculationService service;
@@ -21,7 +21,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpPost("Calculate/{quoteId}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> CalculatePremium(int quoteId)
         {
             var result = await service.CalculatePremiumAsync(quoteId);
@@ -35,7 +35,7 @@ namespace QuoteGeneration.Api.Controllers
         }
 
         [HttpGet("GetByQuoteId/{quoteId}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        //[Authorize(Roles = "Admin,Agent,Customer")]
         public async Task<IActionResult> GetPremiumByQuoteId(int quoteId)
         {
             var result = await service.GetPremiumByQuoteIdAsync(quoteId);
