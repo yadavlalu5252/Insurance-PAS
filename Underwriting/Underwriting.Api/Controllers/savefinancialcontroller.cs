@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Underwriting.Api.Wrappers;
 using Underwriting.Application.DTO;
 using Underwriting.Application.Interfaces;
@@ -9,9 +10,10 @@ namespace Underwriting.Api.Controllers
 {
     [Route("api/v1/underwriting/{id}/financial")]
     [ApiController]
+    [Authorize]
     public class savefinancialcontroller : ControllerBase
     {
-        Isavefinancial service;
+        private readonly Isavefinancial service;
 
         public savefinancialcontroller(Isavefinancial service)
         {
@@ -19,16 +21,20 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> addfinancial(long id, savefinancialdto dto)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> addfinancial(int id, savefinancialdto dto)
         {
             await service.addfinancial(id, dto);
+
             return Ok(ApiResponse<string>.SuccessResponse("Financial details saved successfully"));
         }
 
         [HttpGet]
-        public async Task<IActionResult> fetchfinancial(long id)
+        [Authorize(Roles = "Admin,Customer")]
+        public async Task<IActionResult> fetchfinancial(int id)
         {
-            var data=await service.fetchfinancial(id);
+            var data = await service.fetchfinancial(id);
+
             if (data == null)
             {
                 return NotFound(ApiResponse<string>.ErrorResponse("Financial details not found"));
@@ -36,8 +42,10 @@ namespace Underwriting.Api.Controllers
 
             return Ok(ApiResponse<financial_underwriting>.SuccessResponse(data));
         }
+
         [HttpPut]
-        public async Task<IActionResult> updatefinancial(long id, savefinancialdto dto)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> updatefinancial(int id, savefinancialdto dto)
         {
             await service.updatefinancial(id, dto);
 

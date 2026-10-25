@@ -15,6 +15,6 @@ namespace KycVerification.Application.Interface
         Task<KycDocument> AddAsync(KycDocument document);
         Task UpdateAsync(KycDocument document);
 
-        Task<KycDocument> UploadAsync(int kycId, string documentType,string documentNumber, IFormFile file);
+        Task<KycDocument?> UploadAsync(long kycId, string? documentType, string? documentNumber, IFormFile file);
     }
 }

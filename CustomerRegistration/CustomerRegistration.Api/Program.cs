@@ -17,6 +17,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 builder.Services.AddControllers();
 
+// CORS configuration for Angular
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
@@ -65,10 +75,14 @@ builder.Services
 
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtKey))
+                Encoding.UTF8.GetBytes(jwtKey)),
+
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+            NameClaimType = System.Security.Claims.ClaimTypes.Name
         };
     });
 
+// Authorization policies
 builder.Services.AddAuthorization();
 
 // Swagger with JWT Bearer support
@@ -91,6 +105,20 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
+
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("InsuranceFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+
 var app = builder.Build();
 
 // Exception middleware
@@ -103,9 +131,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRouting();
+
+app.UseCors("InsuranceFrontend");
+
 app.UseHttpsRedirection();
 
-// Authentication must run before authorization
+// CORS must run before authentication and authorization
+app.UseCors("AngularPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

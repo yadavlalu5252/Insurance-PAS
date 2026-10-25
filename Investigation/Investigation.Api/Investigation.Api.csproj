@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+ <Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -23,6 +23,11 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Investigation.Application\Investigation.Application.csproj" />
 		<ProjectReference Include="..\Investigation.Infrastructure\Investigation.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Middleware\" />
+	  <Folder Include="Wrappers\" />
 	</ItemGroup>
 
 </Project>

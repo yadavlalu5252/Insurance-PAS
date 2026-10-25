@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Underwriting.Api.Wrappers;
 using Underwriting.Application.DTO;
 using Underwriting.Application.Interfaces;
@@ -8,9 +10,10 @@ namespace Underwriting.Api.Controllers
 {
     [Route("api/v1/underwriting/{id}/medical")]
     [ApiController]
+    [Authorize]
     public class savemedicalcontroller : ControllerBase
     {
-        Isavemedical service;
+        private readonly Isavemedical service;
 
         public savemedicalcontroller(Isavemedical service)
         {
@@ -18,27 +21,34 @@ namespace Underwriting.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> addmedical(long id, savemedicaldto dto)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> addmedical(int id, savemedicaldto dto)
         {
             await service.addmedical(id, dto);
-            return Ok(ApiResponse<string>.SuccessResponse("Medical details saved successfully"));
 
+            return Ok(ApiResponse<string>.SuccessResponse("Medical details saved successfully"));
         }
+
         [HttpGet]
-        public async Task<IActionResult> fetchmedical(long id)
+        [Authorize(Roles = "Admin,Customer")]
+        public async Task<IActionResult> fetchmedical(int id)
         {
             var data = await service.fetchmedical(id);
+
             if (data == null)
             {
                 return NotFound(ApiResponse<string>.ErrorResponse("Medical details not found"));
             }
+
             return Ok(ApiResponse<medical_underwriting>.SuccessResponse(data));
         }
 
         [HttpPut]
-        public async Task<IActionResult> updatemedical(long id,savemedicaldto dto)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> updatemedical(int id, savemedicaldto dto)
         {
-            await service.updatemedical(id,dto);
+            await service.updatemedical(id, dto);
+
             return Ok(ApiResponse<string>.SuccessResponse("Medical details updated successfully"));
         }
     }

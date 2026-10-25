@@ -103,19 +103,33 @@ public class CustomerService : ICustomerService
     public async Task<List<CustomerResponseDto>> SearchCustomers(
         CustomerSearchDto dto)
     {
-        var query = db.customers.AsNoTracking().AsQueryable();
+        var query = db.customers
+            .AsNoTracking()
+            .AsQueryable();
 
         if (dto.customer_id.HasValue)
-            query = query.Where(x => x.customer_id == dto.customer_id.Value);
+        {
+            query = query.Where(x =>
+                x.customer_id == dto.customer_id.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(dto.customer_code))
-            query = query.Where(x => x.customer_code.Contains(dto.customer_code));
+        {
+            query = query.Where(x =>
+                x.customer_code.Contains(dto.customer_code));
+        }
 
         if (!string.IsNullOrWhiteSpace(dto.mobile_number))
-            query = query.Where(x => x.mobile_number.Contains(dto.mobile_number));
+        {
+            query = query.Where(x =>
+                x.mobile_number.Contains(dto.mobile_number));
+        }
 
         if (!string.IsNullOrWhiteSpace(dto.email))
-            query = query.Where(x => x.email.Contains(dto.email));
+        {
+            query = query.Where(x =>
+                x.email.Contains(dto.email));
+        }
 
         if (!string.IsNullOrWhiteSpace(dto.customer_name))
         {
@@ -124,14 +138,75 @@ public class CustomerService : ICustomerService
             query = query.Where(x =>
                 x.first_name.Contains(name) ||
                 x.last_name.Contains(name) ||
-                (x.middle_name != null && x.middle_name.Contains(name)));
+                (x.middle_name != null &&
+                 x.middle_name.Contains(name)));
         }
 
         if (!string.IsNullOrWhiteSpace(dto.customer_status))
-            query = query.Where(x => x.customer_status == dto.customer_status);
+        {
+            query = query.Where(x =>
+                x.customer_status == dto.customer_status);
+        }
 
         var customers = await query.ToListAsync();
 
         return mapper.Map<List<CustomerResponseDto>>(customers);
+    }
+
+    public async Task<object> GetCustomerDashboard()
+    {
+        var today = DateTime.UtcNow.Date;
+        var tomorrow = today.AddDays(1);
+
+        // Total customers
+        var totalCustomers = await db.customers
+            .CountAsync();
+
+        // Customers registered today
+        var newCustomersToday = await db.customers
+            .CountAsync(x =>
+                x.created_at >= today &&
+                x.created_at < tomorrow);
+
+        // Active customers
+        var activeCustomers = await db.customers
+            .CountAsync(x => x.customer_status == "Active");
+
+        // Inactive customers
+        var inactiveCustomers = await db.customers
+            .CountAsync(x => x.customer_status == "Inactive");
+
+        // Customers grouped by city
+        var customersByCity = await (
+            from address in db.customer_addresses
+            join customer in db.customers
+                on address.customer_id equals customer.customer_id
+            group customer by address.city into cityGroup
+            select new
+            {
+                City = cityGroup.Key,
+                TotalCustomers = cityGroup
+                    .Select(x => x.customer_id)
+                    .Distinct()
+                    .Count()
+            }
+        ).ToListAsync();
+
+        // Customers with pending KYC verification
+        var pendingKycCustomers = await db.customer_documents
+            .Where(x => x.verification_status == "Pending")
+            .Select(x => x.customer_id)
+            .Distinct()
+            .CountAsync();
+
+        return new
+        {
+            TotalCustomers = totalCustomers,
+            NewCustomersToday = newCustomersToday,
+            ActiveCustomers = activeCustomers,
+            InactiveCustomers = inactiveCustomers,
+            CustomersByCity = customersByCity,
+            PendingKycCustomers = pendingKycCustomers
+        };
     }
 }
