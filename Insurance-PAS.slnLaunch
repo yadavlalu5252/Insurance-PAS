@@ -3,16 +3,11 @@
     "Name": "New Profile",
     "Projects": [
       {
-        "Path": "Authentication\\Authentication.Api\\Authentication.Api.csproj",
+        "Path": "AgentManagement\\AgentManagement.Api\\AgentManagement.Api.csproj",
         "Action": "Start"
       },
       {
-        "Path": "PolicyIssuance\\PolicyIssuance.Api\\PolicyIssuance.Api.csproj",
-        "Action": "Start",
-        "DebugTarget": "https"
-      },
-      {
-        "Path": "CustomerRegistration\\CustomerRegistration.Api\\CustomerRegistration.Api.csproj",
+        "Path": "Authentication\\Authentication.Api\\Authentication.Api.csproj",
         "Action": "Start"
       }
     ]

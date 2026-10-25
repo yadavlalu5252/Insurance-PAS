@@ -5,17 +5,17 @@
     <Project Path="AgentManagement/AgentManagement.Domain/AgentManagement.Domain.csproj" />
     <Project Path="AgentManagement/AgentManagement.Infrastructure/AgentManagement.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/AgentManagement/ClaimManagement/">
+    <Project Path="ClaimManagement/ClaimManagement.Api/ClaimManagement.Api.csproj" />
+    <Project Path="ClaimManagement/ClaimManagement.Application/ClaimManagement.Application.csproj" />
+    <Project Path="ClaimManagement/ClaimManagement.Domain/ClaimManagement.Domain.csproj" />
+    <Project Path="ClaimManagement/ClaimManagement.Infrastructure/ClaimManagement.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/Authentication/">
     <Project Path="Authentication/Authentication.Api/Authentication.Api.csproj" />
     <Project Path="Authentication/Authentication.Application/Authentication.Application.csproj" />
     <Project Path="Authentication/Authentication.Domain/Authentication.Domain.csproj" />
     <Project Path="Authentication/Authentication.Infrastructure/Authentication.Infrastructure.csproj" />
-  </Folder>
-  <Folder Name="/ClaimManagement/">
-    <Project Path="ClaimManagement/ClaimManagement.Api/ClaimManagement.Api.csproj" />
-    <Project Path="ClaimManagement/ClaimManagement.Application/ClaimManagement.Application.csproj" />
-    <Project Path="ClaimManagement/ClaimManagement.Domain/ClaimManagement.Domain.csproj" />
-    <Project Path="ClaimManagement/ClaimManagement.Infrastructure/ClaimManagement.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/ClaimSettlement/">
     <Project Path="ClaimSettlement/ClaimSettlement.Api/ClaimSettlement.Api.csproj" />
