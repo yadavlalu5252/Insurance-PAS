@@ -33,6 +33,11 @@ public class GlobalExceptionMiddleware
         {
             await Write(context, 409, ex.Message);
         }
+        catch (ServiceUnavailableException ex)
+        {
+            logger.LogError(ex, "Dependent service problem on {Method} {Path}", context.Request.Method, context.Request.Path);
+            await Write(context, 503, ex.Message);
+        }
         catch (DbUpdateConcurrencyException ex)
         {
             // two users changed the same claim at the same time

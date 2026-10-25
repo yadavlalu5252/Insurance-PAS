@@ -11,11 +11,13 @@ using ClaimManagement.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using Microsoft.OpenApi;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register controllers (bad request bodies also return the wrapper format)
+// Controllers (bad request bodies also return the wrapper format)
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -44,39 +46,66 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
-// Database, services, mapper
+// Database (connection string comes from user-secrets)
 builder.Services.AddDbContext<ClaimDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("dbconn")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("dbconn"),
+        sql => sql.EnableRetryOnFailure(3)));   // Azure SQL drops connections now and then
 
+// File storage
 var filePath = builder.Configuration["FileStorage:RootPath"]
     ?? Path.Combine(builder.Environment.ContentRootPath, "ClaimFiles");
-
 builder.Services.AddScoped<IFileStorageService>(sp => new LocalFileStorageService(filePath));
-builder.Services.AddScoped<IClaimDocumentService, ClaimDocumentService>();
-builder.Services.AddScoped<IClaimWorkflowService, ClaimWorkflowService>();
-builder.Services.AddScoped<IInvestigationService, InvestigationService>();
-builder.Services.AddScoped<IClaimService, ClaimService>();
-builder.Services.AddScoped<ISurveyService, SurveyService>();
-builder.Services.AddDataProtection();
-builder.Services.AddScoped<ISecretProtector, DataProtectionSecretProtector>();
-builder.Services.AddScoped<ISettlementService, SettlementService>();
-builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingData>());
 
-// Swagger configuration
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
+// Other teams' services (Policy and Premium), called over HTTP
+// If your earlier file already had these two blocks with other key names, keep THOSE names and values.
 builder.Services.AddHttpClient<PolicyClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["policyAddress"] ?? "http://localhost:5002");
+    client.Timeout = TimeSpan.FromSeconds(5);
 });
 
 builder.Services.AddHttpClient<PremiumClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["premiumAddress"] ?? "http://localhost:5003");
+    client.Timeout = TimeSpan.FromSeconds(5);
 });
 
+// Services
+builder.Services.AddScoped<IClaimService, ClaimService>();
+builder.Services.AddScoped<IClaimDocumentService, ClaimDocumentService>();
+builder.Services.AddScoped<IClaimWorkflowService, ClaimWorkflowService>();
+builder.Services.AddScoped<ISurveyService, SurveyService>();
+builder.Services.AddScoped<IAssessmentService, AssessmentService>();
+builder.Services.AddScoped<IInvestigationService, InvestigationService>();
+builder.Services.AddScoped<ISettlementService, SettlementService>();
 
+// Encryption of the account number and the payment reference
+builder.Services.AddDataProtection();
+builder.Services.AddScoped<ISecretProtector, DataProtectionSecretProtector>();
+
+// Mapper
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingData>());
+
+// Swagger, with the Authorize button for the token
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "Paste only the token. Swagger adds the word Bearer."
+    });
+
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
+    });
+});
+
+// Authentication: this API only checks tokens, the Authentication service creates them
 var jwt = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwt["Key"] ?? throw new InvalidOperationException("Jwt:Key is missing. Set it with dotnet user-secrets.");
 
@@ -114,9 +143,17 @@ var jwtKey = jwt["Key"] ?? throw new InvalidOperationException("Jwt:Key is missi
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("angular", policy => policy
+        .WithOrigins("http://localhost:4200")
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});
 
 var app = builder.Build();
 
+// Must be FIRST so it can catch errors from everything below
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -127,8 +164,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
+app.UseCors("angular"); 
 
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllers();
