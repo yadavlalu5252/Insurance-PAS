@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using System;
+using System.Security.Claims; // 🚨 Add this
 using System.Threading.Tasks;
 
 namespace PolicyServicing.API.Controllers
 {
+    [Authorize] 
     [ApiController]
     [Route("api/v1")]
     public class CancellationController : ControllerBase
@@ -17,15 +20,21 @@ namespace PolicyServicing.API.Controllers
             _cancellationService = cancellationService;
         }
 
-        // POST /api/v1/policies/{id}/cancel
+
         [HttpPost("policies/{id}/cancel")]
-        public async Task<IActionResult> CancelPolicy(long id, [FromQuery] long customerId, [FromBody] CancellationRequestDTO request)
+        public async Task<IActionResult> CancelPolicy(long id, [FromBody] CancellationRequestDTO request)
         {
             if (request == null)
                 return BadRequest("Invalid cancellation payload.");
 
+
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!long.TryParse(userIdClaim, out long customerId))
+                return Unauthorized("Customer ID missing from token.");
+
             try
             {
+
                 var result = await _cancellationService.ProcessCancellationAsync(customerId, id, request);
                 return Ok(new { Message = result });
             }
@@ -36,13 +45,19 @@ namespace PolicyServicing.API.Controllers
             }
         }
 
-        // GET /api/v1/cancellations/{id}
+
         [HttpGet("cancellations/{id}")]
         public async Task<IActionResult> GetCancellationDetails(long id)
         {
-            var result = await _cancellationService.GetCancellationDetailsAsync(id);
+
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!long.TryParse(userIdClaim, out long customerId))
+                return Unauthorized("Customer ID missing from token.");
+
+            var result = await _cancellationService.GetCancellationDetailsAsync(id, customerId);
+
             if (result == null)
-                return NotFound(new { Message = "Cancellation record not found." });
+                return NotFound(new { Message = "Cancellation record not found or unauthorized." });
 
             return Ok(result);
         }

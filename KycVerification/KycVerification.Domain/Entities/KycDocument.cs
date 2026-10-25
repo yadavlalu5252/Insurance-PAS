@@ -1,37 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KycVerification.Domain.Entities
 {
+    [Table("kyc_document")]
     public class KycDocument
     {
         [Key]
-        public int document_id { get; set; }
+        [Column("document_id")]
+        public int DocumentId { get; set; }
 
         [Required]
-        public int kyc_id { get; set; }
+        [Column("kyc_id")]
+        public int KycId { get; set; }
 
-        [Required]
         [MaxLength(50)]
-        public string? document_type { get; set; }
+        [Column("document_type")]
+        public string? DocumentType { get; set; }
 
-        [Required]
-        [MaxLength(100)]
-        public string? document_number { get; set; } 
+        [MaxLength(50)]
+        [Column("document_number")]
+        public string? DocumentNumber { get; set; }
 
-        [Required]
         [MaxLength(500)]
-        public string? file_path { get; set; }
+        [Column("file_path")]
+        public string? FilePath { get; set; }
 
-        public DateTime upload_date { get; set; } = DateTime.Now;
+        [Column("upload_date")]
+        public DateTime UploadDate { get; set; } = DateTime.UtcNow;
 
-        [Required]
         [MaxLength(20)]
-        public string verification_status { get; set; } = "Pending";
-
+        [Column("verification_status")]
+        public string VerificationStatus { get; set; } = "Pending";
     }
 }

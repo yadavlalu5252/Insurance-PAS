@@ -1,11 +1,14 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PolicyIssuance.Application.Interface;
 
 namespace PolicyIssuance.Api.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/v1/policies/{id:long}/document")]
+    
     public class PolicyDocumentController : ControllerBase
     {
         private readonly IPolicyDocumentService service;

@@ -1,6 +1,7 @@
 ﻿using KycVerification.Api.Wrappers;
 using KycVerification.Application.Interface;
 using KycVerification.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,11 +9,13 @@ namespace KycVerifiaction.Api.Controllers
 {
     [Route("api/v1/kyc/document-types")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class DocumentTypeMasterController : ControllerBase
     {
         private readonly IDocumentTypeMasterServices service;
 
-        public DocumentTypeMasterController(IDocumentTypeMasterServices service)
+        public DocumentTypeMasterController(
+            IDocumentTypeMasterServices service)
         {
             this.service = service;
         }

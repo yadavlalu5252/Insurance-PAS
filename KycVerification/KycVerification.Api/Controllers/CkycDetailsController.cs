@@ -1,6 +1,7 @@
 ﻿using KycVerification.Api.Wrappers;
 using KycVerification.Application.Interface;
 using KycVerification.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +9,7 @@ namespace KycVerifiaction.Api.Controllers
 {
     [Route("api/v1/kyc/ckyc")]
     [ApiController]
+    [Authorize]
     public class CkycDetailsController : ControllerBase
     {
         private readonly ICkycDetailsServices _service;
@@ -18,7 +20,10 @@ namespace KycVerifiaction.Api.Controllers
         }
 
         // GET: api/v1/kyc/ckyc/customer/1
+        // Customer: own CKYC
+        // Agent/Admin: allowed
         [HttpGet("customer/{customerId:int}")]
+        [Authorize(Roles = "Customer,Agent,Admin")]
         public async Task<IActionResult> GetByCustomerId(int customerId)
         {
             var data = await _service.GetByCustomerIdAsync(customerId);
@@ -41,7 +46,9 @@ namespace KycVerifiaction.Api.Controllers
         }
 
         // POST: api/v1/kyc/ckyc
+        // Agent/Admin
         [HttpPost]
+        [Authorize(Roles = "Agent,Admin")]
         public async Task<IActionResult> Create(
             [FromBody] CkycDetails details)
         {
@@ -70,7 +77,9 @@ namespace KycVerifiaction.Api.Controllers
         }
 
         // PUT: api/v1/kyc/ckyc/1
+        // Agent/Admin
         [HttpPut("{ckycId:int}")]
+        [Authorize(Roles = "Agent,Admin")]
         public async Task<IActionResult> Update(
             int ckycId,
             [FromBody] CkycDetails details)
@@ -118,4 +127,3 @@ namespace KycVerifiaction.Api.Controllers
         }
     }
 }
-

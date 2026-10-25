@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using PolicyServicing.Domain.Entities;
@@ -19,15 +20,26 @@ namespace PolicyServicing.Infrastructure.Repository
         private readonly PremiumClient premiumClient;
         private readonly CustomerClient customerClient;
 
-        public EndorsementService(AppDbContext db, PolicyClient policyClient, PremiumClient premiumClient, CustomerClient customerClient)
+        private readonly ClaimsClient claimsClient;
+
+        private readonly ProductClient productClient;
+
+        private readonly IHttpContextAccessor httpContextAccessor;
+
+        public EndorsementService(AppDbContext db, PolicyClient policyClient, PremiumClient premiumClient, CustomerClient customerClient,
+            IHttpContextAccessor httpContextAccessor,ClaimsClient claimsClient, ProductClient productClient)
         {
             this.db = db;
             this.policyClient = policyClient;
             this.premiumClient = premiumClient;
             this.customerClient = customerClient;
+            this.claimsClient = claimsClient;
+            this.productClient = productClient;
+            this.httpContextAccessor = httpContextAccessor;
+
         }
 
-        // 1. POST /api/v1/endorsements
+        
         public async Task<policy_endorsement> CreateEndorsementAsync(CreateEndorsementDTO dto)
         {
             var request = await db.service_request.FindAsync(dto.RequestId);
@@ -40,7 +52,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 endorsement_type = dto.EndorsementType,
                 previous_value = dto.PreviousValue,
                 updated_value = dto.UpdatedValue,
-                approval_status = Approval_status.Pending // Waits for Admin
+                approval_status = Approval_status.Pending 
             };
 
             db.policy_endorsements.Add(endorsement);
@@ -48,9 +60,10 @@ namespace PolicyServicing.Infrastructure.Repository
             return endorsement;
         }
 
-        // 2. PUT /api/v1/endorsements/{id}/approve
+       
         public async Task<bool> ApproveEndorsementAsync(long endorsementId, long adminId)
         {
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
             var endorsement = await db.policy_endorsements
                 .Include(e => e.service_Request)
                 .FirstOrDefaultAsync(e => e.endorsement_id == endorsementId);
@@ -64,74 +77,278 @@ namespace PolicyServicing.Infrastructure.Repository
 
             try
             {
-                // =========================================================
-                // EXECUTE FUNCTIONAL REQUIREMENTS (CALL MICROSERVICES)
-                // =========================================================
+               
                 switch (endorsement.endorsement_type)
                 {
                     case "Address Change":
                         var newAddress = JsonSerializer.Deserialize<CustomerAddressDTO>(endorsement.updated_value);
-                        var allAddresses = await customerClient.GetCustomerAddresses(customerId);
-                        var oldAddress = allAddresses.FirstOrDefault(a => a.address_type == newAddress.address_type);
-                        if (oldAddress != null)
-                        {
-                            bool isAddressUpdated = await customerClient.UpdateAddress(oldAddress.address_id, newAddress);
-                            if (!isAddressUpdated) throw new Exception("Customer Microservice rejected the address update.");
-                        }
-                        break;
 
+                      
+                        var allAddresses = await customerClient.GetCustomerAddresses(customerId, token);
+                        var oldAddress = allAddresses.FirstOrDefault(a => a.address_type == newAddress.address_type);
+
+
+                        if (oldAddress == null)
+                        {
+                            throw new Exception("Existing address not found in Customer Microservice.");
+                        }
+
+                        
+                        endorsement.previous_value = JsonSerializer.Serialize(oldAddress);
+
+                      
+                        bool isAddressUpdated = await customerClient.UpdateAddress(oldAddress.address_id, newAddress, token);
+                        if (!isAddressUpdated)
+                        {
+                            throw new Exception("Customer Microservice rejected the address update.");
+                        }
+
+                        break;
                     case "Contact Update":
-                        var contactData = JsonSerializer.Deserialize<ContactUpdateDTO>(endorsement.updated_value);
-                        var newCustomerData = new { mobile_number = contactData.MobileNumber, email = contactData.EmailAddress };
-                        bool isContactUpdated = await customerClient.UpdateCustomer(customerId, newCustomerData);
-                        if (!isContactUpdated) throw new Exception("Customer Microservice rejected the contact update.");
+                 
+                        var contactJson = JsonDocument.Parse(endorsement.updated_value).RootElement;
+                        string newEmail = contactJson.GetProperty("email").GetString();
+                        string newMobile = contactJson.GetProperty("mobile_number").GetString();
+
+                        var oldCustomer = await customerClient.GetCustomerById(customerId, token);
+                        if (oldCustomer == null) throw new Exception("Customer not found in Customer Microservice.");
+
+                
+                        endorsement.previous_value = JsonSerializer.Serialize(oldCustomer);
+
+                     
+                        var existingEmail = await customerClient.SearchCustomersByEmail(newEmail, token);
+                        if (existingEmail.Any(c => c.customer_id != customerId))
+                            throw new Exception("Email address is already in use by another customer.");
+
+                        var existingMobile = await customerClient.SearchCustomersByMobile(newMobile, token);
+                        if (existingMobile.Any(c => c.customer_id != customerId))
+                            throw new Exception("Mobile number is already in use by another customer.");
+
+          
+               
+                        var updatePayload = new
+                        {
+                            first_name = oldCustomer.first_name,
+                            middle_name = oldCustomer.middle_name,
+                            last_name = oldCustomer.last_name,
+                            date_of_birth = oldCustomer.date_of_birth,
+
+                            gender = oldCustomer.gender == "0" ? "Male" :
+                                     oldCustomer.gender == "1" ? "Female" : "Other",
+
+                            marital_status = oldCustomer.marital_status == "0" ? "Single" :
+                                             oldCustomer.marital_status == "1" ? "Married" :
+                                             oldCustomer.marital_status == "2" ? "Divorced" : "Widowed",
+
+                            occupation = oldCustomer.occupation,
+                            annual_income = oldCustomer.annual_income,
+                            mobile_number = newMobile, // The new mobile
+                            email = newEmail,          // The new email
+
+                            customer_status = oldCustomer.customer_status == "0" ? "Active" : "Inactive"
+                        };
+
+            
+                        bool isContactUpdated = await customerClient.UpdateCustomer(customerId, updatePayload, token);
+
+                        if (!isContactUpdated)
+                            throw new Exception("Customer Microservice rejected the contact update.");
                         break;
 
                     case "Nominee Change":
                         var updatedNominees = JsonSerializer.Deserialize<List<NomineeDTO>>(endorsement.updated_value);
                         if (updatedNominees != null)
                         {
-                            var oldNominees = await customerClient.GetNominees(customerId);
-                            foreach (var oldNom in oldNominees) await customerClient.DeleteNominee(oldNom.nominee_id);
-                            foreach (var newNom in updatedNominees) await customerClient.AddNominee(customerId, newNom);
+
+                            var oldNominees = await customerClient.GetNominees(customerId,token);
+
+                    
+                            endorsement.previous_value = JsonSerializer.Serialize(oldNominees);
+
+           
+                            foreach (var oldNom in oldNominees)
+                            {
+                                await customerClient.DeleteNominee(oldNom.nominee_id,token);
+                            }
+
+                            foreach (var newNom in updatedNominees)
+                            {
+                                bool isAdded = await customerClient.AddNominee(customerId, newNom, token);
+                                if (!isAdded) throw new Exception("Customer API rejected the nominee add request.");
+                            }
                         }
                         break;
-
+                    case "Coverage Update":
                     case "Coverage Increase":
                     case "Coverage Reduction":
-                        var coverageData = JsonSerializer.Deserialize<SavedCoverageDTO>(endorsement.updated_value);
-                        var policyPayload = new { coverage_id = coverageData.coverage_id, sum_insured = coverageData.sum_insured };
+                        var coverageData = JsonSerializer.Deserialize<SavedCoverageDTO>(
+                            endorsement.updated_value,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                        );
 
-                        bool isPolicyUpdated = await policyClient.UpdatePolicy(policyId, policyPayload);
-                        if (!isPolicyUpdated) throw new Exception("Core Policy update failed.");
+                        // 1. Fetch the old coverage for the audit trail
+                        var currentCoverages = await policyClient.GetPolicyCoverages(policyId, token);
+                        var oldCoverage = currentCoverages.FirstOrDefault(c => c.coverage_id == coverageData.coverage_id);
 
-                        await policyClient.CreatePolicyEndorsement(policyId, new { endorsement_type = endorsement.endorsement_type, new_value = endorsement.updated_value });
+                        if (oldCoverage == null) throw new Exception("Coverage not found on policy.");
 
-                        bool isPremiumUpdated = await premiumClient.GeneratePremiumSchedule(policyId);
+                        // 2. Save Audit Trail (Old Value)
+                        endorsement.previous_value = JsonSerializer.Serialize(oldCoverage);
+
+                    
+                        var coverageRules = await productClient.GetCoverageRules(coverageData.coverage_id, token);
+
+                        if (coverageRules == null)
+                            throw new Exception("Coverage rules not found in Product Microservice.");
+
+                        if (coverageData.sum_insured < coverageRules.minimum_coverage ||
+                            coverageData.sum_insured > coverageRules.maximum_coverage)
+                        {
+                            throw new Exception($"Sum insured must be between {coverageRules.minimum_coverage} and {coverageRules.maximum_coverage} for this coverage.");
+                        }
+               
+   
+                        var policyDetailsForPremium = await policyClient.GetPolicyById(policyId, token);
+
+                        decimal oldSumInsured = oldCoverage.sum_insured;
+                        decimal newSumInsured = coverageData.sum_insured;
+                        decimal oldTotalPremium = policyDetailsForPremium.premium_amount;
+
+                        decimal newCalculatedPremium = oldTotalPremium;
+                        if (oldSumInsured > 0)
+                        {
+                            newCalculatedPremium = oldTotalPremium * (newSumInsured / oldSumInsured);
+                        }
+
+                    
+                        oldCoverage.sum_insured = coverageData.sum_insured;
+
+                        bool isCoverageUpdated = await policyClient.UpdatePolicyCoverage(policyId, oldCoverage.coverage_id, oldCoverage, token);
+                        if (!isCoverageUpdated) throw new Exception("Core Policy coverage update failed.");
+
+                        endorsement.updated_value = JsonSerializer.Serialize(oldCoverage);
+
+             
+                        var endorsementPayload = new
+                        {
+                            policy_id = policyId,
+                            endorsement_type = "Coverage Update",
+                            old_values = endorsement.previous_value,
+                            new_values = endorsement.updated_value,
+                            status = "Approved",
+                            approved_by = adminId.ToString(),
+                            created_date = DateTime.UtcNow,
+                            approved_date = DateTime.UtcNow
+                        };
+                        await policyClient.CreatePolicyEndorsement(policyId, endorsementPayload, token);
+
+       
+                        var premiumPayload = new
+                        {
+                            policy_id = (int)policyId,
+                            issue_date = policyDetailsForPremium.issue_date,
+                            effective_date = policyDetailsForPremium.effective_date,
+                            expiry_date = policyDetailsForPremium.expiry_date,
+                            premium_frequency = "Monthly",
+                            total_premium = newCalculatedPremium
+                        };
+
+                        bool isPremiumUpdated = await premiumClient.GeneratePremiumSchedule(premiumPayload, token);
                         if (!isPremiumUpdated) throw new Exception("Failed to recalculate premium.");
                         break;
 
                     case "Rider Addition":
                     case "Rider Removal":
-                        var updatedRidersList = JsonSerializer.Deserialize<List<PolicyRiderDTO>>(endorsement.updated_value);
-                        var riderPayload = new { riders = updatedRidersList };
+                        // 1. Deserialize the requested intent (Action + RiderId)
+                        var riderRequest = JsonSerializer.Deserialize<RiderModifyDTO>(
+                                            endorsement.updated_value,
+                                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                                        );
+                        if (riderRequest == null) throw new Exception("Invalid rider payload.");
 
-                        bool isRiderUpdated = await policyClient.UpdatePolicy(policyId, riderPayload);
-                        if (!isRiderUpdated) throw new Exception("Core Policy update failed.");
+                        // 2. Fetch Current Policy Details
+                        var riderPolicyDetails = await policyClient.GetPolicyById(policyId, token);
+                        if (riderPolicyDetails == null) throw new Exception("Policy not found.");
+                        if (riderPolicyDetails.policy_status != "Active" && riderPolicyDetails.policy_status != "3")
+                        {
+                            throw new Exception($"Policy must be Active to modify riders. Current status: {riderPolicyDetails.policy_status}");
+                        }
 
-                        await policyClient.CreatePolicyEndorsement(policyId, new { endorsement_type = endorsement.endorsement_type, new_value = endorsement.updated_value });
 
-                        bool isRiderPremiumUpdated = await premiumClient.GeneratePremiumSchedule(policyId);
+                        var eligibleRiders = await productClient.GetEligibleRiders(riderPolicyDetails.product_id, token);
+                        var requestedRiderInfo = eligibleRiders.FirstOrDefault(r => r.rider_id == riderRequest.RiderId);
+                        if (requestedRiderInfo == null) throw new Exception("This rider is not eligible for your policy's product.");
+
+
+                        var currentRiders = await policyClient.GetPolicyRiders(policyId, token);
+                        var oldRidersList = currentRiders ?? new List<PolicyRiderDTO>();
+                        var updatedRidersList = new List<PolicyRiderDTO>(oldRidersList);
+
+                        // Assuming ProductRiderDTO has 'rider_premium' and 'rider_name'. Change these if your DTO uses different names.
+                        decimal riderCost = requestedRiderInfo.rider_premium;
+                        decimal newRiderCalculatedPremium = riderPolicyDetails.premium_amount;
+
+                        if (riderRequest.Action == "Add")
+                        {
+                            if (updatedRidersList.Any(r => r.rider_id == riderRequest.RiderId))
+                                throw new Exception("Policy already has this rider.");
+
+                            updatedRidersList.Add(new PolicyRiderDTO
+                            {
+                                rider_id = riderRequest.RiderId,
+                                policy_id = policyId,
+                                rider_name = requestedRiderInfo.rider_name,
+                                premium_amount = requestedRiderInfo.rider_premium
+                            });
+                            newRiderCalculatedPremium += riderCost;
+                        }
+                        else if (riderRequest.Action == "Remove")
+                        {
+                            var riderToRemove = updatedRidersList.FirstOrDefault(r => r.rider_id == riderRequest.RiderId);
+                            if (riderToRemove == null) throw new Exception("Rider not found on this policy.");
+
+                            updatedRidersList.Remove(riderToRemove);
+                            newRiderCalculatedPremium -= riderCost;
+                        }
+
+                        endorsement.previous_value = JsonSerializer.Serialize(oldRidersList);
+                        endorsement.updated_value = JsonSerializer.Serialize(updatedRidersList);
+
+                        bool isRiderUpdated = await policyClient.UpdatePolicyRiders(policyId, updatedRidersList, token);
+                        if (!isRiderUpdated) throw new Exception("Core Policy rider update failed.");
+
+               
+                        await policyClient.CreatePolicyEndorsement(policyId, new
+                        {
+                            policy_id = policyId,
+                            endorsement_type = endorsement.endorsement_type,
+                            old_values = endorsement.previous_value,
+                            new_values = endorsement.updated_value,
+                            status = "Approved",
+                            approved_by = adminId.ToString(),
+                            created_date = DateTime.UtcNow,
+                            approved_date = DateTime.UtcNow
+                        }, token);
+
+                        var riderPremiumPayload = new
+                        {
+                            policy_id = (int)policyId,
+                            issue_date = riderPolicyDetails.issue_date,
+                            effective_date = riderPolicyDetails.effective_date,
+                            expiry_date = riderPolicyDetails.expiry_date,
+                            premium_frequency = "Monthly",
+                            total_premium = newRiderCalculatedPremium
+                        };
+
+                        bool isRiderPremiumUpdated = await premiumClient.GeneratePremiumSchedule(riderPremiumPayload, token);
                         if (!isRiderPremiumUpdated) throw new Exception("Failed to recalculate premium.");
                         break;
-
                     default:
                         throw new Exception($"No approval logic implemented for type: {endorsement.endorsement_type}");
                 }
 
-                // ========================================================
-                // UPDATE STATUSES & LOG HISTORY
-                // ========================================================
+              
                 endorsement.approval_status = Approval_status.Approved;
                 endorsement.service_Request.status = RequestStatus.Completed;
 
@@ -149,7 +366,7 @@ namespace PolicyServicing.Infrastructure.Repository
             }
             catch (Exception ex)
             {
-                // If microservices fail, reject the endorsement and log the failure
+                
                 endorsement.approval_status = Approval_status.Rejected;
                 endorsement.service_Request.status = RequestStatus.Rejected;
 
@@ -167,7 +384,6 @@ namespace PolicyServicing.Infrastructure.Repository
             }
         }
 
-        // 3. PUT /api/v1/endorsements/{id}/reject
         public async Task<bool> RejectEndorsementAsync(long endorsementId, long adminId, string reason)
         {
             var endorsement = await db.policy_endorsements
@@ -192,12 +408,21 @@ namespace PolicyServicing.Infrastructure.Repository
             return true;
         }
 
-        // 4. GET /api/v1/endorsements/{id}
-        public async Task<policy_endorsement> GetEndorsementByIdAsync(long endorsementId)
+
+        public async Task<policy_endorsement?> GetEndorsementByIdAsync(long endorsementId)
         {
             return await db.policy_endorsements
                 .Include(e => e.service_Request)
                 .FirstOrDefaultAsync(e => e.endorsement_id == endorsementId);
+        }
+
+        public async Task<List<policy_endorsement>> GetAllPendingEndorsementsAsync()
+        {
+            return await db.policy_endorsements
+                .Include(e => e.service_Request) 
+                .Where(e => e.approval_status == Approval_status.Pending)
+                .OrderByDescending(e => e.endorsement_id)
+                .ToListAsync();
         }
     }
 }

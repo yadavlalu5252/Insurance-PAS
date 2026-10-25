@@ -1,25 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KycVerification.Domain.Entities
 {
+    [Table("document_type_master")]
     public class DocumentTypeMaster
     {
         [Key]
-        public int document_type_id { get; set; }
+        [Column("document_type_id")]
+        public int DocumentTypeId { get; set; }
 
-        [Required]
         [MaxLength(100)]
-        public string? document_name { get; set; } 
+        [Column("document_name")]
+        public string? DocumentName { get; set; }
 
-        public bool mandatory_flag { get; set; }
+        [Column("mandatory_flag")]
+        public bool MandatoryFlag { get; set; }
 
-        [Required]
         [MaxLength(20)]
-        public string status { get; set; } = "Active";
+        [Column("status")]
+        public string Status { get; set; } = "Active";
     }
 }

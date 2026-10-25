@@ -5,6 +5,6 @@ namespace DashboardNotification.Application.Interface
 {
     public interface IDashboardMetrics
     {
-        DashboardMetrics GetDashboardMetrics();
+        Task<DashboardMetrics> GetDashboardMetrics(string token);
     }
 }

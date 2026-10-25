@@ -18,9 +18,12 @@ namespace DashboardNotification.Api.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetDashboardMetrics()
+        public async Task<IActionResult> GetDashboardMetrics()
         {
-            var data = service.GetDashboardMetrics();
+            string token = Request.Headers.Authorization.ToString()
+                .Replace("Bearer ", "");
+
+            var data = await service.GetDashboardMetrics(token);
 
             var response = ApiResponse<DashboardMetrics>.SuccessResponse(data);
 
