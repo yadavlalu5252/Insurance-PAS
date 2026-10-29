@@ -5,6 +5,7 @@ using PolicyServicing.Application.Interface;
 using System;
 using System.Security.Claims; // 🚨 Add this
 using System.Threading.Tasks;
+using PolicyServicing.Api.Wrappers;
 
 namespace PolicyServicing.API.Controllers
 {
@@ -25,24 +26,19 @@ namespace PolicyServicing.API.Controllers
         public async Task<IActionResult> CancelPolicy(long id, [FromBody] CancellationRequestDTO request)
         {
             if (request == null)
-                return BadRequest("Invalid cancellation payload.");
+                return NotFound(ApiResponse<object>.ErrorResponse("Cancellation record not found or unauthorized."));
+
 
 
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!long.TryParse(userIdClaim, out long customerId))
-                return Unauthorized("Customer ID missing from token.");
+                return Unauthorized(ApiResponse<object>.ErrorResponse("Customer ID missing from token."));
 
-            try
-            {
+          
 
                 var result = await _cancellationService.ProcessCancellationAsync(customerId, id, request);
-                return Ok(new { Message = result });
-            }
-            catch (Exception ex)
-            {
-                // Catches FR-SRV-008 rules (Active claims, reason mandatory, etc.)
-                return BadRequest(new { Error = ex.Message });
-            }
+            return Ok(ApiResponse<string>.SuccessResponse(result, "Policy cancellation processed successfully."));
+
         }
 
 
@@ -52,14 +48,15 @@ namespace PolicyServicing.API.Controllers
 
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!long.TryParse(userIdClaim, out long customerId))
-                return Unauthorized("Customer ID missing from token.");
+                return Unauthorized(ApiResponse<object>.ErrorResponse("Customer ID missing from token."));
+
 
             var result = await _cancellationService.GetCancellationDetailsAsync(id, customerId);
 
             if (result == null)
-                return NotFound(new { Message = "Cancellation record not found or unauthorized." });
+                return NotFound(ApiResponse<object>.ErrorResponse("Cancellation record not found or unauthorized."));
 
-            return Ok(result);
+            return Ok(ApiResponse<CancellationDetailsDTO>.SuccessResponse(result, "Cancellation details retrieved successfully."));
         }
     }
 }

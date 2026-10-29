@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolicyServicing.Api.Wrappers;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using PolicyServicing.Infrastructure.Config;
@@ -32,7 +33,9 @@ public class ServiceRequestController : ControllerBase
         }
 
         var result = await service.CreateServiceRequestAsync(request);
-        return Ok(new { Message = "Created", RequestNumber = result });
+        return Ok(ApiResponse<object>.SuccessResponse(
+           new { requestNumber = result },
+           "Service request created successfully."));
     }
 
     [HttpGet]
@@ -41,23 +44,27 @@ public class ServiceRequestController : ControllerBase
         var userRole = User.FindFirstValue(ClaimTypes.Role);
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // 2. If Customer, fetch only their requests
+
         if (userRole == "Customer" && long.TryParse(userIdClaim, out long customerId))
         {
             var myRequests = await service.GetRequestsByCustomerIdAsync(customerId);
-            return Ok(myRequests);
+            return Ok(ApiResponse<object>.SuccessResponse(myRequests, "Service requests retrieved successfully."));
         }
 
-        // 3. If Admin/Agent, fetch all
+
         var allRequests = await service.ListRequestsAsync();
-        return Ok(allRequests);
+        return Ok(ApiResponse<object>.SuccessResponse(allRequests, "Service requests retrieved successfully."));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:long}")]
     public async Task<IActionResult> View(long id)
     {
         var result = await service.ViewRequestAsync(id);
-        return result != null ? Ok(result) : NotFound();
+        if (result == null)
+            return NotFound(ApiResponse<object>.ErrorResponse("Service request not found."));
+
+        return Ok(ApiResponse<object>.SuccessResponse(result, "Service request retrieved successfully."));
+
     }
 
     [HttpPut("{id}")]
@@ -66,10 +73,14 @@ public class ServiceRequestController : ControllerBase
        
         var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!long.TryParse(adminIdClaim, out long adminId))
-            return Unauthorized("Admin ID missing.");
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Admin ID missing."));
+
 
         var success = await service.UpdateRequestAsync(id, newStatus, adminId);
-        return success ? Ok("Updated") : BadRequest();
+        if (!success)
+            return BadRequest(ApiResponse<object>.ErrorResponse("Failed to update service request."));
+
+        return Ok(ApiResponse<object>.SuccessResponse(new { id, newStatus }, "Service request updated successfully."));
     }
 
     [HttpGet("my-policies")]
@@ -77,11 +88,11 @@ public class ServiceRequestController : ControllerBase
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!long.TryParse(userIdClaim, out long customerId))
-            return Unauthorized("Customer ID missing.");
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Customer ID missing."));
 
 
         var policies = await service.GetCustomerPoliciesAsync(customerId);
-        return Ok(policies);
+        return Ok(ApiResponse<object>.SuccessResponse(policies, "Policies retrieved successfully."));
     }
 
 
@@ -90,7 +101,7 @@ public class ServiceRequestController : ControllerBase
     {
       
         var coverages = await service.GetCoveragesForPolicyAsync(policyId);
-        return Ok(coverages);
+        return Ok(ApiResponse<object>.SuccessResponse(coverages, "Coverages retrieved successfully."));
     }
 
     [HttpGet("policies/{policyId}/riders")]
@@ -98,6 +109,6 @@ public class ServiceRequestController : ControllerBase
     {
  
         var riders = await service.GetRidersForPolicyAsync(policyId);
-        return Ok(riders);
+        return Ok(ApiResponse<object>.SuccessResponse(riders, "Riders retrieved successfully."));
     }
 }
