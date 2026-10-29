@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PolicyServicing.Api.Wrappers;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using System;
@@ -25,23 +26,10 @@ namespace PolicyServicing.API.Controllers
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!long.TryParse(userIdClaim, out long customerId))
-                return Unauthorized("Customer ID missing from token.");
+                return Unauthorized(ApiResponse<object>.ErrorResponse("Customer ID missing from token."));
 
-            try
-            {
-                
-                var result = await _renewalService.ProcessPolicyRenewalAsync(customerId, id, request);
-
-                return Ok(new
-                {
-                    Message = result
-                });
-            }
-            catch (Exception ex)
-            {
-              
-                return BadRequest(new { Error = ex.Message });
-            }
+            var result = await _renewalService.ProcessPolicyRenewalAsync(customerId, id, request);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Policy renewal processed successfully."));
         }
 
 
@@ -50,15 +38,16 @@ namespace PolicyServicing.API.Controllers
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!long.TryParse(userIdClaim, out long customerId))
-                return Unauthorized("Customer ID missing from token.");
+                return Unauthorized(ApiResponse<object>.ErrorResponse("Customer ID missing from token."));
+
 
             // Pass the policyId (id) and customerId to the service
             var result = await _renewalService.GetRenewalDetailsAsync(id, customerId);
 
             if (result == null)
-                return NotFound(new { Message = "Renewal record not found or unauthorized." });
+                return NotFound(ApiResponse<object>.ErrorResponse("Renewal record not found or unauthorized."));
 
-            return Ok(result);
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Renewal details retrieved successfully."));
         }
     }
 }
