@@ -50,7 +50,6 @@ namespace PolicyServicing.Infrastructure.Config
             return response?.Data ?? new List<CoverageMasterDTO>();
         }
 
-        // Add this inside ProductClient.cs
         public async Task<CoverageMasterDTO> GetCoverageRules(long coverageId, string token)
         {
             SetAuthHeader(token);

@@ -31,7 +31,7 @@ namespace PolicyServicing.Infrastructure.Repository
             this.httpContextAccessor = httpContextAccessor;
         }
 
-        // 1. POST /api/v1/policies/{id}/renew
+
         public async Task<string> ProcessPolicyRenewalAsync(long customerId, long policyId, RenewalRequestDTO request)
         {
             var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
@@ -59,15 +59,15 @@ namespace PolicyServicing.Infrastructure.Repository
 
             try
             {
-                // 🚨 FIX 1: Build the exact payload her Premium API expects!
+ 
                 var premiumPayload = new
                 {
                     policy_id = (int)policyId,
                     issue_date = policyDetails.issue_date,
-                    effective_date = policyDetails.expiry_date, // Renewal starts when old one ends
+                    effective_date = policyDetails.expiry_date, 
                     expiry_date = request.NewExpiryDate,
                     premium_frequency = "Monthly",
-                    total_premium = policyDetails.premium_amount // 🚨 Pass the OLD premium here
+                    total_premium = policyDetails.premium_amount 
                 };
 
                 bool isGenerated = await premiumClient.GeneratePremiumSchedule(premiumPayload, token);
@@ -156,7 +156,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 return null; 
             }
 
-            // 🚨 MANUAL MAPPING
+
             return new RenewalDetailsResponseDTO
             {
                 RenewalId = renewal.renewal_id,

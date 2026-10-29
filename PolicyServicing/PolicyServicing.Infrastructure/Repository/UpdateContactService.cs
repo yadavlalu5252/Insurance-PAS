@@ -13,7 +13,7 @@ namespace PolicyServicing.Infrastructure.Repository
         private readonly AppDbContext db;
         private readonly OtpService otp;
 
-        // 🚨 CustomerClient is completely removed!
+     
         public UpdateContactService(AppDbContext db, OtpService otp)
         {
             this.db = db;

@@ -1,10 +1,10 @@
 ﻿using PolicyServicing.Application.DTO;
 using System;
-using System.Collections.Generic; // Added for List<>
+using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
-using System.Threading.Tasks; // Added for Task<>
+using System.Threading.Tasks; 
 
 namespace PolicyServicing.Infrastructure.Config
 {

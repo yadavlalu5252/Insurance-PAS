@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PolicyServicing.Infrastructure.Config
 {
-    // 1. Match her exact ApiResponse structure
+
     public class ClaimsApiResponse<T>
     {
         public bool success { get; set; }
@@ -16,7 +16,7 @@ namespace PolicyServicing.Infrastructure.Config
         public List<string> errors { get; set; }
     }
 
-    // 2. Match her exact PagedResultDTO structure (from your previous message)
+
     public class ClaimsPagedResult<T>
     {
         public List<T> items { get; set; } = new();

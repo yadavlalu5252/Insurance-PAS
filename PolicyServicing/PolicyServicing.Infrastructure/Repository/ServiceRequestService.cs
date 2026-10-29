@@ -121,10 +121,10 @@ namespace PolicyServicing.Infrastructure.Repository
 
         public async Task<List<PolicyCoverageDTO>> GetCoveragesForPolicyAsync(long policyId)
         {
-            // Extract the token from the current HTTP context
+         
             var token = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString() ?? string.Empty;
 
-            // Call the client
+
             return await policyClient.GetPolicyCoverages(policyId, token);
         }
 

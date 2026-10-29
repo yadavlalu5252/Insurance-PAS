@@ -12,7 +12,7 @@ namespace PolicyServicing.Infrastructure.Repository
     {
         private readonly AppDbContext db;
 
-        // 🚨 PolicyClient and ProductClient completely removed!
+
         public ProcessRiderModify(AppDbContext db)
         {
             this.db = db;
@@ -23,14 +23,14 @@ namespace PolicyServicing.Infrastructure.Repository
             var riderData = JsonSerializer.Deserialize<RiderModifyDTO>(request.PayloadJson);
             if (riderData == null) throw new Exception("Invalid payload.");
 
-            // Basic validation (no external API needed)
+
             if (riderData.Action != "Add" && riderData.Action != "Remove")
                 throw new Exception("Invalid Action. Must be 'Add' or 'Remove'.");
 
-            // Save the intent as updated_value (The Admin side will compute the actual list)
+
             string updatedValueJson = JsonSerializer.Serialize(riderData);
 
-            // Create Service Request (Pending Admin Approval)
+
             var serviceRequest = new service_request
             {
                 request_number = $"SR-{DateTime.UtcNow.Ticks}",
@@ -44,18 +44,17 @@ namespace PolicyServicing.Infrastructure.Repository
             db.service_request.Add(serviceRequest);
             await db.SaveChangesAsync();
 
-            // Create Endorsement (Pending)
             db.policy_endorsements.Add(new policy_endorsement
             {
                 request_id = serviceRequest.request_id,
                 endorsement_number = $"END-{DateTime.UtcNow.Ticks}",
                 endorsement_type = riderData.Action == "Add" ? "Rider Addition" : "Rider Removal",
-                previous_value = "{}", // 🚨 Left blank, Admin will fill it
-                updated_value = updatedValueJson, // Contains RiderId and Action
+                previous_value = "{}", 
+                updated_value = updatedValueJson, 
                 approval_status = Approval_status.Pending
             });
 
-            // Log History
+   
             db.service_request_history.Add(new service_request_history
             {
                 request_id = serviceRequest.request_id,
