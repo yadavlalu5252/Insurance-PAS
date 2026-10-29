@@ -4,7 +4,7 @@ using PolicyServicing.Api.Wrappers;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using PolicyServicing.Infrastructure.Config;
-using System.Security.Claims; 
+using System.Security.Claims;
 
 [Authorize]
 [ApiController]
@@ -23,10 +23,10 @@ public class ServiceRequestController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] EndorsementRequestDTO request)
     {
-       
+
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-   
+
         if (long.TryParse(userIdClaim, out long tokenCustomerId))
         {
             request.CustomerId = tokenCustomerId;
@@ -70,7 +70,7 @@ public class ServiceRequestController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(long id, [FromQuery] string newStatus)
     {
-       
+
         var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!long.TryParse(adminIdClaim, out long adminId))
             return Unauthorized(ApiResponse<object>.ErrorResponse("Admin ID missing."));
@@ -99,7 +99,7 @@ public class ServiceRequestController : ControllerBase
     [HttpGet("policies/{policyId}/coverages")]
     public async Task<IActionResult> GetCoveragesForPolicy(long policyId)
     {
-      
+
         var coverages = await service.GetCoveragesForPolicyAsync(policyId);
         return Ok(ApiResponse<object>.SuccessResponse(coverages, "Coverages retrieved successfully."));
     }
@@ -107,7 +107,7 @@ public class ServiceRequestController : ControllerBase
     [HttpGet("policies/{policyId}/riders")]
     public async Task<IActionResult> GetRidersForPolicy(long policyId)
     {
- 
+
         var riders = await service.GetRidersForPolicyAsync(policyId);
         return Ok(ApiResponse<object>.SuccessResponse(riders, "Riders retrieved successfully."));
     }

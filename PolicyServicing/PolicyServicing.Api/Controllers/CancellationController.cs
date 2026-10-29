@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using PolicyServicing.Application.DTO;
 using PolicyServicing.Application.Interface;
 using System;
-using System.Security.Claims; // 🚨 Add this
+using System.Security.Claims;
 using System.Threading.Tasks;
 using PolicyServicing.Api.Wrappers;
 
 namespace PolicyServicing.API.Controllers
 {
-    [Authorize] 
+    [Authorize]
     [ApiController]
     [Route("api/v1")]
     public class CancellationController : ControllerBase
@@ -34,9 +34,9 @@ namespace PolicyServicing.API.Controllers
             if (!long.TryParse(userIdClaim, out long customerId))
                 return Unauthorized(ApiResponse<object>.ErrorResponse("Customer ID missing from token."));
 
-          
 
-                var result = await _cancellationService.ProcessCancellationAsync(customerId, id, request);
+
+            var result = await _cancellationService.ProcessCancellationAsync(customerId, id, request);
             return Ok(ApiResponse<string>.SuccessResponse(result, "Policy cancellation processed successfully."));
 
         }
