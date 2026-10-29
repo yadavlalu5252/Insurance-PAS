@@ -187,13 +187,12 @@ namespace PolicyServicing.Infrastructure.Repository
                             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                         );
 
-                        // 1. Fetch the old coverage for the audit trail
                         var currentCoverages = await policyClient.GetPolicyCoverages(policyId, token);
                         var oldCoverage = currentCoverages.FirstOrDefault(c => c.coverage_id == coverageData.coverage_id);
 
                         if (oldCoverage == null) throw new Exception("Coverage not found on policy.");
 
-                        // 2. Save Audit Trail (Old Value)
+
                         endorsement.previous_value = JsonSerializer.Serialize(oldCoverage);
 
                     

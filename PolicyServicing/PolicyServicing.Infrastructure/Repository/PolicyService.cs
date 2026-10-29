@@ -39,10 +39,6 @@ namespace PolicyServicing.Infrastructure.Repository
             var addressChange = JsonSerializer.Deserialize<AddressChangeDTO>(request.PayloadJson);
 
 
-            //if (addressChange == null || string.IsNullOrEmpty(addressChange.AddressProofDocumentPath))
-            //{
-            //    throw new Exception("Address proof document is mandatory");
-            //}
 
 
             var newAddressData = new CustomerAddressDTO

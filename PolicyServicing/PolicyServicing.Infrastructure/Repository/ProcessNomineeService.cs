@@ -24,7 +24,7 @@ namespace PolicyServicing.Infrastructure.Repository
         {
             var nomineeData = JsonSerializer.Deserialize<NomineeUpdateDTO>(request.PayloadJson);
 
-            // 1. Business Rule Validation (FR-SRV-004)
+
             decimal totalShare = nomineeData.Nominees.Sum(n => n.share_percentage);
             if (totalShare != 100.00m)
             {
@@ -42,7 +42,7 @@ namespace PolicyServicing.Infrastructure.Repository
 
             string updatedValueJson = JsonSerializer.Serialize(nomineeData.Nominees);
 
-            // 2. Create Service Request (Pending Admin Approval)
+
             var serviceRequest = new service_request
             {
                 request_number = $"SR-{DateTime.UtcNow.Ticks}",
@@ -56,7 +56,7 @@ namespace PolicyServicing.Infrastructure.Repository
             db.service_request.Add(serviceRequest);
             await db.SaveChangesAsync();
 
-            // 3. Create Endorsement (Pending)
+ 
             db.policy_endorsements.Add(new policy_endorsement
             {
                 request_id = serviceRequest.request_id,
@@ -67,7 +67,7 @@ namespace PolicyServicing.Infrastructure.Repository
                 approval_status = Approval_status.Pending
             });
 
-            // 4. Log History
+
             db.service_request_history.Add(new service_request_history
             {
                 request_id = serviceRequest.request_id,
