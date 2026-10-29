@@ -27,7 +27,6 @@ public class EndorsementController : ControllerBase
 
         var result = await endorsementService.CreateEndorsementAsync(dto);
 
-        // TODO: replace `object` with the real return type; confirm `endorsement_number` casing
         return StatusCode(201, ApiResponse<object>.SuccessResponse(
             new { endorsementNumber = result.endorsement_number },
             "Endorsement created successfully."));
