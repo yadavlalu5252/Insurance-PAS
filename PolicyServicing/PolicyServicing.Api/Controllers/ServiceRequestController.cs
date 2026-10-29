@@ -31,7 +31,10 @@ public class ServiceRequestController : ControllerBase
         {
             request.CustomerId = tokenCustomerId;
         }
-
+        else
+        {
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Customer ID missing from token."));
+        }
         var result = await service.CreateServiceRequestAsync(request);
         return Ok(ApiResponse<object>.SuccessResponse(
            new { requestNumber = result },
